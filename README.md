@@ -170,7 +170,7 @@ Take the following steps to configure and verify the infrastructure:
 
    Now review the deployed infrastructure in the Azure portal. You will find a dummy scenario consisting of some storage accounts and a managed disk, with a backup vault, backup policies and some sample backup instances.
 
-### Customisation
+## Usage
 
 To customise the solution and apply it to your own use case take the following steps:
 
