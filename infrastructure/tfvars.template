@@ -1,0 +1,3 @@
+vault_name = "myvault"
+vault_location  = "UK South"
+vault_redundancy = "LocallyRedundant"
