@@ -40,24 +40,3 @@ Please follow the steps below to create a pull request:
 
 We use [.NET source code analyzer](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview?tabs=net-8) to enforce code style.
 Please make sure you have the pre-commit hook installed and working.
-
-## VS Code
-
-For VS Code it is recommended to install the editorconfig plugin, which will allow the code style rules defined in .editorconfig (within the root of the project repository) to be applied during development.
-
-## Recognition for Contributions
-
-We are happy to recognize contributors to this repository. If you have made a significant contribution, please reach out to the maintainers to be added to the list of contributors - or submit a PR to add yourself to the list.
-
-1. John Collinson
-1. Anat Balzam
-1. Arpit Gaur
-1. David Finson
-1. Dor Lugasi-Gal
-1. Frances Tibble
-1. Jack Jessel
-1. Liam Moat
-1. Martyna Marcinkowska
-1. Nava Vaisman Levy
-1. Sharon Hart
-1. Shiran Rubin Manaev
