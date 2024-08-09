@@ -15,6 +15,7 @@ The following technologies are used:
 
 * The design currently caters for a scenario where a vault could be unlocked initially, and later locked. Do we want this?
 * The design assumes that it is the responsibility of this solution to assign roles to resources-to-be-backed-up, which requires elevated privileges in the subscription that those resources reside. Do we want this?
+* Do we want to prefix backup resources in the TF modules - thus enforcing the prefix convention, or allow module consumers to specify the full resource name - thus giving flexibility.
 
 ### Known Issues
 
