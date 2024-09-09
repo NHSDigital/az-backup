@@ -13,6 +13,7 @@ The following technologies are used:
 
 ### Outstanding Questions
 
+* The design doesn't cater for the requirement to store the backup data in a separate account (or subscription in Azure lingo). We can however support GeoRedundant storage across regions - will this suffice? Otherwise we need to look at a solution for this problem.
 * The design currently caters for a scenario where a vault could be unlocked initially, and later locked. Do we want this?
 
 ## Design
