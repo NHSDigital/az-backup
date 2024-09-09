@@ -26,7 +26,7 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Ensure backend configuration
+      - name: Ensure local backend
         run: |
           echo 'terraform {
             backend "local" {
@@ -35,7 +35,7 @@ jobs:
           }' > infrastructure/backend.tf
 
       - name: Terraform Init
-        run: terraform init -backend-config=backend-local.tf
+        run: terraform init
         working-directory: infrastructure
 
       - name: Terraform Validate
