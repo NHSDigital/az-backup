@@ -26,14 +26,6 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Ensure backend configuration
-        run: |
-          echo 'terraform {
-            backend "local" {
-              path = "terraform.tfstate"
-            }
-          }' > infrastructure/backend.tf
-
       - name: Terraform Init
         run: terraform init -backend-config=backend-local.tf
         working-directory: infrastructure
