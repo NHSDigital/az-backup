@@ -5,15 +5,6 @@ terraform {
       version = "3.114.0"
     }
   }
-
-  backend "local" {
-    path      = "terraform.tfstate"
-    condition = var.use_local_backend
-  }
-
-  backend "azurerm" {
-    condition = !var.use_local_backend
-  }
 }
 
 provider "azurerm" {
