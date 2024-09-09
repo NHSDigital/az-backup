@@ -1,0 +1,84 @@
+name: CI Pipeline
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  actions: read
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-verification:
+    name: Build Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+        working-directory: infrastructure
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: infrastructure
+
+  static-code-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Run Terraform Format
+        run: terraform fmt -check
+        working-directory: infrastructure
+
+      - name: Run Terraform Lint
+        uses: terraform-linters/setup-tflint@v1
+        with:
+          tflint_version: latest
+      - run: tflint
+
+      - name: Install Checkov
+        run: sudo apt-get update && sudo apt-get install -y python3-pip && pip3 install checkov
+
+      - name: Run Checkov Scan
+        run: checkov --directory infrastructure --skip-path example_resource --skip-path example.tf
+
+      - name: Install GitLeaks
+        run: |
+          curl -sSL https://github.com/zricethezav/gitleaks/releases/download/v8.2.4/gitleaks_8.2.4_linux_x64.tar.gz | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Run GitLeaks Scan
+        run: gitleaks detect --source . --config .gitleaks.toml
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy Scan
+        run: trivy filesystem --security-checks vuln,config --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed .
