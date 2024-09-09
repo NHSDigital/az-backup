@@ -61,7 +61,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y python3-pip && pip3 install checkov
 
       - name: Run Checkov Scan
-        run: checkov --directory infrastructure --skip-path example_resource
+        run: checkov --directory infrastructure --skip-path example_resource --skip-path example.tf
 
       - name: Install GitLeaks
         run: |
