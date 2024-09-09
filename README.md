@@ -29,9 +29,9 @@ A solution which utilises the blueprint will consist of the following types of A
 * Azure backup vault and backup policies/instances
 * Azure policy definitions and assignments
 * Azure monitor
-* Resources that need to be backed up
-* Tfstate storage account
 * Entra ID
+* Tfstate storage account
+* Resources that need to be backed up
 
 #### Architecture
 
@@ -39,14 +39,21 @@ The following diagram illustrates the high level architecture
 
 ![Azure Architecture](./docs/azure-architecture.drawio.svg)
 
-1. Backup vault
-1. Backup instances
-1. Backup identity
-1. Azure policy
-1. Backup administrators
-1. Service deployment
-1. Azure monitor
-1. Indirect backup resources
+1. The **backup vault** stores the backups of a variety of different Azure resources. A number of **backup policies** are registered on the vault which define the configuration for a backup such as the retention period and schedule. A number of **backup instances** are then registered with a policy applied that trigger the backups. The vault is configured as **immutable** and **locked** to enforce tamper proof backups. The **backup vault** resides in it's own isolated **resource group**.
+
+1. **Backup instances** link the resources to be backed up and an associated **backup policy**, and one registered trigger the backup process. The resources directly supported are Azure Blob Storage, Managed Disks, PostgreSQL (sinlge server and flexible server) and AKS instances, although other resources are supported indirectly through Azure Storage (see **point 8** for more details). **Backup instances** are automatically registered by **Azure Policy** by creating resources to be  backed up with the required tags - they are not manually registered (see **point 4** for more details).
+
+1. The **backup vault** accesses resources to be backed up through a **System Assigned Managed Identity** - a secure way of enabling communication between defined resources without managing a secret/password. The identity is given read access to the resources to be backed up by **Azure Policy** at the point that the backup instance is registered.
+
+1. **Azure Policy** is an feature that helps enforce rules and standards across an Azure tenant. In this case it is used to ensure **backup instances** are created when resources that require backup are created (or updated) with a defined tag. **Azure Policy** will also be used to validate the **immutability** configuration of the backup vault, for example ensuring it is not set excessively resulting in a developers holiday photos being stored for 100'000 years.
+
+1. **Backup administrators** are a group of identities that will have time limited read only access to the **backup vault** in order to access and restore backups as required. Assignment of the role will be secured by **PIM** - Privileged Identity Management, which requires a second identity to authorise the role assignment, which is then assigned on a time limited bases. The **backup administrators** will also be responsible for monitoring and auditing backup activity via **Azure Monitor** (see **point 7** for more details).
+
+1. The solution requires an identity with elevated subscription contributor permissions that can create the backup resources (such as the backup **resource group**, **backup vault**, and **backup policies**). This identity will be implemented as a **federated credential** of an **app registration**, removing the need to manage a secret/password once configured. The identity also needs writer access to a dedicated **Storage Account** in order to read and write the **terraform** infrastructure state.
+
+1. All backup telemetry will flow into **Azure Monitor** for monitoring and auditing purposes. This will provide access to data such as backup logs and metrics, and provide observability over the solution. Should the need arise, the telemetry could also be integrated into an external monitoring solution.
+
+1. Some resources such as Azure SQL and Azure Key Vault are not directly supported by Azure **backup vault**, but can be incorporated via a supplementary process that backs up the data to Azure Blob Storage first. In the case of Azure SQL, a typical scenario could be an Azure Logic App that takes a backup of Azure SQL on a regular basis and stores the data in Azure Blob Storage.  It is the aspiration of this solution to provide guidance and tooling that teams can adopt to support these scenarios.
 
 ### Pipelines
 
