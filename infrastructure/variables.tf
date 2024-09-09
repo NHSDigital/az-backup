@@ -1,3 +1,9 @@
+variable "use_local_backend" {
+  description = "Set to true to use the local backend instead of azurerm"
+  type        = bool
+  default     = false
+}
+
 variable "vault_name" {
   type    = string
   default = "myvault"

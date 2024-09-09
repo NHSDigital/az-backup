@@ -35,7 +35,7 @@ jobs:
           }' > infrastructure/backend.tf
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="use_local_backend=true"
         working-directory: infrastructure
 
       - name: Terraform Validate
