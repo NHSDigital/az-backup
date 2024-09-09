@@ -2,21 +2,21 @@
 ###########################################################################
 
 module "example_storage_account_1" {
-  source               = "./modules/example_resource/storage_account"
+  source               = "./modules/example/storage_account"
   location             = var.vault_location
   storage_account_name = "samystorage001"
   resource_group       = azurerm_resource_group.resource_group.name
 }
 
 module "example_storage_account_2" {
-  source               = "./modules/example_resource/storage_account"
+  source               = "./modules/example/storage_account"
   location             = var.vault_location
   storage_account_name = "samystorage002"
   resource_group       = azurerm_resource_group.resource_group.name
 }
 
 module "example_managed_disk" {
-  source         = "./modules/example_resource/managed_disk"
+  source         = "./modules/example/managed_disk"
   location       = var.vault_location
   disk_name      = "disk-mydisk"
   resource_group = azurerm_resource_group.resource_group.name

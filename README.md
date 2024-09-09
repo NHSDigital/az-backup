@@ -169,7 +169,9 @@ Take the following steps to configure and verify the infrastructure:
    terraform apply -auto-approve
    ```
 
-   Now review the deployed infrastructure in the Azure portal. You will find a dummy scenario consisting of some storage accounts and a managed disk, with a backup vault, backup policies and some sample backup instances.
+   Now review the deployed infrastructure in the Azure portal. You will find a backup vault and some sample backup policies.
+
+   The repo contains an `example` module which can be utilised to further extend the sample infrastructure with some resources and backup instances. To use this module for dev/test purposes, include the module in `main.tf` and run `terraform apply` again.
 
 ## Usage
 
