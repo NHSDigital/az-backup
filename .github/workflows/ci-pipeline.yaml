@@ -27,10 +27,7 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
-        run: terraform init \
-          -backend-config="path=terraform.tfstate" \
-          -input=false \
-          -no-color
+        run: terraform init -backend-config="path=terraform.tfstate"
         working-directory: infrastructure
 
       - name: Terraform Validate
