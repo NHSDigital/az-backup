@@ -69,7 +69,7 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       - name: Run GitLeaks Scan
-        run: gitleaks detect --source . --config-path ../.gitleaks.toml
+        run: gitleaks detect --source . --config ../.gitleaks.toml
 
       - name: Install Trivy
         run: |
