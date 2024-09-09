@@ -28,9 +28,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        working-directory: infrastructure
 
       - name: Terraform Validate
         run: terraform validate
+        working-directory: infrastructure
 
   static-code-analysis:
     name: Static Code Analysis
@@ -47,6 +49,7 @@ jobs:
 
       - name: Check Terraform Format
         run: terraform fmt -check
+        working-directory: infrastructure
 
       - name: Run Terraform Lint
         uses: terraform-linters/setup-tflint@v1
@@ -57,7 +60,7 @@ jobs:
       - name: Checkov scan
         uses: bridgecrewio/checkov-action@2.0.0
         with:
-          directory: .
+          directory: infrastructure
           quiet: true
 
       - name: GitLeaks Secret Scan
