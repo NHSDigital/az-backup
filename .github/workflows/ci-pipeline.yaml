@@ -61,7 +61,7 @@ jobs:
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: infrastructure
-          args: --skip-path /modules/dummy_resource
+          args: --skip-path /modules/dummy_resource/*
 
       - name: GitLeaks Secret Scan
         uses: zricethezav/gitleaks-action@v2.2.1
