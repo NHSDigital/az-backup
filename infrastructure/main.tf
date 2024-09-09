@@ -39,7 +39,7 @@ module "dummy_storage_account_1" {
   source               = "./modules/dummy_resource/storage_account"
   location             = var.vault_location
   storage_account_name = "samystorage001"
-  resource_group       = azurerm_resource_group.resource_group.name
+  resource_group       = azurerm_resource_group.resource_group2.name
 }
 
 module "dummy_storage_account_2" {
