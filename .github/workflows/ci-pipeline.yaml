@@ -60,13 +60,16 @@ jobs:
       - name: Install Checkov
         run: sudo apt-get update && sudo apt-get install -y python3-pip && pip3 install checkov
 
-      - name: Run Checkov
-        run: checkov --directory infrastructure --quiet --skip-path example_resource --skip-path example.tf
+      - name: Run Checkov Scan
+        run: checkov --directory infrastructure --skip-path example_resource --skip-path example.tf
 
-      - name: GitLeaks Secret Scan
-        uses: zricethezav/gitleaks-action@v2.2.1
-        with:
-          config_path: ../.gitleaks.toml
+      - name: Install GitLeaks
+        run: |
+          curl -sSL https://github.com/zricethezav/gitleaks/releases/download/v8.2.4/gitleaks_8.2.4_linux_x64.tar.gz | tar -xz
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Run GitLeaks Scan
+        run: gitleaks detect --source . --config-path ../.gitleaks.toml
 
       - name: Install Trivy
         run: |
