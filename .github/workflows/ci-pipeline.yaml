@@ -47,7 +47,7 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Check Terraform Format
+      - name: Run Terraform Format
         run: terraform fmt -check
         working-directory: infrastructure
 
@@ -69,7 +69,7 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       - name: Run GitLeaks Scan
-        run: gitleaks detect --source . --config ../.gitleaks.toml
+        run: gitleaks detect --source . --config .gitleaks.toml
 
       - name: Install Trivy
         run: |
