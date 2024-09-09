@@ -57,12 +57,11 @@ jobs:
           tflint_version: latest
       - run: tflint
 
-      - name: Checkov scan
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: infrastructure
-          quiet: true
-          args: --skip-path example_resource --skip-path example.tf
+      - name: Install Checkov
+        run: sudo apt-get update && sudo apt-get install -y python3-pip && pip3 install checkov
+
+      - name: Run Checkov
+        run: checkov --directory infrastructure --quiet --skip-path example_resource --skip-path example.tf
 
       - name: GitLeaks Secret Scan
         uses: zricethezav/gitleaks-action@v2.2.1
