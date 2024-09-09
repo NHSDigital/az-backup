@@ -27,7 +27,7 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false -no-color
         working-directory: infrastructure
 
       - name: Terraform Validate
