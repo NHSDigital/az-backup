@@ -1,4 +1,4 @@
-# Create some dummy resources
+# Create some example resources
 ###########################################################################
 
 module "example_storage_account_1" {
