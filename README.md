@@ -7,20 +7,14 @@ This repository is a blueprint solution for deploying immutable backups to Azure
 The following technologies are used:
 
 * Azure
-* Azure Pipelines
 * Azure CLI
+* Azure Pipelines
 * Terraform
 
 ### Outstanding Questions
 
+* The design doesn't cater for the requirement to store the backup data in a separate account (or subscription in Azure lingo). We can however support GeoRedundant storage across regions - will this suffice? Otherwise we need to look at a solution for this problem.
 * The design currently caters for a scenario where a vault could be unlocked initially, and later locked. Do we want this?
-* The design assumes that it is the responsibility of this solution to assign roles to resources-to-be-backed-up, which requires elevated privileges in the subscription that those resources reside. Do we want this?
-* Do we want to prefix backup resources in the TF modules - thus enforcing the prefix convention, or allow module consumers to specify the full resource name - thus giving flexibility.
-
-### Known Issues
-
-* The Terraform AzureRM resource for a data protection backup vault does not currently have support for configuration of immutability, therefore this will setting will need to be configured in a different way (e.g. via pipelines/API call).
-  * [See this github issue requesting support is added.](https://github.com/hashicorp/terraform-provider-azurerm/issues/22238)
 
 ## Design
 
@@ -31,30 +25,40 @@ The repository consists of:
 
 ### Infrastructure
 
-A typical backup solution that utilises this blueprint will consist of a number of Azure resources that must be created and managed in different ways:
+A solution which utilises the blueprint will consist of the following types of Azure resources
 
-* Tenant and subscription level resources
-  * With the exception of the tfstate storage account, the following resources must be created manually:
-    * The resources required to be backed up
-    * A service principal used for deployment, with the following permissions:
-      * Create resources
-      * Assign roles on the backup resources
+* Azure backup vault and backup policies/instances
+* Azure policy definitions and assignments
+* Azure monitor
+* Entra ID
 * Tfstate storage account
-  * This must be created once during environment setup - see Developer Guide below for more details
-* Backup vault and associated policies/instances
-  * These are defined in the terraform scripts in this repo
-  * The scripts should be customised for the specific use case and deployed via a deployment pipeline (or `terraform apply` in dev scenario)
-  * A resource group is created which all backup resources reside within
+* Resources that need to be backed up
 
-![Azure Architecture](./docs/azure-architecture.png)
+#### Architecture
+
+The following diagram illustrates the high level architecture
+
+![Azure Architecture](./docs/azure-architecture.drawio.svg)
+
+1. The **backup vault** stores the backups of a variety of different Azure resources. A number of **backup policies** are registered on the vault which define the configuration for a backup such as the retention period and schedule. A number of **backup instances** are then registered with a policy applied that trigger the backups. The vault is configured as **immutable** and **locked** to enforce tamper proof backups. The **backup vault** resides in it's own isolated **resource group**.
+
+1. **Backup instances** link the resources to be backed up and an associated **backup policy**, and one registered trigger the backup process. The resources directly supported are Azure Blob Storage, Managed Disks, PostgreSQL (single server and flexible server) and AKS instances, although other resources are supported indirectly through Azure Storage (see **point 8** for more details). **Backup instances** are automatically registered by **Azure Policy** by creating resources to be  backed up with the required tags - they are not manually registered (see **point 4** for more details).
+
+1. The **backup vault** accesses resources to be backed up through a **System Assigned Managed Identity** - a secure way of enabling communication between defined resources without managing a secret/password. The identity is given read access to the resources to be backed up by **Azure Policy** at the point that the backup instance is registered.
+
+1. **Azure Policy** is a feature that helps enforce rules and standards across an Azure tenant. In this case it is used to ensure **backup instances** are created when resources that require backup have a defined tag. **Azure Policy** will also be used to validate the **immutability** configuration of the backup vault, for example ensuring it is not set excessively resulting in a developers holiday photos being stored for 100'000 years.
+
+1. **Backup administrators** are a group of identities that will have time limited read only access to the **backup vault** in order to access and restore backups as required. Assignment of the role will be secured by **PIM** - Privileged Identity Management, which requires a second identity to authorise the role assignment, which is then assigned on a time limited bases. The **backup administrators** will also be responsible for monitoring and auditing backup activity via **Azure Monitor** (see **point 7** for more details).
+
+1. The solution requires a user account with elevated subscription contributor permissions that can create the backup resources (such as the backup **resource group**, **backup vault**, and **backup policies**). This identity will be implemented as a **federated credential** of an **app registration**, which is like a passport that lets you access different services without needing a separate password. This removes the need to manage a secret/password once configured. The identity also needs writer access to a dedicated **Storage Account** in order to read and write the **terraform** infrastructure state.
+
+1. All backup telemetry will flow into **Azure Monitor** for monitoring and auditing purposes. This will provide access to data such as backup logs and metrics, and provide observability over the solution. Should the need arise, the telemetry could also be integrated into an external monitoring solution.
+
+1. Some resources such as Azure SQL and Azure Key Vault are not directly supported by Azure **backup vault**, but can be incorporated via a supplementary process that backs up the data to Azure Blob Storage first. In the case of Azure SQL, a typical scenario could be an Azure Logic App that takes a backup of Azure SQL on a regular basis and stores the data in Azure Blob Storage.  It is the aspiration of this solution to provide guidance and tooling that teams can adopt to support these scenarios.
 
 ### Pipelines
 
-> This section is still in **DRAFT**.
-
-The following diagram illustrates the pipeline design:
-
-![Azure Architecture](./docs/pipeline-design.png)
+> TODO
 
 ## Repository Structure
 
@@ -97,19 +101,9 @@ The following are pre-reqs to working with the solution:
 
 [See the following link for further information.](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
 
-#### Contributing
+### Getting Started
 
-If you want to contribute to the project you need to install [git](https://git-scm.com), [python](https://www.python.org/) and [pre-commit](https://pre-commit.com/).
-
-Once pre-commit is installed, open a terminal, navigate to the repository root and run the following command to install the pre-commit hooks:
-
-```cmd
-pre-commit install
-```
-
-### Configuration
-
-Take the following steps to configure and verify the infrastructure:
+Take the following steps to get started in configuring and verify the infrastructure:
 
 1. Login to Azure
 
@@ -171,24 +165,22 @@ Take the following steps to configure and verify the infrastructure:
 
    Now review the deployed infrastructure in the Azure portal. You will find a dummy scenario consisting of some storage accounts and a managed disk, with a backup vault, backup policies and some sample backup instances.
 
-## Usage
+### Contributing
 
-To customise the solution and apply it to your own use case take the following steps:
+If you want to contribute to the project, raise a PR on GitHub.
 
-1. Analyse Requirements
+We use pre-commit to run analysis and checks on the changes being committed. Take the following steps to ensure the pre-commit hook is installed and working:
 
-   Identify the resources you want to backup, the schedule on which you need take backups and how long you need to retain the backups (the retention period).
+1. Install git
+    * Ensure the git `bin` directory has been added to %PATH%: `C:\Program Files\Git\bin`
 
-2. Plan and Design
+1. Install Python
+    * Ensure the python `bin` directory has been added to %PATH%
 
-   Review main.tf which contains some dummy example resources and sample backup policy/instance modules that can be adapted. Review and understand these modules, as you will need to customise and adapt them for your own environment.
+1. Install pre-commit
+    * Open a terminal and navigate to the repository root directory
+    * Install pre-commit with the following command: `pip install pre-commit`
+    * Install pre-commit within the repository with the following command: `pre-commit install`
+    * Run `pre-commit run --all-files` to check pre-commit is working
 
-3. Adapt and Implement
-
-   Now it's time to implement the terraform infrastructure, specific to your environment by adapting the examples which have been provided.
-
-   If your use case is small it makes sense to keep all your terraform in main.tf for simplicity, however there will be a tipping point. If your setup includes more than a couple of backup policies/instances, it's advised to structure things in a more modular way using separate tf scripts, or your own modules to keep things sane.
-
-4. Deploy and Verify
-
-   Run `terraform apply` to deploy your customised infrastructure, and log into the Azure portal to verify it has been created as expected.
+    > For full details [see this link](https://pre-commit.com/#installation)
