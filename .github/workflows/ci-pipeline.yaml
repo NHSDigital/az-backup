@@ -34,6 +34,14 @@ jobs:
         run: terraform validate
         working-directory: infrastructure
 
+      - name: Terraform Init (Tests)
+        run: terraform init -backend=false
+        working-directory: tests
+
+      - name: Terraform Test
+        run: terraform test
+        working-directory: tests
+
   static-code-analysis:
     name: Static Code Analysis
     runs-on: ubuntu-latest
