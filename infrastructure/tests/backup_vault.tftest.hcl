@@ -14,6 +14,6 @@ run "create_bucket" {
   # Check that the vault name is correct
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.name == "bvault-${run.setup_tests.vault_name}"
-    error_message = "Invalid backup vault name"
+    error_message = "Vault name not as expected."
   }
 }
