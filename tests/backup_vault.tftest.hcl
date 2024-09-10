@@ -1,14 +1,18 @@
 run "setup_tests" {
-    module {
-        source = "./tests/setup"
-    }
+  module {
+    source = "./setup"
+  }
 }
 
 run "create_bucket" {
   command = plan
 
+  module {
+    source = "../infrastructure"
+  }
+
   variables {
-    vault_name = "${run.setup_tests.vault_name}"
+    vault_name = run.setup_tests.vault_name
   }
 
   # Check that the vault name is correct
