@@ -6,7 +6,7 @@ terraform {
     }
   }
 
-  backend "azurerm" {}
+  backend "local" {}
 }
 
 provider "azurerm" {

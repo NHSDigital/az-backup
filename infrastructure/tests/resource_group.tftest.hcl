@@ -7,10 +7,6 @@ run "setup_tests" {
 run "create_bucket" {
   command = plan
 
-  module {
-    source = "../infrastructure"
-  }
-
   variables {
     vault_name = run.setup_tests.vault_name
   }
