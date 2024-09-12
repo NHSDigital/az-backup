@@ -1,10 +1,4 @@
-run "setup_tests" {
-  module {
-    source = "./setup"
-  }
-}
-
-run "create_bucket" {
+run "create_resource_group" {
   command = plan
 
   module {
@@ -12,12 +6,19 @@ run "create_bucket" {
   }
 
   variables {
-    vault_name = run.setup_tests.vault_name
+    vault_name     = "testvault"
+    vault_location = "uksouth"
   }
 
-  # Check that the resource group name is as expected
+  # Check that the name is as expected
   assert {
-    condition     = azurerm_resource_group.resource_group.name == "rg-nhsbackup-${run.setup_tests.vault_name}"
+    condition     = azurerm_resource_group.resource_group.name == "rg-nhsbackup-testvault"
     error_message = "Resource group name not as expected."
+  }
+
+  # Check that the location is as expected
+  assert {
+    condition     = azurerm_resource_group.resource_group.location == "uksouth"
+    error_message = "Resource group location not as expected."
   }
 }
