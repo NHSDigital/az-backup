@@ -1,3 +1,7 @@
+mock_provider "azurerm" {
+  source = "./azurerm"
+}
+
 run "setup_tests" {
   module {
     source = "./setup"
@@ -5,7 +9,7 @@ run "setup_tests" {
 }
 
 run "create_resource_group" {
-  command = plan
+  command = apply
 
   module {
     source = "../infrastructure"

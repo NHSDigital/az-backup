@@ -1,3 +1,7 @@
+mock_provider "azurerm" {
+  source = "./azurerm"
+}
+
 run "setup_tests" {
   module {
     source = "./setup"
