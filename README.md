@@ -175,23 +175,13 @@ Take the following steps to get started in configuring and verify the infrastruc
 
 ### Running the Tests
 
-The test suite consists of a number Terraform HCL tests. 
+The test suite consists of a number Terraform HCL tests that use a mock azurerm provider.
 
 [See this link for more information.](https://developer.hashicorp.com/terraform/language/tests)
 
 Take the following steps to run the test suite:
 
-1. Login to Azure
-
-   Use the Azure CLI to login to Azure by running the following command:
-
-   ```pwsh
-   az login
-   ```
-
-   > NOTE: You can skip this step if you've already logged in (e.g. by following the steps above in the [Getting Started](#getting-started) guide).
-
-2. Initialise Terraform
+1. Initialise Terraform
 
    Change the working directory to `./tests`.
 
@@ -201,17 +191,15 @@ Take the following steps to run the test suite:
    terraform init -backend=false
    ````
 
-   > NOTE: There's no need to initialise a backend for the purposes of running the tests).
+   > NOTE: There's no need to initialise a backend for the purposes of running the tests.
 
-3. Run the Tests
+2. Run the Tests
 
    Run the tests with the following command:
 
    ````pwsh
    terraform test
    ````
-
-   > NOTE: There's no need to initialise a backend for the purposes of running the tests).
 
 ### Contributing
 
@@ -231,4 +219,4 @@ We use pre-commit to run analysis and checks on the changes being committed. Tak
     * Install pre-commit within the repository with the following command: `pre-commit install`
     * Run `pre-commit run --all-files` to check pre-commit is working
 
-    > For full details [see this link](https://pre-commit.com/#installation)
+> For full details [see this link](https://pre-commit.com/#installation)
