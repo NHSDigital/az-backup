@@ -48,7 +48,7 @@ run "create_managed_disk_policy" {
   }
 
   variables {
-    vault_name = "testvault"
+    vault_name = run.setup_tests.vault_name
   }
 
   # Check that the id is as expected
