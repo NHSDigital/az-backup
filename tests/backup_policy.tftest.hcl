@@ -17,7 +17,7 @@ run "create_blob_storage_policy" {
 
   # Check that the name is as expected
   assert {
-    condition     = module.blob_storage_policy.name == "bkpol-testvault-blobstorage"
+    condition     = module.blob_storage_policy.name == "bkpol-${var.vault_name}-blobstorage"
     error_message = "Blob storage policy name not as expected."
   }
 
@@ -53,7 +53,7 @@ run "create_managed_disk_policy" {
 
   # Check that the name is as expected
   assert {
-    condition     = module.managed_disk_policy.name == "bkpol-testvault-manageddisk"
+    condition     = module.managed_disk_policy.name == "bkpol-${var.vault_name}-manageddisk"
     error_message = "Managed disk policy name not as expected."
   }
 

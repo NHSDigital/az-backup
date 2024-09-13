@@ -12,13 +12,13 @@ run "create_resource_group" {
 
   # Check that the name is as expected
   assert {
-    condition     = azurerm_resource_group.resource_group.name == "rg-nhsbackup-testvault"
+    condition     = azurerm_resource_group.resource_group.name == "rg-nhsbackup-${var.vault_name}"
     error_message = "Resource group name not as expected."
   }
 
   # Check that the location is as expected
   assert {
-    condition     = azurerm_resource_group.resource_group.location == "uksouth"
+    condition     = azurerm_resource_group.resource_group.location == var.vault_location
     error_message = "Resource group location not as expected."
   }
 }

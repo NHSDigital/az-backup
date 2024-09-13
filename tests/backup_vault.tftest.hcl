@@ -13,7 +13,7 @@ run "create_backup_vault" {
 
   # Check that the name is as expected
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.name == "bvault-testvault"
+    condition     = azurerm_data_protection_backup_vault.backup_vault.name == "bvault-${var.vault_name}"
     error_message = "Backup vault name not as expected."
   }
 
@@ -25,7 +25,7 @@ run "create_backup_vault" {
 
   # Check that the location is as expected
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.location == "uksouth"
+    condition     = azurerm_data_protection_backup_vault.backup_vault.location == var.vault_location
     error_message = "Backup vault location not as expected."
   }
 
@@ -37,7 +37,7 @@ run "create_backup_vault" {
 
   # Check that the redundancy is as expected
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.redundancy == "LocallyRedundant"
+    condition     = azurerm_data_protection_backup_vault.backup_vault.redundancy == var.vault_redundancy
     error_message = "Backup vault redundancy not as expected."
   }
 
