@@ -24,7 +24,12 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
         run: terraform init -backend=false
@@ -33,6 +38,15 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
         working-directory: infrastructure
+
+      - name: Terraform Init (Tests)
+        run: terraform init -backend=false
+        working-directory: tests
+
+      - name: Terraform Test
+        run: terraform test
+        working-directory: tests
+        #working-directory: infrastructure
 
   static-code-analysis:
     name: Static Code Analysis
@@ -45,7 +59,7 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.9.3
 
       - name: Run Terraform Format
         run: terraform fmt -check

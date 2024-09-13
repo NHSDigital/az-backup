@@ -64,6 +64,12 @@ The following diagram illustrates the high level architecture
 
 The repository consists of the following directories:
 
+* `./.github`
+  
+  Contains the GitHub workflows in `yaml` format.
+  
+  [See the YAML schema documentation for more details.](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines)
+
 * `./.pipelines`
   
   Contains the Azure Pipelines in `yaml` format.
@@ -166,6 +172,46 @@ Take the following steps to get started in configuring and verify the infrastruc
    Now review the deployed infrastructure in the Azure portal. You will find a backup vault and some sample backup policies.
 
    The repo contains an `example` module which can be utilised to further extend the sample infrastructure with some resources and backup instances. To use this module for dev/test purposes, include the module in `main.tf` and run `terraform apply` again.
+
+### Running the Tests
+
+The test suite consists of a number Terraform HCL tests. 
+
+[See this link for more information.](https://developer.hashicorp.com/terraform/language/tests)
+
+Take the following steps to run the test suite:
+
+1. Login to Azure
+
+   Use the Azure CLI to login to Azure by running the following command:
+
+   ```pwsh
+   az login
+   ```
+
+   > NOTE: You can skip this step if you've already logged in (e.g. by following the steps above in the [Getting Started](#getting-started) guide).
+
+2. Initialise Terraform
+
+   Change the working directory to `./tests`.
+
+   Terraform can now be initialised by running the following command:
+
+   ````pwsh
+   terraform init -backend=false
+   ````
+
+   > NOTE: There's no need to initialise a backend for the purposes of running the tests).
+
+3. Run the Tests
+
+   Run the tests with the following command:
+
+   ````pwsh
+   terraform test
+   ````
+
+   > NOTE: There's no need to initialise a backend for the purposes of running the tests).
 
 ### Contributing
 
