@@ -260,3 +260,32 @@ We use pre-commit to run analysis and checks on the changes being committed. Tak
     * Run `pre-commit run --all-files` to check pre-commit is working
 
 > For full details [see this link](https://pre-commit.com/#installation)
+
+## CI Pipeline
+
+The CI pipeline builds and verifies the solution and runs a number of static code analysis steps on the code base.
+
+### End to End Testing
+
+Part of the build verification is the end to end testing step. This requires the pipeline to login to Azure in order to deploy an environment on which to execute the tests.
+
+In order for the CI pipeline to login to Azure the following GitHub actions secret must be created called `AZURE_CREDENTIALS` set as a JSON object in the following structure:
+
+```json
+{
+    "clientSecret":  "******",
+    "subscriptionId":  "******",
+    "tenantId":  "******",
+    "clientId":  "******"
+}
+```
+
+### Static Code Analysis
+
+The following static code analysis checks are executed:
+
+* [Terraform format](https://developer.hashicorp.com/terraform/cli/commands/fmt)
+* [Terraform lint](https://github.com/terraform-linters/tflint)
+* [Checkov scan](https://www.checkov.io/)
+* [Gitleaks scan](https://github.com/gitleaks/gitleaks)
+* [Trivy vulnerability scan](https://github.com/aquasecurity/trivy)
