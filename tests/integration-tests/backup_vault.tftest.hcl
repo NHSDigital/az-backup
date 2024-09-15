@@ -12,7 +12,7 @@ run "create_backup_vault" {
   command = apply
 
   module {
-    source = "../infrastructure"
+    source = "../../infrastructure"
   }
 
   variables {

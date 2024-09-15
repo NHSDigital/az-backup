@@ -12,7 +12,7 @@ run "create_resource_group" {
   command = apply
 
   module {
-    source = "../infrastructure"
+    source = "../../infrastructure"
   }
 
   variables {

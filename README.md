@@ -10,6 +10,7 @@ The following technologies are used:
 * Azure CLI
 * Azure Pipelines
 * Terraform
+* Go (used for end-to-end testing)
 
 ### Outstanding Questions
 
@@ -99,13 +100,12 @@ The repository consists of the following directories:
 The following are pre-reqs to working with the solution:
 
 * An Azure subscription
-* Azure CLI installed
-* Terraform installed
-* An Azure identity with the following roles:
-  * Contributor role on the subscription (required to create resources)
-  * RBAC Administrator role on the resources being backed up (required to assign roles on the resource to the backup vault managed identity)
+* An Azure identity assigned the subscription Contributor role (required to create resources)
+* [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
+* [Terraform installed](https://developer.hashicorp.com/terraform/install)
+* [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
 
-[See the following link for further information.](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
+> Ensure all installed components have been added to the `%PATH%` - e.g. `az`, `terraform` and `go`.
 
 ### Getting Started
 
@@ -113,7 +113,7 @@ Take the following steps to get started in configuring and verify the infrastruc
 
 1. Login to Azure
 
-   Use the Azure CLI to login to Azure by running the following command:
+   Use Azure CLI to login to Azure by running the following command:
 
    ```pwsh
    az login
@@ -175,6 +175,8 @@ Take the following steps to get started in configuring and verify the infrastruc
 
 ### Running the Tests
 
+#### Terraform HCL Tests
+
 The test suite consists of a number Terraform HCL tests that use a mock azurerm provider.
 
 [See this link for more information.](https://developer.hashicorp.com/terraform/language/tests)
@@ -183,7 +185,7 @@ Take the following steps to run the test suite:
 
 1. Initialise Terraform
 
-   Change the working directory to `./tests`.
+   Change the working directory to `./tests/integration-tests`.
 
    Terraform can now be initialised by running the following command:
 
@@ -199,6 +201,44 @@ Take the following steps to run the test suite:
 
    ````pwsh
    terraform test
+   ````
+
+#### End to End Tests
+
+The end to end tests are written in go, and use the [terratest library](https://terratest.gruntwork.io/).
+
+The tests depend on a connection to Azure so it can create an environment that the tests are executed against. The environment is torn down once the test run has completed.
+
+To run the tests, take the following steps:
+
+1. Install go packages
+
+   You only need to do this once when setting up your environment.
+
+   Change the working directory to `./tests/end-to-end-tests`.
+
+   Run the following command:
+
+   ````pwsh
+   go mod tidy
+   ````
+
+2. Login to Azure
+
+   You only need to do this once when setting up your environment, and may have already completed it as part of the environment setup.
+
+   Use Azure CLI to login to Azure by running the following command:
+
+   ```pwsh
+   az login
+   ```
+
+3. Run the Tests
+
+   Run the tests with the following command:
+
+   ````pwsh
+   go test -v -timeout 10m
    ````
 
 ### Contributing

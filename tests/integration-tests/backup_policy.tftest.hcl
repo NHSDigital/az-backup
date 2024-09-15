@@ -12,7 +12,7 @@ run "create_blob_storage_policy" {
   command = apply
 
   module {
-    source = "../infrastructure"
+    source = "../../infrastructure"
   }
 
   variables {
@@ -48,7 +48,7 @@ run "create_managed_disk_policy" {
   command = apply
 
   module {
-    source = "../infrastructure"
+    source = "../../infrastructure"
   }
 
   variables {
