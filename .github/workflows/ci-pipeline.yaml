@@ -27,7 +27,7 @@ jobs:
           terraform_version: 1.9.3
 
       - name: Terraform Init
-        run: terraform init -backend=false
+        run: terraform init -backend=true -backend-config="resource_group_name=rg-nhsbackup" -backend-config="storage_account_name=satfstate729585701" -backend-config="container_name=tfstate" -backend-config="key=terraform.tfstate"
         working-directory: infrastructure
 
       - name: Terraform Validate
@@ -39,6 +39,16 @@ jobs:
           terraform init -backend=false
           terraform test
         working-directory: tests/integration-tests
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Run End to End Tests
+        uses: cloudposse/github-action-terratest@main
+        with:
+          sourceDir: tests/end-to-end-tests
 
   static-code-analysis:
     name: Static Code Analysis
