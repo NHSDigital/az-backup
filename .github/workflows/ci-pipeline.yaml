@@ -28,7 +28,9 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init -backend=true -backend-config="resource_group_name=$TF_STATE_RESOURCE_GROUP" -backend-config="storage_account_name=$TF_STATE_STORAGE_ACCOUNT" -backend-config="container_name=github-actions" -backend-config="key=$TF_STATE_KEY"
+        run: | 
+          TF_STATE_KEY="${BRANCH_NAME//\//_}.tfstate"
+          terraform init -backend=true -backend-config="resource_group_name=$TF_STATE_RESOURCE_GROUP" -backend-config="storage_account_name=$TF_STATE_STORAGE_ACCOUNT" -backend-config="container_name=github-actions" -backend-config="key=$TF_STATE_KEY"
         working-directory: infrastructure
         env:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -37,7 +39,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TF_STATE_RESOURCE_GROUP: ${{ secrets.TF_STATE_RESOURCE_GROUP }}
           TF_STATE_STORAGE_ACCOUNT: ${{ secrets.TF_STATE_STORAGE_ACCOUNT }}
-          TF_STATE_KEY: "${{ replace(github.head_ref != '' && github.head_ref || github.ref, '/', '_') }}.tfstate"
+          BRANCH_NAME: ${{ github.head_ref != '' && github.head_ref || github.ref }}
 
       - name: Terraform Validate
         run: terraform validate
