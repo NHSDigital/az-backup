@@ -64,6 +64,12 @@ The following diagram illustrates the high level architecture
 
 The repository consists of the following directories:
 
+* `./.github`
+  
+  Contains the GitHub workflows in `yaml` format.
+  
+  [See the YAML schema documentation for more details.](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines)
+
 * `./.pipelines`
   
   Contains the Azure Pipelines in `yaml` format.
@@ -86,6 +92,10 @@ The repository consists of the following directories:
 
   Contains scripts that are used to create and maintain the environment.
 
+* `./tests`
+
+  Contains the different types of tests used to verify the solution.
+
 ## Developer Guide
 
 ### Environment Setup
@@ -93,21 +103,19 @@ The repository consists of the following directories:
 The following are pre-reqs to working with the solution:
 
 * An Azure subscription
-* Azure CLI installed
-* Terraform installed
-* An Azure identity with the following roles:
-  * Contributor role on the subscription (required to create resources)
-  * RBAC Administrator role on the resources being backed up (required to assign roles on the resource to the backup vault managed identity)
+* An Azure identity assigned the subscription Contributor role (required to create resources)
+* [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
+* [Terraform installed](https://developer.hashicorp.com/terraform/install)
 
-[See the following link for further information.](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
+> Ensure all installed components have been added to the `%PATH%` - e.g. `az` and `terraform`.
 
 ### Getting Started
 
-Take the following steps to get started in configuring and verify the infrastructure:
+Take the following steps to get started in configuring and verifying the infrastructure for your development environment:
 
 1. Login to Azure
 
-   Use the Azure CLI to login to Azure by running the following command:
+   Use Azure CLI to login to Azure by running the following command:
 
    ```pwsh
    az login
@@ -167,6 +175,36 @@ Take the following steps to get started in configuring and verify the infrastruc
 
    The repo contains an `example` module which can be utilised to further extend the sample infrastructure with some resources and backup instances. To use this module for dev/test purposes, include the module in `main.tf` and run `terraform apply` again.
 
+### Running the Tests
+
+#### Integration Tests
+
+The test suite consists of a number Terraform HCL integration tests that use a mock azurerm provider.
+
+[See this link for more information.](https://developer.hashicorp.com/terraform/language/tests)
+
+Take the following steps to run the test suite:
+
+1. Initialise Terraform
+
+   Change the working directory to `./tests/integration-tests`.
+
+   Terraform can now be initialised by running the following command:
+
+   ````pwsh
+   terraform init -backend=false
+   ````
+
+   > NOTE: There's no need to initialise a backend for the purposes of running the tests.
+
+2. Run the Tests
+
+   Run the tests with the following command:
+
+   ````pwsh
+   terraform test
+   ````
+
 ### Contributing
 
 If you want to contribute to the project, raise a PR on GitHub.
@@ -185,4 +223,33 @@ We use pre-commit to run analysis and checks on the changes being committed. Tak
     * Install pre-commit within the repository with the following command: `pre-commit install`
     * Run `pre-commit run --all-files` to check pre-commit is working
 
-    > For full details [see this link](https://pre-commit.com/#installation)
+> For full details [see this link](https://pre-commit.com/#installation)
+
+## CI Pipeline
+
+The CI pipeline builds and verifies the solution and runs a number of static code analysis steps on the code base.
+
+### End to End Testing
+
+Part of the build verification is the end to end testing step. This requires the pipeline to login to Azure in order to deploy an environment on which to execute the tests.
+
+In order for the CI pipeline to login to Azure the following GitHub actions secret must be created called `AZURE_CREDENTIALS` set as a JSON object in the following structure:
+
+```json
+{
+    "clientSecret":  "******",
+    "subscriptionId":  "******",
+    "tenantId":  "******",
+    "clientId":  "******"
+}
+```
+
+### Static Code Analysis
+
+The following static code analysis checks are executed:
+
+* [Terraform format](https://developer.hashicorp.com/terraform/cli/commands/fmt)
+* [Terraform lint](https://github.com/terraform-linters/tflint)
+* [Checkov scan](https://www.checkov.io/)
+* [Gitleaks scan](https://github.com/gitleaks/gitleaks)
+* [Trivy vulnerability scan](https://github.com/aquasecurity/trivy)
