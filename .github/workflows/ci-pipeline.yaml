@@ -25,6 +25,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.9.3
+          terraform_wrapper: false
 
       - name: Terraform Init
         run: terraform init -backend=true -backend-config="resource_group_name=rg-nhsbackup" -backend-config="storage_account_name=satfstate729585701" -backend-config="container_name=tfstate" -backend-config="key=terraform.tfstate"
