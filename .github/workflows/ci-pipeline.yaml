@@ -28,7 +28,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init -backend=true -backend-config="resource_group_name=${{ secrets.TF_STATE_RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT }}" -backend-config="container_name=tfstate-${{ github.event.number }}" -backend-config="key=terraform.tfstate"
+        run: terraform init -backend=true -backend-config="resource_group_name=${{ secrets.TF_STATE_RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT }}" -backend-config="container_name=tfstate-pr${{ github.event.number }}" -backend-config="key=terraform.tfstate"
         working-directory: infrastructure
         env:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
