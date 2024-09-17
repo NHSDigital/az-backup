@@ -265,16 +265,35 @@ The CI pipeline builds and verifies the solution and runs a number of static cod
 
 Part of the build verification is the end to end testing step. This requires the pipeline to login to Azure in order to deploy an environment on which to execute the tests.
 
-In order for the CI pipeline to login to Azure the following GitHub actions secret must be created called `AZURE_CREDENTIALS` set as a JSON object in the following structure:
+A storage account must be provisioned with a container called `github-actions`, which is used by the CI pipeline to persist the terraform state.
 
-```json
-{
-    "clientSecret":  "******",
-    "subscriptionId":  "******",
-    "tenantId":  "******",
-    "clientId":  "******"
-}
-```
+In order for the CI pipeline to login to Azure and use the terraform state storage account, the following GitHub actions secrets must be created:
+
+* `AZURE_TENANT_ID`
+
+  The ID of an Azure tenant which can be used for the end to end test environment.
+
+* `AZURE_SUBSCRIPTION_ID`
+
+  The ID of an Azure subscription which can be used for the end to end test environment.
+
+* `AZURE_CLIENT_ID`
+
+  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment. 
+  
+  The app registration must have contributor permissions on the subscription in order to create resources.
+
+* `AZURE_CLIENT_SECRET`
+
+  The client secret of an Azure app registration which can be used to authenticate with the end to end test environment.
+
+* `TF_STATE_RESOURCE_GROUP`
+
+  The resource group which contains the TF state storage account.
+
+* `TF_STATE_STORAGE_ACCOUNT`
+
+  The storage account used for TF state.
 
 ### Static Code Analysis
 
