@@ -25,10 +25,22 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.9.3
+          terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init -backend=false
+        run: | 
+          BRANCH_NAME="${{ github.head_ref != '' && github.head_ref || github.ref }}"
+          TF_STATE_KEY="${BRANCH_NAME//\//_}.tfstate"
+          
+          terraform init -backend=true -backend-config="resource_group_name=$TF_STATE_RESOURCE_GROUP" -backend-config="storage_account_name=$TF_STATE_STORAGE_ACCOUNT" -backend-config="container_name=github-actions" -backend-config="key=$TF_STATE_KEY"
         working-directory: infrastructure
+        env:
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_STATE_RESOURCE_GROUP: ${{ secrets.TF_STATE_RESOURCE_GROUP }}
+          TF_STATE_STORAGE_ACCOUNT: ${{ secrets.TF_STATE_STORAGE_ACCOUNT }}
 
       - name: Terraform Validate
         run: terraform validate
@@ -39,6 +51,22 @@ jobs:
           terraform init -backend=false
           terraform test
         working-directory: tests/integration-tests
+        
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.21
+
+      - name: Run End to End Tests
+        run: |
+          go mod tidy
+          go test -v -timeout 10m
+        working-directory: tests/end-to-end-tests
+        env:
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   static-code-analysis:
     name: Static Code Analysis
