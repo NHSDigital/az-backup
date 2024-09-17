@@ -31,6 +31,7 @@ jobs:
         run: | 
           BRANCH_NAME="${{ github.head_ref != '' && github.head_ref || github.ref }}"
           TF_STATE_KEY="${BRANCH_NAME//\//_}.tfstate"
+
           terraform init -backend=true -backend-config="resource_group_name=$TF_STATE_RESOURCE_GROUP" -backend-config="storage_account_name=$TF_STATE_STORAGE_ACCOUNT" -backend-config="container_name=github-actions" -backend-config="key=$TF_STATE_KEY"
         working-directory: infrastructure
         env:
@@ -61,11 +62,6 @@ jobs:
           go mod tidy
           go test -v -timeout 10m
         working-directory: tests/end-to-end-tests
-        env:
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   static-code-analysis:
     name: Static Code Analysis
