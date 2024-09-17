@@ -104,7 +104,7 @@ The repository consists of the following directories:
 The following are pre-reqs to working with the solution:
 
 * An Azure subscription
-* An Azure identity assigned the subscription Contributor role (required to create resources)
+* An Azure identity which has been assigned the subscription Contributor role (required to create resources)
 * [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
 * [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
@@ -115,35 +115,26 @@ The following are pre-reqs to working with the solution:
 
 Take the following steps to get started in configuring and verifying the infrastructure for your development environment:
 
-1. Login to Azure
+1. Setup environment variables
 
-   Use Azure CLI to login to Azure by running the following command:
+   Set the following environment variables in order to connect to Azure in the following steps:
 
    ```pwsh
-   az login
+   $env:ARM_TENANT_ID="your-tenant-id"
+   $env:ARM_SUBSCRIPTION_ID="your-subscription-id"
+   $env:ARM_CLIENT_ID="your-client-id"
+   $env:ARM_CLIENT_SECRET="your-client-secret"
    ```
 
 2. Create Backend
 
    A backend (e.g. storage account) is required in order to store the tfstate and work with Terraform.
 
-   Run the following powershell script to create the backend with default settings: `./scripts/create-tf-backend.ps1`.
+   Run the following powershell script to create the backend with default settings: `./scripts/create-tf-backend.ps1`. This script will create a resource group called `rg-nhsbackup` containing a storage account called `satfstate<random-id>`.
 
-   Make a note of the name of the storage account - it's generated with a random suffix, and you'll need it in the following steps.
+   Make a note of the name of the storage account in the script output - it's generated with a random suffix, and you'll need it in the following steps to initialise the terraform.
 
-3. Create Access Key
-
-   An access key must be created as an environment variable so Terraform can authenticate with Azure.
-
-   Run the following commands to generate an access key and store it as an environment variable:
-
-   ```pwsh
-   $ACCOUNT_KEY=$(az storage account keys list --resource-group "rg-nhsbackup" --account-name "<storage-account-name>" --query '[0].value' -o tsv)
-
-   $env:ARM_ACCESS_KEY=$ACCOUNT_KEY
-   ```
-
-4. Prepare Terraform Variables (Optional)
+3. Prepare Terraform Variables (Optional)
 
    If you want to override the Terraform variables, make a copy of `tfvars.template` and amend any default settings as required.
 
@@ -153,7 +144,7 @@ Take the following steps to get started in configuring and verifying the infrast
    -var-file="<your-var-file>.tfvars
    ```
 
-5. Initialise Terraform
+4. Initialise Terraform
 
    Change the working directory to `./infrastructure`.
 
@@ -163,7 +154,7 @@ Take the following steps to get started in configuring and verifying the infrast
    terraform init -backend=true -backend-config="resource_group_name=rg-nhsbackup" -backend-config="storage_account_name=<storage-account-name>" -backend-config="container_name=tfstate" -backend-config="key=terraform.tfstate"
    ````
 
-6. Apply Terraform
+5. Apply Terraform
 
    Apply the Terraform code to create the infrastructure.
 
@@ -199,7 +190,7 @@ Take the following steps to run the test suite:
 
    > NOTE: There's no need to initialise a backend for the purposes of running the tests.
 
-2. Run the Tests
+2. Run the tests
 
    Run the tests with the following command:
 
@@ -209,11 +200,17 @@ Take the following steps to run the test suite:
 
 #### End to End Tests
 
-The end to end tests are written in go, and use the [terratest library](https://terratest.gruntwork.io/).
+The end to end tests are written in go, and use the [terratest library](https://terratest.gruntwork.io/) and the [Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go/tree/main).
 
 The tests depend on a connection to Azure so it can create an environment that the tests can be executed against - the environment is torn down once the test run has completed.
 
-For the tests to run, you must complete the steps in the [getting started guide](#getting-started) to setup and initialise a terraform backend in Azure.
+See the following resources for docs and examples of terratest and the Azure SDK:
+
+[Terratest docs](https://terratest.gruntwork.io/docs/)
+[Terratest repository](https://github.com/gruntwork-io/terratest)
+[Terratest test examples](https://github.com/gruntwork-io/terratest/tree/master/test)
+[Azure SDK](https://github.com/Azure/azure-sdk-for-go/tree/main)
+[Azure SDK Data Protection Module](https://github.com/Azure/azure-sdk-for-go/tree/main/sdk/resourcemanager/dataprotection/armdataprotection)
 
 To run the tests, take the following steps:
 
@@ -229,7 +226,20 @@ To run the tests, take the following steps:
    go mod tidy
    ````
 
-2. Run the Tests
+2. Setup environment variables
+
+   The end-to-end test suite needs to login to Azure in order to execute the tests and therefore the following environment variables must be set.
+
+   ```pwsh
+   $env:ARM_TENANT_ID="your-tenant-id"
+   $env:ARM_SUBSCRIPTION_ID="your-subscription-id"
+   $env:ARM_CLIENT_ID="your-client-id"
+   $env:ARM_CLIENT_SECRET="your-client-secret"
+   ```
+
+   You may have completed this step whilst following the [getting started guide](#getting-started).
+
+3. Run the tests
 
    Run the tests with the following command:
 
