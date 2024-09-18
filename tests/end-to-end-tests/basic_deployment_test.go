@@ -11,8 +11,6 @@ import (
 )
 
 func TestBasicDeployment(t *testing.T) {
-	t.Parallel()
-
 	terraformFolder := "../../infrastructure"
 
 	vaultName := random.UniqueId()
