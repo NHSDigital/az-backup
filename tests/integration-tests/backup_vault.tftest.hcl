@@ -21,43 +21,36 @@ run "create_backup_vault" {
     vault_redundancy = "LocallyRedundant"
   }
 
-  # Check that the name is as expected
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.name == "bvault-${var.vault_name}"
     error_message = "Backup vault name not as expected."
   }
 
-  # Check that the resource group is as expected
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.resource_group_name == azurerm_resource_group.resource_group.name
     error_message = "Resource group not as expected."
   }
 
-  # Check that the location is as expected
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.location == var.vault_location
     error_message = "Backup vault location not as expected."
   }
 
-  # Check that the datastore type is as expected
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.datastore_type == "VaultStore"
     error_message = "Backup vault datastore type not as expected."
   }
 
-  # Check that the redundancy is as expected
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.redundancy == var.vault_redundancy
     error_message = "Backup vault redundancy not as expected."
   }
 
-  # Check that soft delete is as expected
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.soft_delete == "Off"
     error_message = "Backup vault soft delete not as expected."
   }
 
-  # Check that identity is as expected
   assert {
     condition     = length(azurerm_data_protection_backup_vault.backup_vault.identity[0].principal_id) > 0
     error_message = "Backup vault identity not as expected."
