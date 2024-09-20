@@ -24,6 +24,7 @@ func TestFullDeployment(t *testing.T) {
 	terraformFolder := "../../infrastructure"
 	terraformStateResourceGroup := os.Getenv("TF_STATE_RESOURCE_GROUP")
 	terraformStateStorageAccount := os.Getenv("TF_STATE_STORAGE_ACCOUNT")
+	terraformStateContainer := os.Getenv("TF_STATE_STORAGE_CONTAINER")
 
 	vaultName := random.UniqueId()
 	vaultLocation := "uksouth"
@@ -46,7 +47,7 @@ func TestFullDeployment(t *testing.T) {
 			BackendConfig: map[string]interface{}{
 				"resource_group_name":  terraformStateResourceGroup,
 				"storage_account_name": terraformStateStorageAccount,
-				"container_name":       "tfstate",
+				"container_name":       terraformStateContainer,
 				"key":                  vaultName + ".tfstate",
 			},
 		}
