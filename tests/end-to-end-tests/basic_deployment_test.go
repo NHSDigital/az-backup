@@ -10,6 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+/*
+ * TestBasicDeployment tests a basic deployment of the infrastructure using Terraform using the TF output variables.
+ */
 func TestBasicDeployment(t *testing.T) {
 	terraformFolder := "../../infrastructure"
 
@@ -18,6 +21,8 @@ func TestBasicDeployment(t *testing.T) {
 	vaultRedundancy := "LocallyRedundant"
 
 	// Setup stage
+	// ...
+
 	test_structure.RunTestStage(t, "setup", func() {
 		terraformOptions := &terraform.Options{
 			TerraformDir: terraformFolder,
@@ -37,6 +42,8 @@ func TestBasicDeployment(t *testing.T) {
 	})
 
 	// Validate stage
+	// ...
+
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
 
@@ -55,6 +62,8 @@ func TestBasicDeployment(t *testing.T) {
 	})
 
 	// Teardown stage
+	// ...
+
 	test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
 

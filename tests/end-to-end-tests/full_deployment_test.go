@@ -15,6 +15,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+/*
+ * TestFullDeployment tests the full deployment of the infrastructure using Terraform.
+ */
 func TestFullDeployment(t *testing.T) {
 	terraformFolder := "../../infrastructure"
 
@@ -23,6 +26,8 @@ func TestFullDeployment(t *testing.T) {
 	vaultRedundancy := "LocallyRedundant"
 
 	// Setup stage
+	// ...
+
 	test_structure.RunTestStage(t, "setup", func() {
 		terraformOptions := &terraform.Options{
 			TerraformDir: terraformFolder,
@@ -42,6 +47,8 @@ func TestFullDeployment(t *testing.T) {
 	})
 
 	// Validate stage
+	// ...
+
 	test_structure.RunTestStage(t, "validate", func() {
 		resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
 		fullVaultName := fmt.Sprintf("bvault-%s", vaultName)
@@ -66,6 +73,8 @@ func TestFullDeployment(t *testing.T) {
 	})
 
 	// Teardown stage
+	// ...
+
 	test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
 
@@ -73,6 +82,9 @@ func TestFullDeployment(t *testing.T) {
 	})
 }
 
+/*
+ * Validates the resource group has been deployed correctly
+ */
 func ValidateResourceGroup(t *testing.T, subscriptionID string,
 	cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultLocation string) {
 	// Create a new resource groups client
@@ -90,6 +102,9 @@ func ValidateResourceGroup(t *testing.T, subscriptionID string,
 	assert.Equal(t, vaultLocation, *resp.ResourceGroup.Location, "Resource group location does not match")
 }
 
+/*
+ * Validates the backup vault has been deployed correctly
+ */
 func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultName string, vaultLocation string) {
 	// Create a new Data Protection Backup Vaults client
 	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, cred, nil)
@@ -109,6 +124,9 @@ func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.C
 	assert.Equal(t, armdataprotection.StorageSettingStoreTypesVaultStore, *resp.BackupVaultResource.Properties.StorageSettings[0].DatastoreType, "Backup vault datastore type does not match")
 }
 
+/*
+ * Validates the backup policies have been deployed correctly
+ */
 func ValidateBackupPolicies(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, fullVaultName string, vaultName string) {
 	ctx := context.Background()
 
@@ -139,6 +157,9 @@ func ValidateBackupPolicies(t *testing.T, subscriptionID string, cred *azidentit
 	}
 }
 
+/*
+ * Validates the blob storage backup policy
+ */
 func ValidateBlobStoragePolicy(t *testing.T, policies []*armdataprotection.BaseBackupPolicyResource, vaultName string) {
 	blobStoragePolicyName := fmt.Sprintf("bkpol-%s-blobstorage", vaultName)
 	blobStoragePolicy := GetBackupPolicyForName(policies, blobStoragePolicyName)
@@ -160,7 +181,9 @@ func ValidateBlobStoragePolicy(t *testing.T, policies []*armdataprotection.BaseB
 	assert.Equal(t, "P7D", *deleteOption.Duration, "Expected the blob storage retention period to be P7D")
 }
 
-// Validates the managed disk backup policy
+/*
+ * Validates the managed disk backup policy
+ */
 func ValidateManagedDiskPolicy(t *testing.T, policies []*armdataprotection.BaseBackupPolicyResource, vaultName string) {
 	managedDiskPolicyName := fmt.Sprintf("bkpol-%s-manageddisk", vaultName)
 	managedDiskPolicy := GetBackupPolicyForName(policies, managedDiskPolicyName)
@@ -195,7 +218,9 @@ func ValidateManagedDiskPolicy(t *testing.T, policies []*armdataprotection.BaseB
 	assert.Equal(t, "P7D", *deleteOption.Duration, "Expected the managed disk retention period to be P7D")
 }
 
-// Gets a backup policy from the provided list for the provided name
+/*
+ * Gets a backup policy from the provided list for the provided name
+ */
 func GetBackupPolicyForName(policies []*armdataprotection.BaseBackupPolicyResource, name string) *armdataprotection.BaseBackupPolicyResource {
 	for _, policy := range policies {
 		if *policy.Name == name {
@@ -206,7 +231,9 @@ func GetBackupPolicyForName(policies []*armdataprotection.BaseBackupPolicyResour
 	return nil
 }
 
-// Gets a backup policy rules from the provided list for the provided name
+/*
+ * Gets a backup policy rules from the provided list for the provided name
+ */
 func GetBackupPolicyRuleForName(policyRules []armdataprotection.BasePolicyRuleClassification, name string) armdataprotection.BasePolicyRuleClassification {
 	for _, policyRule := range policyRules {
 		if *policyRule.GetBasePolicyRule().Name == name {
