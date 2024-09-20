@@ -17,7 +17,7 @@ import (
 func TestBasicDeployment(t *testing.T) {
 	t.Parallel()
 
-	terraformFolder := "../../infrastructure"
+	terraformFolder := test_structure.CopyTerraformFolderToTemp(t, "../../infrastructure", "")
 	terraformStateResourceGroup := os.Getenv("TF_STATE_RESOURCE_GROUP")
 	terraformStateStorageAccount := os.Getenv("TF_STATE_STORAGE_ACCOUNT")
 	terraformStateContainer := os.Getenv("TF_STATE_STORAGE_CONTAINER")
