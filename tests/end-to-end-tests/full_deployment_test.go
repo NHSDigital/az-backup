@@ -52,7 +52,6 @@ func TestFullDeployment(t *testing.T) {
 		clientID := os.Getenv("ARM_CLIENT_ID")
 		clientSecret := os.Getenv("ARM_CLIENT_SECRET")
 
-		// Validate that the required environment variables are set
 		if tenantID == "" || subscriptionID == "" || clientID == "" || clientSecret == "" {
 			t.Fatalf("One or more required environment variables (ARM_TENANT_ID, ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_CLIENT_SECRET) are not set.")
 		}
@@ -61,13 +60,8 @@ func TestFullDeployment(t *testing.T) {
 		cred, err := azidentity.NewClientSecretCredential(tenantID, clientID, clientSecret, nil)
 		assert.NoError(t, err, "Failed to obtain a credential: %v", err)
 
-		// Check the resource group was created
-		ValidateResourceGroup(t, subscriptionID, cred, resourceGroupName)
-
-		// Check the backup vault was created
-		ValidateBackupVault(t, subscriptionID, cred, resourceGroupName, fullVaultName)
-
-		// Check the expected policies were created
+		ValidateResourceGroup(t, subscriptionID, cred, resourceGroupName, vaultLocation)
+		ValidateBackupVault(t, subscriptionID, cred, resourceGroupName, fullVaultName, vaultLocation)
 		ValidateBackupPolicies(t, subscriptionID, cred, resourceGroupName, fullVaultName, vaultName)
 	})
 
@@ -79,7 +73,8 @@ func TestFullDeployment(t *testing.T) {
 	})
 }
 
-func ValidateResourceGroup(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string) {
+func ValidateResourceGroup(t *testing.T, subscriptionID string,
+	cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultLocation string) {
 	// Create a new resource groups client
 	client, err := armresources.NewResourceGroupsClient(subscriptionID, cred, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
@@ -90,10 +85,12 @@ func ValidateResourceGroup(t *testing.T, subscriptionID string, cred *azidentity
 	assert.NoError(t, err, "Failed to get resource group: %v", err)
 
 	// Validate the resource group
-	assert.NotNil(t, resp.ResourceGroup)
+	assert.NotNil(t, resp.ResourceGroup, "Resource group does not exist")
+	assert.Equal(t, resourceGroupName, *resp.ResourceGroup.Name, "Resource group name does not match")
+	assert.Equal(t, vaultLocation, *resp.ResourceGroup.Location, "Resource group location does not match")
 }
 
-func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultName string) {
+func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultName string, vaultLocation string) {
 	// Create a new Data Protection Backup Vaults client
 	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, cred, nil)
 	assert.NoError(t, err, "Failed to create data protection client: %v", err)
@@ -102,9 +99,14 @@ func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.C
 	resp, err := client.Get(context.Background(), resourceGroupName, vaultName, nil)
 	assert.NoError(t, err, "Failed to get backup vault: %v", err)
 
-	// Validate the backup vault exists
+	// Validate the backup vault
 	assert.NotNil(t, resp.BackupVaultResource, "Backup vault does not exist")
-	assert.Equal(t, *resp.BackupVaultResource.Name, vaultName, "Backup vault name does not match")
+	assert.Equal(t, vaultName, *resp.BackupVaultResource.Name, "Backup vault name does not match")
+	assert.Equal(t, vaultLocation, *resp.BackupVaultResource.Location, "Backup vault location does not match")
+	assert.NotNil(t, resp.BackupVaultResource.Identity.PrincipalID, "Backup vault identity does not exist")
+	assert.Equal(t, "SystemAssigned", *resp.BackupVaultResource.Identity.Type, "Backup vault identity type does not match")
+	assert.Equal(t, armdataprotection.StorageSettingTypesLocallyRedundant, *resp.BackupVaultResource.Properties.StorageSettings[0].Type, "Backup vault redundancy does not match")
+	assert.Equal(t, armdataprotection.StorageSettingStoreTypesVaultStore, *resp.BackupVaultResource.Properties.StorageSettings[0].DatastoreType, "Backup vault datastore type does not match")
 }
 
 func ValidateBackupPolicies(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, fullVaultName string, vaultName string) {
@@ -132,12 +134,85 @@ func ValidateBackupPolicies(t *testing.T, subscriptionID string, cred *azidentit
 	} else {
 		assert.Equal(t, len(policies), 2, "Expected to find two backup policies in vault %s", fullVaultName)
 
-		managedDiskPolicyName := fmt.Sprintf("bkpol-%s-manageddisk", vaultName)
-		managedDiskPolicyExists := BackupPolicyExists(policies, managedDiskPolicyName)
-		assert.True(t, managedDiskPolicyExists, "Expected to find a managed disk backup policy called %s in vault %s", managedDiskPolicyName, fullVaultName)
-
-		blobStoragePolicyName := fmt.Sprintf("bkpol-%s-blobstorage", vaultName)
-		blobStoragePolicyExists := BackupPolicyExists(policies, blobStoragePolicyName)
-		assert.True(t, blobStoragePolicyExists, "Expected to find a blob storage backup policy called %s in vault %s", blobStoragePolicyName, fullVaultName)
+		ValidateManagedDiskPolicy(t, policies, vaultName)
+		ValidateBlobStoragePolicy(t, policies, vaultName)
 	}
+}
+
+func ValidateBlobStoragePolicy(t *testing.T, policies []*armdataprotection.BaseBackupPolicyResource, vaultName string) {
+	blobStoragePolicyName := fmt.Sprintf("bkpol-%s-blobstorage", vaultName)
+	blobStoragePolicy := GetBackupPolicyForName(policies, blobStoragePolicyName)
+	assert.NotNil(t, blobStoragePolicy, "Expected to find a blob storage backup policy called %s", blobStoragePolicyName)
+
+	blobStoragePolicyProperties, ok := blobStoragePolicy.Properties.(*armdataprotection.BackupPolicy)
+	assert.True(t, ok, "Failed to cast blob storage policy properties to BackupPolicy")
+
+	// Validate the retention policy
+	retentionPeriodPolicyRule := GetBackupPolicyRuleForName(blobStoragePolicyProperties.PolicyRules, "Default")
+	assert.NotNil(t, retentionPeriodPolicyRule, "Expected to find a policy rule called Default in the blob storage backup policies")
+
+	azureRetentionRule, ok := retentionPeriodPolicyRule.(*armdataprotection.AzureRetentionRule)
+	assert.True(t, ok, "Failed to cast retention period policy rule to AzureRetentionRule")
+
+	deleteOption, ok := azureRetentionRule.Lifecycles[0].DeleteAfter.(*armdataprotection.AbsoluteDeleteOption)
+	assert.True(t, ok, "Failed to cast delete option to AbsoluteDeleteOption")
+
+	assert.Equal(t, "P7D", *deleteOption.Duration, "Expected the blob storage retention period to be P7D")
+}
+
+// Validates the managed disk backup policy
+func ValidateManagedDiskPolicy(t *testing.T, policies []*armdataprotection.BaseBackupPolicyResource, vaultName string) {
+	managedDiskPolicyName := fmt.Sprintf("bkpol-%s-manageddisk", vaultName)
+	managedDiskPolicy := GetBackupPolicyForName(policies, managedDiskPolicyName)
+	assert.NotNil(t, managedDiskPolicy, "Expected to find a managed disk backup policy called %s", managedDiskPolicyName)
+
+	managedDiskPolicyProperties, ok := managedDiskPolicy.Properties.(*armdataprotection.BackupPolicy)
+	assert.True(t, ok, "Failed to cast managed disk policy properties to BackupPolicy")
+
+	// Validate the repeating time intervals
+	backupIntervalsPolicyRule := GetBackupPolicyRuleForName(managedDiskPolicyProperties.PolicyRules, "BackupIntervals")
+	assert.NotNil(t, backupIntervalsPolicyRule, "Expected to find a policy rule called BackupIntervals in the managed disk backup policies")
+
+	azureBackupRule, ok := backupIntervalsPolicyRule.(*armdataprotection.AzureBackupRule)
+	assert.True(t, ok, "Failed to cast backup intervals policy rule to AzureBackupRule")
+
+	trigger, ok := azureBackupRule.Trigger.(*armdataprotection.ScheduleBasedTriggerContext)
+	assert.True(t, ok, "Failed to cast azure backup rule trigger to ScheduleBasedTriggerContext")
+
+	assert.Equal(t, "R/2024-01-01T00:00:00+00:00/P1D", *trigger.Schedule.RepeatingTimeIntervals[0],
+		"Expected the managed disk backup policy repeating time intervals to be R/2024-01-01T00:00:00+00:00/P1D")
+
+	// Validate the retention policy
+	retentionPeriodPolicyRule := GetBackupPolicyRuleForName(managedDiskPolicyProperties.PolicyRules, "Default")
+	assert.NotNil(t, retentionPeriodPolicyRule, "Expected to find a policy rule called Default in the managed disk backup policies")
+
+	azureRetentionRule, ok := retentionPeriodPolicyRule.(*armdataprotection.AzureRetentionRule)
+	assert.True(t, ok, "Failed to cast retention period policy rule to AzureRetentionRule")
+
+	deleteOption, ok := azureRetentionRule.Lifecycles[0].DeleteAfter.(*armdataprotection.AbsoluteDeleteOption)
+	assert.True(t, ok, "Failed to cast delete option to AbsoluteDeleteOption")
+
+	assert.Equal(t, "P7D", *deleteOption.Duration, "Expected the managed disk retention period to be P7D")
+}
+
+// Gets a backup policy from the provided list for the provided name
+func GetBackupPolicyForName(policies []*armdataprotection.BaseBackupPolicyResource, name string) *armdataprotection.BaseBackupPolicyResource {
+	for _, policy := range policies {
+		if *policy.Name == name {
+			return policy
+		}
+	}
+
+	return nil
+}
+
+// Gets a backup policy rules from the provided list for the provided name
+func GetBackupPolicyRuleForName(policyRules []armdataprotection.BasePolicyRuleClassification, name string) armdataprotection.BasePolicyRuleClassification {
+	for _, policyRule := range policyRules {
+		if *policyRule.GetBasePolicyRule().Name == name {
+			return policyRule
+		}
+	}
+
+	return nil
 }

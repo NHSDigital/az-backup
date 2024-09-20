@@ -247,6 +247,30 @@ To run the tests, take the following steps:
    go test -v -timeout 10m
    ````
 
+##### Debugging
+
+To debug the tests in vscode, add the following configuration to launch settings and run the configuration with the test file you want to debug open:
+
+```json
+{
+    "configurations": [
+        {
+            "name": "Go Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${file}",
+            "env": {
+                "ARM_TENANT_ID": "your-tenant-id",
+                "ARM_SUBSCRIPTION_ID": "your-subscription-id",
+                "ARM_CLIENT_ID": "your-client-id",
+                "ARM_CLIENT_SECRET": "your-client-secret"
+            }
+        }       
+    ]
+}
+```
+
 ### Contributing
 
 If you want to contribute to the project, raise a PR on GitHub.
@@ -289,7 +313,7 @@ In order for the CI pipeline to login to Azure and use the terraform state stora
 
 * `AZURE_CLIENT_ID`
 
-  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment. 
+  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment.
   
   The app registration must have contributor permissions on the subscription in order to create resources.
 
