@@ -22,6 +22,10 @@ func TestBasicDeployment(t *testing.T) {
 	terraformStateStorageAccount := os.Getenv("TF_STATE_STORAGE_ACCOUNT")
 	terraformStateContainer := os.Getenv("TF_STATE_STORAGE_CONTAINER")
 
+	if terraformStateResourceGroup == "" || terraformStateStorageAccount == "" || terraformStateContainer == "" {
+		t.Fatalf("One or more required environment variables (TF_STATE_RESOURCE_GROUP, TF_STATE_STORAGE_ACCOUNT, TF_STATE_STORAGE_CONTAINER) are not set.")
+	}
+
 	vaultName := random.UniqueId()
 	vaultLocation := "uksouth"
 	vaultRedundancy := "LocallyRedundant"
