@@ -19,7 +19,12 @@ import (
  * TestFullDeployment tests the full deployment of the infrastructure using Terraform.
  */
 func TestFullDeployment(t *testing.T) {
-	terraformFolder := "../../infrastructure"
+	t.Parallel()
+
+	terraformFolder := test_structure.CopyTerraformFolderToTemp(t, "../../infrastructure", "")
+	terraformStateResourceGroup := os.Getenv("TF_STATE_RESOURCE_GROUP")
+	terraformStateStorageAccount := os.Getenv("TF_STATE_STORAGE_ACCOUNT")
+	terraformStateContainer := os.Getenv("TF_STATE_STORAGE_CONTAINER")
 
 	vaultName := random.UniqueId()
 	vaultLocation := "uksouth"
@@ -37,6 +42,13 @@ func TestFullDeployment(t *testing.T) {
 				"vault_name":       vaultName,
 				"vault_location":   vaultLocation,
 				"vault_redundancy": vaultRedundancy,
+			},
+
+			BackendConfig: map[string]interface{}{
+				"resource_group_name":  terraformStateResourceGroup,
+				"storage_account_name": terraformStateStorageAccount,
+				"container_name":       terraformStateContainer,
+				"key":                  vaultName + ".tfstate",
 			},
 		}
 
