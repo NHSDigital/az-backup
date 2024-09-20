@@ -120,10 +120,10 @@ Take the following steps to get started in configuring and verifying the infrast
    Set the following environment variables in order to connect to Azure in the following steps:
 
    ```pwsh
-   $env:ARM_TENANT_ID="your-tenant-id"
-   $env:ARM_SUBSCRIPTION_ID="your-subscription-id"
-   $env:ARM_CLIENT_ID="your-client-id"
-   $env:ARM_CLIENT_SECRET="your-client-secret"
+   $env:ARM_TENANT_ID="<your-tenant-id>"
+   $env:ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+   $env:ARM_CLIENT_ID="<your-client-id>"
+   $env:ARM_CLIENT_SECRET="<your-client-secret>"
    ```
 
 2. Create Backend
@@ -231,13 +231,16 @@ To run the tests, take the following steps:
    The end-to-end test suite needs to login to Azure in order to execute the tests and therefore the following environment variables must be set.
 
    ```pwsh
-   $env:ARM_TENANT_ID="your-tenant-id"
-   $env:ARM_SUBSCRIPTION_ID="your-subscription-id"
-   $env:ARM_CLIENT_ID="your-client-id"
-   $env:ARM_CLIENT_SECRET="your-client-secret"
+   $env:ARM_TENANT_ID="<your-tenant-id>"
+   $env:ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+   $env:ARM_CLIENT_ID="<your-client-id>"
+   $env:ARM_CLIENT_SECRET="<your-client-secret>"
+   $env:TF_STATE_RESOURCE_GROUP="rg-nhsbackup"
+   $env:TF_STATE_STORAGE_ACCOUNT="<storage-account-name>"
+   $env:TF_STATE_STORAGE_CONTAINER="terraform"
    ```
 
-   You may have completed this step whilst following the [getting started guide](#getting-started).
+   > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
 
 3. Run the tests
 
@@ -261,15 +264,20 @@ To debug the tests in vscode, add the following configuration to launch settings
             "mode": "test",
             "program": "${file}",
             "env": {
-                "ARM_TENANT_ID": "your-tenant-id",
-                "ARM_SUBSCRIPTION_ID": "your-subscription-id",
-                "ARM_CLIENT_ID": "your-client-id",
-                "ARM_CLIENT_SECRET": "your-client-secret"
+                "ARM_TENANT_ID": "<your-tenant-id>",
+                "ARM_SUBSCRIPTION_ID": "<your-subscription-id>",
+                "ARM_CLIENT_ID": "<your-client-id>",
+                "ARM_CLIENT_SECRET": "<your-client-secret>",
+                "TF_STATE_RESOURCE_GROUP": "rg-nhsbackup",
+                "TF_STATE_STORAGE_ACCOUNT": "<storage-account-name>",
+                "TF_STATE_STORAGE_CONTAINER": "terraform"
             }
         }       
     ]
 }
 ```
+
+> For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
 
 ### Contributing
 
@@ -328,6 +336,10 @@ In order for the CI pipeline to login to Azure and use the terraform state stora
 * `TF_STATE_STORAGE_ACCOUNT`
 
   The storage account used for TF state.
+
+* `TF_STATE_STORAGE_COMTAINER`
+
+  The storage container used for TF state.
 
 ### Static Code Analysis
 
