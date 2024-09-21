@@ -19,12 +19,7 @@ The following technologies are used:
 
 ## Design
 
-The repository consists of:
-
-* Terraform modules to create the infrastructure
-* Azure Pipelines to manage the deployment
-
-### Infrastructure
+### Azure Architecture
 
 A solution which utilises the blueprint will consist of the following types of Azure resources
 
@@ -35,9 +30,7 @@ A solution which utilises the blueprint will consist of the following types of A
 * Tfstate storage account
 * Resources that need to be backed up
 
-#### Architecture
-
-The following diagram illustrates the high level architecture
+The following diagram illustrates the high level architecture:
 
 ![Azure Architecture](./docs/azure-architecture.drawio.svg)
 
@@ -57,11 +50,48 @@ The following diagram illustrates the high level architecture
 
 1. Some resources such as Azure SQL and Azure Key Vault are not directly supported by Azure **backup vault**, but can be incorporated via a supplementary process that backs up the data to Azure Blob Storage first. In the case of Azure SQL, a typical scenario could be an Azure Logic App that takes a backup of Azure SQL on a regular basis and stores the data in Azure Blob Storage.  It is the aspiration of this solution to provide guidance and tooling that teams can adopt to support these scenarios.
 
+### Terraform Design
+
+The following diagram illustrates the terraform design:
+
+![Terraform Design](./docs/terraform-design.drawio.svg)
+
+1. The **az-backup** module is essentially everything within the `./infrastructure` directory of this repository. It consists of the following resources:
+   * A **resource group** which will contain _most_ of the other resources in the module.
+   * A **backup vault** within which backup policies and instances are configured..
+   * A **role assignment** which provides read access to the vault.
+   * An **Azure policy** which validates the vault configuration.
+   * A number of **backup modules** which can backup a specific type of resource.
+
+1. **Backup instances** are created through the use of the **backup modules**, which define policies that configure and initiate the backups once the module is deployed. The backup instances which are created upon deployment are configured via terraform variables.
+
+1. Each **backup module** deploys the resources that are required to backup a resource that contains source data (e.g. a storage account). It consists of a **backup policy** that is registered in the **backup vault** and defines the rules such as backup retention and schedule, and an **Azure policy** that is assigned to the subscription containing the backup resources and creates **backup instances** when a resource is created with a specific tag.
+
+1. The **consuming application** is developed and maintained by the blueprint consumer. It will likely consist of a number of resource that make up an application or service, and contain resources that need to be backed up. The recommended way of using **az-backup** in the **consuming application** is to specify the blueprint repository as the remote source of a terraform module. [See the following link for more information.](https://developer.hashicorp.com/terraform/language/modules/sources)
+
+1. The **az-backup** module is configured by terraform variables which are applied at deployment time. The **consuming application** can control parameters such as the vault name, location and redundancy, as well as the backup policies and their retention period and schedule. See the [module variables](#module-variables) section for more details.
+
 ### Pipelines
 
 > TODO
 
-## Repository Structure
+## Usage
+
+> TODO - provide an example of using **az-backup** git as a module source in a consuming application.
+
+### Module Variables
+
+| Name | Description | Mandatory | Default |
+|------|-------------|-----------|---------|
+| `vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
+| `vault_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
+| `vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+
+## Developer Guide
+
+The following guide is for developers working on the blueprint solution - not for developers that are consuming the blueprint.
+
+### Repository Structure
 
 The repository consists of the following directories:
 
@@ -97,11 +127,9 @@ The repository consists of the following directories:
 
   Contains the different types of tests used to verify the solution.
 
-## Developer Guide
-
 ### Environment Setup
 
-The following are pre-reqs to working with the solution:
+The following are pre-requisites to working with the solution:
 
 * An Azure subscription
 * An Azure identity which has been assigned the subscription Contributor role (required to create resources)
@@ -109,7 +137,7 @@ The following are pre-reqs to working with the solution:
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
 * [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
 
-> Ensure all installed components have been added to the `%PATH%` - e.g. `az`, `terraform` and `go`.
+Ensure all installed components have been added to the `%PATH%` - e.g. `az`, `terraform` and `go`.
 
 ### Getting Started
 
@@ -126,7 +154,7 @@ Take the following steps to get started in configuring and verifying the infrast
    $env:ARM_CLIENT_SECRET="<your-client-secret>"
    ```
 
-2. Create Backend
+1. Create Backend
 
    A backend (e.g. storage account) is required in order to store the tfstate and work with Terraform.
 
@@ -134,7 +162,7 @@ Take the following steps to get started in configuring and verifying the infrast
 
    Make a note of the name of the storage account in the script output - it's generated with a random suffix, and you'll need it in the following steps to initialise the terraform.
 
-3. Prepare Terraform Variables (Optional)
+1. Prepare Terraform Variables (Optional)
 
    If you want to override the Terraform variables, make a copy of `tfvars.template` and amend any default settings as required.
 
@@ -144,7 +172,7 @@ Take the following steps to get started in configuring and verifying the infrast
    -var-file="<your-var-file>.tfvars
    ```
 
-4. Initialise Terraform
+1. Initialise Terraform
 
    Change the working directory to `./infrastructure`.
 
@@ -154,7 +182,7 @@ Take the following steps to get started in configuring and verifying the infrast
    terraform init -backend=true -backend-config="resource_group_name=rg-nhsbackup" -backend-config="storage_account_name=<storage-account-name>" -backend-config="container_name=tfstate" -backend-config="key=terraform.tfstate"
    ````
 
-5. Apply Terraform
+1. Apply Terraform
 
    Apply the Terraform code to create the infrastructure.
 
@@ -166,11 +194,7 @@ Take the following steps to get started in configuring and verifying the infrast
 
    Now review the deployed infrastructure in the Azure portal. You will find a backup vault and some sample backup policies.
 
-   The repo contains an `example` module which can be utilised to further extend the sample infrastructure with some resources and backup instances. To use this module for dev/test purposes, include the module in `main.tf` and run `terraform apply` again.
-
-### Running the Tests
-
-#### Integration Tests
+### Integration Tests
 
 The test suite consists of a number Terraform HCL integration tests that use a mock azurerm provider.
 
@@ -190,7 +214,7 @@ Take the following steps to run the test suite:
 
    > NOTE: There's no need to initialise a backend for the purposes of running the tests.
 
-2. Run the tests
+1. Run the tests
 
    Run the tests with the following command:
 
@@ -198,7 +222,7 @@ Take the following steps to run the test suite:
    terraform test
    ````
 
-#### End to End Tests
+### End to End Tests
 
 The end to end tests are written in go, and use the [terratest library](https://terratest.gruntwork.io/) and the [Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go/tree/main).
 
@@ -226,7 +250,7 @@ To run the tests, take the following steps:
    go mod tidy
    ````
 
-2. Setup environment variables
+1. Setup environment variables
 
    The end-to-end test suite needs to login to Azure in order to execute the tests and therefore the following environment variables must be set.
 
@@ -242,7 +266,7 @@ To run the tests, take the following steps:
 
    > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
 
-3. Run the tests
+1. Run the tests
 
    Run the tests with the following command:
 
@@ -250,7 +274,7 @@ To run the tests, take the following steps:
    go test -v -timeout 10m
    ````
 
-##### Debugging
+#### Debugging
 
 To debug the tests in vscode, add the following configuration to launch settings and run the configuration with the test file you want to debug open:
 
@@ -279,6 +303,45 @@ To debug the tests in vscode, add the following configuration to launch settings
 
 > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
 
+### CI Pipeline
+
+The CI pipeline builds and verifies the solution and runs a number of static code analysis steps on the code base.
+
+Part of the build verification is end to end testing. This requires the pipeline to login to Azure and deploy an environment on which to execute the tests. In order for the pipeline to login to Azure the following GitHub actions secrets must be created:
+
+* `AZURE_TENANT_ID`
+  The ID of an Azure tenant which can be used for the end to end test environment.
+
+* `AZURE_SUBSCRIPTION_ID`
+  The ID of an Azure subscription which can be used for the end to end test environment.
+
+* `AZURE_CLIENT_ID`
+  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment.
+  
+  The app registration must have contributor permissions on the subscription in order to create resources.
+
+* `AZURE_CLIENT_SECRET`
+  The client secret of an Azure app registration which can be used to authenticate with the end to end test environment.
+
+* `TF_STATE_RESOURCE_GROUP`
+  The resource group which contains the TF state storage account.
+
+* `TF_STATE_STORAGE_ACCOUNT`
+  The storage account used for TF state.
+
+* `TF_STATE_STORAGE_COMTAINER`
+  The storage container used for TF state.
+
+#### Static Code Analysis
+
+The following static code analysis checks are executed:
+
+* [Terraform format](https://developer.hashicorp.com/terraform/cli/commands/fmt)
+* [Terraform lint](https://github.com/terraform-linters/tflint)
+* [Checkov scan](https://www.checkov.io/)
+* [Gitleaks scan](https://github.com/gitleaks/gitleaks)
+* [Trivy vulnerability scan](https://github.com/aquasecurity/trivy)
+
 ### Contributing
 
 If you want to contribute to the project, raise a PR on GitHub.
@@ -298,55 +361,3 @@ We use pre-commit to run analysis and checks on the changes being committed. Tak
     * Run `pre-commit run --all-files` to check pre-commit is working
 
 > For full details [see this link](https://pre-commit.com/#installation)
-
-## CI Pipeline
-
-The CI pipeline builds and verifies the solution and runs a number of static code analysis steps on the code base.
-
-### End to End Testing
-
-Part of the build verification is the end to end testing step. This requires the pipeline to login to Azure in order to deploy an environment on which to execute the tests.
-
-A storage account must be provisioned with a container called `github-actions`, which is used by the CI pipeline to persist the terraform state.
-
-In order for the CI pipeline to login to Azure and use the terraform state storage account, the following GitHub actions secrets must be created:
-
-* `AZURE_TENANT_ID`
-
-  The ID of an Azure tenant which can be used for the end to end test environment.
-
-* `AZURE_SUBSCRIPTION_ID`
-
-  The ID of an Azure subscription which can be used for the end to end test environment.
-
-* `AZURE_CLIENT_ID`
-
-  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment.
-  
-  The app registration must have contributor permissions on the subscription in order to create resources.
-
-* `AZURE_CLIENT_SECRET`
-
-  The client secret of an Azure app registration which can be used to authenticate with the end to end test environment.
-
-* `TF_STATE_RESOURCE_GROUP`
-
-  The resource group which contains the TF state storage account.
-
-* `TF_STATE_STORAGE_ACCOUNT`
-
-  The storage account used for TF state.
-
-* `TF_STATE_STORAGE_COMTAINER`
-
-  The storage container used for TF state.
-
-### Static Code Analysis
-
-The following static code analysis checks are executed:
-
-* [Terraform format](https://developer.hashicorp.com/terraform/cli/commands/fmt)
-* [Terraform lint](https://github.com/terraform-linters/tflint)
-* [Checkov scan](https://www.checkov.io/)
-* [Gitleaks scan](https://github.com/gitleaks/gitleaks)
-* [Trivy vulnerability scan](https://github.com/aquasecurity/trivy)
