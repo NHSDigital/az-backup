@@ -106,7 +106,6 @@ func ValidateResourceGroup(t *testing.T, subscriptionID string,
 	// Create a new resource groups client
 	client, err := armresources.NewResourceGroupsClient(subscriptionID, cred, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
-	assert.NoError(t, err)
 
 	// Get the resource group
 	resp, err := client.Get(context.Background(), resourceGroupName, nil)
@@ -144,8 +143,6 @@ func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.C
  * Validates the backup policies have been deployed correctly
  */
 func ValidateBackupPolicies(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, fullVaultName string, vaultName string) {
-	ctx := context.Background()
-
 	// Create a client to interact with Data Protection vault backup policies
 	client, err := armdataprotection.NewBackupPoliciesClient(subscriptionID, cred, nil)
 	assert.NoError(t, err, "Failed to create data protection client: %v", err)
@@ -156,7 +153,7 @@ func ValidateBackupPolicies(t *testing.T, subscriptionID string, cred *azidentit
 	var policies []*armdataprotection.BaseBackupPolicyResource
 
 	for policyPager.More() {
-		page, err := policyPager.NextPage(ctx)
+		page, err := policyPager.NextPage(context.Background())
 		assert.NoError(t, err, "Failed to get backup policies: %v", err)
 
 		policies = append(policies, page.Value...)
