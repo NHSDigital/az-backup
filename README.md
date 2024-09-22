@@ -79,6 +79,10 @@ The following diagram illustrates the terraform design:
 
 > TODO - provide an example of using **az-backup** git as a module source in a consuming application.
 
+### Deployment Service Principal
+
+> TODO - provide details of the service principal and role assignments required by the consuming application to deploy the solution.
+
 ### Module Variables
 
 | Name | Description | Mandatory | Default |
@@ -131,10 +135,12 @@ The repository consists of the following directories:
 
 The following are pre-requisites to working with the solution:
 
-* An Azure subscription
+* An Azure subscription for development purposes
 * An Azure identity which has been assigned the following roles at the subscription level:
   * Contributor (required to create resources)
   * Resource Policy Contributor (required to define policies)
+  * Role Based Access Control Administrator (to assign roles to the managed identities used by the azure policy assignments)
+    * **It's strongly advised to add a condition to exclude the owner role.**
 * [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
 * [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
@@ -194,7 +200,13 @@ Take the following steps to get started in configuring and verifying the infrast
    terraform apply -auto-approve
    ```
 
-   Now review the deployed infrastructure in the Azure portal. You will find a backup vault and some sample backup policies.
+   Now review the deployed infrastructure in the Azure portal. You will find the resources deployed to a resource group called `rg-nhsbackup-myvault` (unless you specified a different vault name in the tfvars).
+
+   Should you want to, you can remove the infrastructure with the following command:
+
+   ```pwsh
+   terraform destroy -auto-approve
+   ```
 
 ### Integration Tests
 

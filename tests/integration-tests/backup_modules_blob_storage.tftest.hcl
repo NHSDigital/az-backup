@@ -46,7 +46,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup.azure_policy_definition_name == "policydef-${var.vault_name}-create-backup-instance-blob-storage"
+    condition     = module.blob_storage_backup.azure_policy_definition_name == "policydef-${var.vault_name}-backup-blob-storage"
     error_message = "Blob storage backup azure policy definition name not as expected."
   }
 
@@ -66,7 +66,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup.azure_policy_assignment_name == "policyass-${var.vault_name}-create-backup-instance-blob-storage"
+    condition     = module.blob_storage_backup.azure_policy_assignment_name == "policyass-${var.vault_name}-backup-blob-storage"
     error_message = "Blob storage backup azure policy assignment name not as expected."
   }
 
@@ -87,14 +87,14 @@ run "create_blob_storage_backup" {
 
   assert {
     condition = module.blob_storage_backup.azure_policy_assignment_parameters == jsonencode({
-      vaultName = {
-        value = var.vault_name
-      }
-      backupInstanceName = {
-        value = "bkinst-${var.vault_name}-blobstorage"
+      backupVaultId = {
+        value = module.blob_storage_backup.vault_id
       }
       backupPolicyId = {
         value = module.blob_storage_backup.backup_policy_id
+      }
+      backupInstanceName = {
+        value = "bkinst-${var.vault_name}-${module.blob_storage_backup.backup_policy_name}"
       }
     })
     error_message = "Blob storage backup azure policy assignment parameters not as expected."

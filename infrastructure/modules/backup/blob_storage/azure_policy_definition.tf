@@ -1,8 +1,14 @@
 resource "azurerm_policy_definition" "create_backup_instance" {
-  name         = "policydef-${var.vault_name}-create-backup-instance-blob-storage"
+  name         = "policydef-${var.vault_name}-backup-blob-storage"
   policy_type  = "Custom"
   mode         = "All"
   display_name = "[AZ-BACKUP] Configure backup on blob storage accounts with a given tag"
+
+  metadata = <<METADATA
+  {
+    "category": "Az-Backup"
+  }
+  METADATA
 
   policy_rule = <<POLICY_RULE
   {
@@ -35,20 +41,24 @@ resource "azurerm_policy_definition" "create_backup_instance" {
           ]
         },
         "roleDefinitionIds": [
-          "/providers/Microsoft.Authorization/roleDefinitions/4a333f42-bcae-4445-8538-3ec9ef8ad1f6"
+            "/providers/Microsoft.Authorization/roleDefinitions/00c29273-979b-4161-815c-10b084fb9324",
+            "/providers/Microsoft.Authorization/roleDefinitions/f58310d9-a9f6-439a-9e8d-f62e7b41a168"
         ],
         "deployment": {
           "properties": {
             "mode": "incremental",
             "parameters": {
-              "vaultName": {
-                "value": "[parameters('vaultName')]"
+              "backupVaultId": {
+                "value": "[parameters('backupVaultId')]"
               },
               "backupPolicyId": {
                 "value": "[parameters('backupPolicyId')]"
               },
               "backupInstanceName": {
                 "value": "[parameters('backupInstanceName')]"
+              },
+              "storageAccountId": {
+                "value": "[field('id')]"
               }
             },
             "template": {
@@ -56,12 +66,25 @@ resource "azurerm_policy_definition" "create_backup_instance" {
               "contentVersion": "1.0.0.0",
               "resources": [
                 {
+                  "type": "Microsoft.Authorization/roleAssignments",
+                  "apiVersion": "2020-04-01",
+                  "name": "[guid(parameters('storageAccountId'), 'StorageAccountBackupContributor')]",
+                  "properties": {
+                    "roleDefinitionName": "Storage Account Backup Contributor",
+                    "principalId": "[reference(parameters('backupVaultId')).identity.principalId]",
+                    "scope": "[parameters('storageAccountId')]"
+                  }
+                },  
+                {
                   "type": "Microsoft.DataProtection/backupVaults/backupInstances",
                   "apiVersion": "2023-01-01",
-                  "name": "[concat(parameters('vaultName'), '/', parameters('backupInstanceName'))]",
+                  "name": "[parameters('backupInstanceName')]",
+                  "dependsOn": [
+                    "[resourceId('Microsoft.Authorization/roleAssignments', guid(parameters('storageAccountId'), 'StorageAccountBackupContributor'))]"
+                  ],
                   "properties": {
                     "dataSourceInfo": {
-                      "resourceId": "[field('id')]",
+                      "resourceId": "[parameters('storageAccountId')]",
                       "resourceType": "Microsoft.Storage/storageAccounts",
                       "dataSourceType": "AzureBlob"
                     },
@@ -81,20 +104,20 @@ resource "azurerm_policy_definition" "create_backup_instance" {
 
   parameters = <<PARAMETERS
   {
-    "vaultName": {
-      "type": "string",
+    "backupVaultId": {
+      "type": "String",
       "metadata": {
-        "description": "Name of the backup vault"
+        "description": "Resource ID of the backup vault"
       }
     },
     "backupPolicyId": {
-      "type": "string",
+      "type": "String",
       "metadata": {
         "description": "Resource ID of the backup policy to assign to the backup instance"
       }
     },
     "backupInstanceName": {
-      "type": "string",
+      "type": "String",
       "metadata": {
         "description": "Name of the backup instance to create"
       }
