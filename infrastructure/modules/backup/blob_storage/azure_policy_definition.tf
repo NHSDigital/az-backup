@@ -1,8 +1,8 @@
 resource "azurerm_policy_definition" "create_backup_instance" {
-  name         = "policydef-${var.vault_name}-create-backup-instance-storage-account"
+  name         = "policydef-${var.vault_name}-create-backup-instance-blob-storage"
   policy_type  = "Custom"
   mode         = "All"
-  display_name = "Create backup instances for storage accounts based on tags"
+  display_name = "Create backup instances for blob storage accounts based on tags"
 
   policy_rule = <<POLICY_RULE
  {
@@ -13,7 +13,7 @@ resource "azurerm_policy_definition" "create_backup_instance" {
           "equals": "Microsoft.Storage/storageAccounts"
         },
         {
-          "field": "tags['backup']",
+          "field": "tags['nhsbackup']",
           "equals": "enabled"
         }
       ]

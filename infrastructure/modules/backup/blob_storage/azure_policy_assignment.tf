@@ -1,5 +1,5 @@
 resource "azurerm_subscription_policy_assignment" "create_backup_instance" {
-  name                 = "policyass-${var.vault_name}-create-backup-instance-storage-account"
+  name                 = "policyass-${var.vault_name}-create-backup-instance-blob-storage"
   policy_definition_id = azurerm_policy_definition.create_backup_instance.id
   subscription_id      = var.subscription_id
   parameters = jsonencode({

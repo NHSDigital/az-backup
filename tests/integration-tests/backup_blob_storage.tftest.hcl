@@ -45,7 +45,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup.azure_policy_definition_name == "policydef-${var.vault_name}-create-backup-instance-storage-account"
+    condition     = module.blob_storage_backup.azure_policy_definition_name == "policydef-${var.vault_name}-create-backup-instance-blob-storage"
     error_message = "Blob storage backup azure policy definition name not as expected."
   }
 
@@ -65,7 +65,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup.azure_policy_assignment_name == "policyass-${var.vault_name}-create-backup-instance-storage-account"
+    condition     = module.blob_storage_backup.azure_policy_assignment_name == "policyass-${var.vault_name}-create-backup-instance-blob-storage"
     error_message = "Blob storage backup azure policy assignment name not as expected."
   }
 
