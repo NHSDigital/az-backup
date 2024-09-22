@@ -1,6 +1,6 @@
 mock_data "azurerm_subscription" {
   defaults = {
-    subscription_id = "/subscriptions/12345678-1234-9876-4563-123456789012"
+    id = "/subscriptions/12345678-1234-9876-4563-123456789012"
   }
 }
 

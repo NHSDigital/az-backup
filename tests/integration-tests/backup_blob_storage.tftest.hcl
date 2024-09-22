@@ -70,7 +70,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup.azure_policy_assignment_subscription_id == data.azurerm_subscription.current.subscription_id
+    condition     = module.blob_storage_backup.azure_policy_assignment_subscription_id == data.azurerm_subscription.current.id
     error_message = "Blob storage backup azure policy assignment subscription id not as expected."
   }
 
