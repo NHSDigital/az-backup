@@ -2,10 +2,10 @@ resource "azurerm_policy_definition" "create_backup_instance" {
   name         = "policydef-${var.vault_name}-create-backup-instance-blob-storage"
   policy_type  = "Custom"
   mode         = "All"
-  display_name = "Create backup instances for blob storage accounts based on tags"
+  display_name = "[AZ-BACKUP] Configure backup on blob storage accounts with a given tag"
 
   policy_rule = <<POLICY_RULE
- {
+  {
     "if": {
       "allOf": [
         {
@@ -19,17 +19,17 @@ resource "azurerm_policy_definition" "create_backup_instance" {
       ]
     },
     "then": {
-      "effect": "DeployIfNotExists",
+      "effect": "deployIfNotExists",
       "details": {
         "type": "Microsoft.DataProtection/backupVaults/backupInstances",
         "existenceCondition": {
           "allOf": [
             {
-              "field": "Microsoft.DataProtection/backupVaults/backupInstances/properties.dataSourceInfo.resourceId",
+              "field": "Microsoft.DataProtection/backupVaults/backupInstances/dataSourceInfo.resourceID",
               "equals": "[field('id')]"
             },
             {
-              "field": "Microsoft.DataProtection/backupVaults/backupInstances/properties.policyInfo.policyId",
+              "field": "Microsoft.DataProtection/backupVaults/backupInstances/policyInfo.policyId",
               "equals": "[parameters('backupPolicyId')]"
             }
           ]
@@ -40,6 +40,17 @@ resource "azurerm_policy_definition" "create_backup_instance" {
         "deployment": {
           "properties": {
             "mode": "incremental",
+            "parameters": {
+              "vaultName": {
+                "value": "[parameters('vaultName')]"
+              },
+              "backupPolicyId": {
+                "value": "[parameters('backupPolicyId')]"
+              },
+              "backupInstanceName": {
+                "value": "[parameters('backupInstanceName')]"
+              }
+            },
             "template": {
               "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
               "contentVersion": "1.0.0.0",
@@ -59,32 +70,35 @@ resource "azurerm_policy_definition" "create_backup_instance" {
                     }
                   }
                 }
-              ],
-              "parameters": {
-                "vaultName": {
-                  "type": "string",
-                  "metadata": {
-                    "description": "Name of the existing backup vault"
-                  }
-                },
-                "backupInstanceName": {
-                  "type": "string",
-                  "metadata": {
-                    "description": "Name of the backup instance to create"
-                  }
-                },
-                "backupPolicyId": {
-                  "type": "string",
-                  "metadata": {
-                    "description": "Resource ID of the backup policy"
-                  }
-                }
-              }
+              ]
             }
           }
         }
       }
     }
   }
-POLICY_RULE
+  POLICY_RULE
+
+  parameters = <<PARAMETERS
+  {
+    "vaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the backup vault"
+      }
+    },
+    "backupPolicyId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the backup policy to assign to the backup instance"
+      }
+    },
+    "backupInstanceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the backup instance to create"
+      }
+    }
+  }
+  PARAMETERS
 }

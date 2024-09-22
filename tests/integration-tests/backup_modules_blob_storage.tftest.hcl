@@ -16,7 +16,8 @@ run "create_blob_storage_backup" {
   }
 
   variables {
-    vault_name = run.setup_tests.vault_name
+    vault_name     = run.setup_tests.vault_name
+    vault_location = "uksouth"
   }
 
   assert {
@@ -75,7 +76,17 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup.azure_policy_assignment_parameters == jsonencode({
+    condition     = module.blob_storage_backup.azure_policy_assignment_location == var.vault_location
+    error_message = "Blob storage backup azure policy assignment location not as expected."
+  }
+
+  assert {
+    condition     = length(module.blob_storage_backup.azure_policy_assignment_identity[0].principal_id) > 0
+    error_message = "Blob storage backup azure policy assignment identity not as expected."
+  }
+
+  assert {
+    condition = module.blob_storage_backup.azure_policy_assignment_parameters == jsonencode({
       vaultName = {
         value = var.vault_name
       }

@@ -6,6 +6,10 @@ variable "vault_name" {
   type = string
 }
 
+variable "vault_location" {
+  type = string
+}
+
 variable "subscription_id" {
   type = string
 }

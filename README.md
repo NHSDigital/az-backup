@@ -63,9 +63,9 @@ The following diagram illustrates the terraform design:
    * An **Azure policy** which validates the vault configuration.
    * A number of **backup modules** which can backup a specific type of resource.
 
-1. **Backup instances** are created through the use of the **backup modules**, which define policies that configure and initiate the backups once the module is deployed. The backup instances which are created upon deployment are configured via terraform variables.
+1. **Backup modules** are created which define policies that setup and trigger the backups once the module is deployed. The policies which are configured via terraform variables.
 
-1. Each **backup module** deploys the resources that are required to backup a resource that contains source data (e.g. a storage account). It consists of a **backup policy** that is registered in the **backup vault** and defines the rules such as backup retention and schedule, and an **Azure policy** that is assigned to the subscription containing the backup resources and creates **backup instances** when a resource is created with a specific tag.
+1. Each **backup module** deploys the resources that are required to backup a resource that contains source data (e.g. a storage account). It consists of a **backup policy** that is configured in the **backup vault** on deployment and defines the rules such as backup retention and schedule, and an **Azure policy** that is assigned to the subscription containing the backup resources and creates **backup instances** when a resource is created with a specific tag.
 
 1. The **consuming application** is developed and maintained by the blueprint consumer. It will likely consist of a number of resource that make up an application or service, and contain resources that need to be backed up. The recommended way of using **az-backup** in the **consuming application** is to specify the blueprint repository as the remote source of a terraform module. [See the following link for more information.](https://developer.hashicorp.com/terraform/language/modules/sources)
 
@@ -132,7 +132,9 @@ The repository consists of the following directories:
 The following are pre-requisites to working with the solution:
 
 * An Azure subscription
-* An Azure identity which has been assigned the subscription Contributor role (required to create resources)
+* An Azure identity which has been assigned the following roles at the subscription level:
+  * Contributor (required to create resources)
+  * Resource Policy Contributor (required to define policies)
 * [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
 * [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
@@ -199,6 +201,8 @@ Take the following steps to get started in configuring and verifying the infrast
 The test suite consists of a number Terraform HCL integration tests that use a mock azurerm provider.
 
 [See this link for more information.](https://developer.hashicorp.com/terraform/language/tests)
+
+> TIP! Consider adopting the classic red-green-refactor approach using the integration test framework when adding or modifying the terraform code.
 
 Take the following steps to run the test suite:
 

@@ -42,6 +42,14 @@ output "azure_policy_assignment_subscription_id" {
   value = azurerm_subscription_policy_assignment.create_backup_instance.subscription_id
 }
 
+output "azure_policy_assignment_location" {
+  value = azurerm_subscription_policy_assignment.create_backup_instance.location
+}
+
+output "azure_policy_assignment_identity" {
+  value = azurerm_subscription_policy_assignment.create_backup_instance.identity
+}
+
 output "azure_policy_assignment_parameters" {
   value = azurerm_subscription_policy_assignment.create_backup_instance.parameters
 }
