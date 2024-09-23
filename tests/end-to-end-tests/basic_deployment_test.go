@@ -66,15 +66,15 @@ func TestBasicDeployment(t *testing.T) {
 
 		// Check if the vault name is as expected
 		expectedVaultName := fmt.Sprintf("bvault-%s", vaultName)
-		actualVaultName := terraform.Output(t, terraformOptions, "vault_name")
+		actualVaultName := terraform.OutputMap(t, terraformOptions, "backup_vault")["name"]
 		assert.Equal(t, expectedVaultName, actualVaultName)
 
 		// Check if the vault location is as expected
-		actualVaultLocation := terraform.Output(t, terraformOptions, "vault_location")
+		actualVaultLocation := terraform.OutputMap(t, terraformOptions, "backup_vault")["location"]
 		assert.Equal(t, vaultLocation, actualVaultLocation)
 
 		// Check if the vault redundancy is as expected
-		actualVaultRedundancy := terraform.Output(t, terraformOptions, "vault_redundancy")
+		actualVaultRedundancy := terraform.OutputMap(t, terraformOptions, "backup_vault")["redundancy"]
 		assert.Equal(t, vaultRedundancy, actualVaultRedundancy)
 	})
 
