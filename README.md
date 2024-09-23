@@ -36,11 +36,11 @@ The following diagram illustrates the high level architecture:
 
 1. The **backup vault** stores the backups of a variety of different Azure resources. A number of **backup instances** are created in the vault, which have a policy applied that defines the configuration for a backup such as the retention period and schedule. The vault is configured as **immutable** and **locked** to enforce tamper proof backups. The **backup vault** resides in it's own isolated **resource group**.
 
-1. **Backup instances** link the resources to be backed up and an associated **backup policy**, and one registered trigger the backup process. The resources directly supported are Azure Blob Storage, Managed Disks, PostgreSQL (single server and flexible server) and AKS instances, although other resources are supported indirectly through Azure Storage (see **point 8** for more details). **Backup instances** are created based on the variables supplied to module, which include configuration and details of the resources that need to be backed up.
+1. **Backup instances** link the resources to be backed up and an associated **backup policy**, and one registered trigger the backup process. The resources directly supported are Azure Blob Storage, Managed Disks, PostgreSQL (single server and flexible server) and AKS instances, although other resources are supported indirectly through Azure Storage (see **point 7** for more details). **Backup instances** are created based on the variables supplied to module, which include configuration and details of the resources that need to be backed up.
 
 1. The **backup vault** accesses resources to be backed up through a **System Assigned Managed Identity** - a secure way of enabling communication between defined resources without managing a secret/password, which is assigned the necessary roles to the resources that require backup.
 
-1. **Backup administrators** are a group of identities that will have time limited read only access to the **backup vault** in order to access and restore backups as required. Assignment of the role will be secured by **PIM** - Privileged Identity Management, which requires a second identity to authorise the role assignment, which is then assigned on a time limited bases. The **backup administrators** will also be responsible for monitoring and auditing backup activity via **Azure Monitor** (see **point 7** for more details).
+1. **Backup administrators** are a group of identities that will have time limited read only access to the **backup vault** in order to access and restore backups as required. Assignment of the role will be secured by **PIM** - Privileged Identity Management, which requires a second identity to authorise the role assignment, which is then assigned on a time limited bases. The **backup administrators** will also be responsible for monitoring and auditing backup activity via **Azure Monitor** (see **point 6** for more details).
 
 1. The solution requires a user account with elevated subscription contributor permissions that can create the backup resources (such as the backup **resource group** and **backup vault**) and assign roles to the resources that require backup. This identity will be implemented as a **federated credential** of an **app registration**, which is like a passport that lets you access different services without needing a separate password. This removes the need to manage a secret/password once configured. The identity also needs writer access to a dedicated **Storage Account** in order to read and write the **terraform** infrastructure state.
 
@@ -285,7 +285,7 @@ To run the tests, take the following steps:
    $env:ARM_CLIENT_SECRET="<your-client-secret>"
    $env:TF_STATE_RESOURCE_GROUP="rg-nhsbackup"
    $env:TF_STATE_STORAGE_ACCOUNT="<storage-account-name>"
-   $env:TF_STATE_STORAGE_CONTAINER="terraform"
+   $env:TF_STATE_STORAGE_CONTAINER="tfstate"
    ```
 
    > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
@@ -318,7 +318,7 @@ To debug the tests in vscode, add the following configuration to launch settings
                 "ARM_CLIENT_SECRET": "<your-client-secret>",
                 "TF_STATE_RESOURCE_GROUP": "rg-nhsbackup",
                 "TF_STATE_STORAGE_ACCOUNT": "<storage-account-name>",
-                "TF_STATE_STORAGE_CONTAINER": "terraform"
+                "TF_STATE_STORAGE_CONTAINER": "tfstate"
             }
         }       
     ]
