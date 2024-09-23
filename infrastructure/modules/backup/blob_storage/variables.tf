@@ -1,8 +1,8 @@
-variable "instance_name" {
+variable "vault_id" {
   type = string
 }
 
-variable "vault_id" {
+variable "vault_name" {
   type = string
 }
 
@@ -14,7 +14,11 @@ variable "vault_principal_id" {
   type = string
 }
 
-variable "policy_id" {
+variable "backup_name" {
+  type = string
+}
+
+variable "retention_period" {
   type = string
 }
 
