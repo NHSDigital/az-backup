@@ -27,19 +27,8 @@ resource "azurerm_policy_definition" "create_backup_instance" {
     "then": {
       "effect": "deployIfNotExists",
       "details": {
-        "type": "Microsoft.DataProtection/backupVaults/backupInstances",
-        "existenceCondition": {
-          "allOf": [
-            {
-              "field": "Microsoft.DataProtection/backupVaults/backupInstances/dataSourceInfo.resourceID",
-              "equals": "[field('id')]"
-            },
-            {
-              "field": "Microsoft.DataProtection/backupVaults/backupInstances/policyInfo.policyId",
-              "equals": "[parameters('backupPolicyId')]"
-            }
-          ]
-        },
+        "type": "Microsoft.Storage/storageAccounts/blobServices",
+        "name": "default",
         "roleDefinitionIds": [
             "/providers/Microsoft.Authorization/roleDefinitions/00c29273-979b-4161-815c-10b084fb9324",
             "/providers/Microsoft.Authorization/roleDefinitions/f58310d9-a9f6-439a-9e8d-f62e7b41a168"
@@ -64,32 +53,87 @@ resource "azurerm_policy_definition" "create_backup_instance" {
             "template": {
               "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
               "contentVersion": "1.0.0.0",
-              "resources": [
-                {
-                  "type": "Microsoft.Authorization/roleAssignments",
-                  "apiVersion": "2020-04-01",
-                  "name": "[guid(parameters('storageAccountId'), 'StorageAccountBackupContributor')]",
-                  "properties": {
-                    "roleDefinitionName": "Storage Account Backup Contributor",
-                    "principalId": "[reference(parameters('backupVaultId')).identity.principalId]",
-                    "scope": "[parameters('storageAccountId')]"
+              "parameters": {
+                "backupVaultId": {
+                  "type": "String",
+                  "metadata": {
+                    "description": "Resource ID of the backup vault"
                   }
-                },  
+                },
+                "backupPolicyId": {
+                  "type": "String",
+                  "metadata": {
+                    "description": "Resource ID of the backup policy to assign to the backup instance"
+                  }
+                },
+                "backupInstanceName": {
+                  "type": "String",
+                  "metadata": {
+                    "description": "Name of the backup instance to create"
+                  }
+                },
+                "storageAccountId": {
+                  "type": "String",
+                  "metadata": {
+                    "description": "ID of the storage account to backup"
+                  }
+                }
+              },
+              "variables": {
+                "storageAccountName": "[first(skip(split(parameters('storageAccountId'), '/'), 8))]",
+                "dataSourceType": "Microsoft.Storage/storageAccounts/blobServices",
+                "resourceType": "Microsoft.Storage/storageAccounts",
+                "backupPolicyName": "[first(skip(split(parameters('backupPolicyId'), '/'), 10))]",
+                "vaultName": "[first(skip(split(parameters('backupPolicyId'), '/'), 8))]",
+                "vaultResourceGroup": "[first(skip(split(parameters('backupPolicyId'), '/'), 4))]",
+                "vaultSubscriptionId": "[first(skip(split(parameters('backupPolicyId'), '/'), 2))]"
+              },
+              "resources": [ 
                 {
-                  "type": "Microsoft.DataProtection/backupVaults/backupInstances",
-                  "apiVersion": "2023-01-01",
-                  "name": "[parameters('backupInstanceName')]",
-                  "dependsOn": [
-                    "[resourceId('Microsoft.Authorization/roleAssignments', guid(parameters('storageAccountId'), 'StorageAccountBackupContributor'))]"
-                  ],
+                  "type": "Microsoft.Resources/deployments",
+                  "apiVersion": "2021-04-01",
+                  "resourceGroup": "[variables('vaultResourceGroup')]",
+                  "subscriptionId": "[variables('vaultSubscriptionId')]",
+                  "name": "[concat('DeployProtection-',uniqueString(variables('storageAccountName')))]",
                   "properties": {
-                    "dataSourceInfo": {
-                      "resourceId": "[parameters('storageAccountId')]",
-                      "resourceType": "Microsoft.Storage/storageAccounts",
-                      "dataSourceType": "AzureBlob"
-                    },
-                    "policyInfo": {
-                      "policyId": "[parameters('backupPolicyId')]"
+                    "mode": "Incremental",
+                    "template": {
+                      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                      "contentVersion": "1.0.0.0",
+                      "parameters": {},
+                      "resources": [
+                        {
+                          "type": "Microsoft.Authorization/roleAssignments",
+                          "apiVersion": "2022-04-01",
+                          "name": "[guid(parameters('storageAccountId'), 'StorageAccountBackupContributor')]",
+                          "properties": {
+                            "roleDefinitionName": "Storage Account Backup Contributor",
+                            "principalId": "[reference(parameters('backupVaultId')).identity.principalId]",
+                            "scope": "[parameters('storageAccountId')]"
+                          }
+                        }, 
+                        {
+                          "type": "Microsoft.DataProtection/backupvaults/backupInstances",
+                          "apiVersion": "2021-01-01",
+                          "name": "[concat(variables('vaultName'), '/', variables('storageAccountName'))]",
+                          "properties": {
+                            "objectType": "BackupInstance",
+                            "dataSourceInfo": {
+                              "objectType": "Datasource",
+                              "resourceID": "[parameters('storageAccountId')]",
+                              "resourceName": "[variables('storageAccountName')]",
+                              "resourceType": "[variables('resourceType')]",
+                              "resourceUri": "[parameters('storageAccountId')]",
+                              "resourceLocation": "[parameters('location')]",
+                              "datasourceType": "[variables('dataSourceType')]"
+                            },
+                            "policyInfo": {
+                              "policyId": "[parameters('backupPolicyId')]",
+                              "name": "[variables('backupPolicyName')]"
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
