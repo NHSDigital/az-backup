@@ -12,3 +12,8 @@ variable "vault_redundancy" {
   type    = string
   default = "LocallyRedundant"
 }
+
+variable "tags"{
+    type = map
+
+}
