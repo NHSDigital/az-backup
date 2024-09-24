@@ -1,11 +1,10 @@
 variable "vault_name" {
-  type    = string
-  default = "myvault"
+  type = string
 }
 
 variable "vault_location" {
   type    = string
-  default = "UK South"
+  default = "uksouth"
 }
 
 variable "vault_redundancy" {
