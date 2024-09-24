@@ -74,11 +74,72 @@ The following diagram illustrates the terraform design:
 
 ## Usage
 
-> TODO - provide an example of using **az-backup** git as a module source in a consuming application.
+To use the az-backup terraform module, create a module in your code and set the source as this repository.
+
+[See the following link for more information about using github as the source of a terraform module.](https://developer.hashicorp.com/terraform/language/modules/sources#github)
+
+The repository is currently public so no authentication is needed, however the az-backup module resides in the `infrastructure` sub directory of the repository, so you need to specify that in the module source and [use the double-slash syntax as explained in this guide](https://developer.hashicorp.com/terraform/language/modules/sources#modules-in-package-sub-directories).
+
+In future we will use release tags to ensure consumers can depend on a specific release of the module, however this has not currently been implemented.
+
+### Example
+
+The following is an example of how the module should be used:
+
+```terraform
+module "my_backup" {
+  source           = "github.com/nhsdigital/az-backup//infrastructure"
+  vault_name       = "myvault"
+  vault_location   = "uksouth"
+  vault_redundancy = "LocallyRedundant"
+  blob_storage_backups = {
+    backup1 = {
+      backup_name        = "storage1"
+      retention_period   = "P7D"
+      storage_account_id = azurerm_storage_account.my_storage_account_1.id
+    }
+    backup2 = {
+      backup_name        = "storage2"
+      retention_period   = "P30D"
+      storage_account_id = azurerm_storage_account.my_storage_account_2.id
+    }
+  }
+  managed_disk_backups = {
+    backup1 = {
+      backup_name      = "disk1"
+      retention_period = "P7D"
+      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P1D"]
+      managed_disk_id  = azurerm_managed_disk.my_managed_disk_1.id
+      managed_disk_resource_group = {
+        id   = azurerm_resource_group.my_resource_group.id
+        name = azurerm_resource_group.my_resource_group.name
+      }
+    }
+    backup2 = {
+      backup_name      = "disk2"
+      retention_period = "P30D"
+      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      managed_disk_id  = azurerm_managed_disk.my_managed_disk_2.id
+      managed_disk_resource_group = {
+        id   = azurerm_resource_group.my_resource_group.id
+        name = azurerm_resource_group.my_resource_group.name
+      }
+    }
+  }
+
+}
+```
 
 ### Deployment Service Principal
 
-> TODO - provide details of the service principal and role assignments required by the consuming application to deploy the solution.
+To deploy the module an Azure identity is required which has been assigned the following roles at the subscription level:
+
+* Contributor (required to create resources)
+* Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
+  * **With a condition that limits the roles which can be assigned to:**
+    * Storage Account Backup Contributor
+    * Disk Snapshot Contributor
+    * Disk Backup Reader
 
 ### Module Variables
 

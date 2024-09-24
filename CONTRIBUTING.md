@@ -35,8 +35,3 @@ Please follow the steps below to create a pull request:
 1. Make sure you have each PR reviewed
 
 1. Once the PR is approved, merge it to the `main` branch, preferably using `Squash and Merge`
-
-## Coding Style
-
-We use [.NET source code analyzer](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview?tabs=net-8) to enforce code style.
-Please make sure you have the pre-commit hook installed and working.
