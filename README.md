@@ -126,13 +126,12 @@ module "my_backup" {
       }
     }
   }
-
 }
 ```
 
-### Deployment Service Principal
+### Deployment Identity
 
-To deploy the module an Azure identity is required which has been assigned the following roles at the subscription level:
+To deploy the module an Azure identity (typically an app registration with client secret) is required which has been assigned the following roles at the subscription level:
 
 * Contributor (required to create resources)
 * Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
@@ -206,7 +205,7 @@ The following are pre-requisites to working with the solution:
 * An Azure identity which has been assigned the following roles at the subscription level:
   * Contributor (required to create resources)
   * Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
-    * **Add a condition that limits the roles which can be assigned to:**
+    * **With a condition that limits the roles which can be assigned to:**
       * Storage Account Backup Contributor
       * Disk Snapshot Contributor
       * Disk Backup Reader

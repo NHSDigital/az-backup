@@ -21,10 +21,13 @@ func TestBasicDeployment(t *testing.T) {
 	t.Parallel()
 
 	environment := GetEnvironmentConfiguration(t)
+	credential := GetAzureCredential(t, environment)
 
 	vaultName := random.UniqueId()
 	vaultLocation := "uksouth"
 	vaultRedundancy := "LocallyRedundant"
+	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
+	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
 
 	// Teardown stage - deferred so it runs after the other test stages
 	// regardless of whether they succeed or fail.
@@ -57,7 +60,6 @@ func TestBasicDeployment(t *testing.T) {
 			},
 		}
 
-		// Save options for later test stages
 		test_structure.SaveTerraformOptions(t, environment.TerraformFolder, terraformOptions)
 
 		terraform.InitAndApply(t, terraformOptions)
@@ -67,25 +69,18 @@ func TestBasicDeployment(t *testing.T) {
 	// ...
 
 	test_structure.RunTestStage(t, "validate", func() {
-		resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
-		fullVaultName := fmt.Sprintf("bvault-%s", vaultName)
-
-		// Create a credential to authenticate with Azure Resource Manager
-		cred, err := azidentity.NewClientSecretCredential(environment.TenantID, environment.ClientID, environment.ClientSecret, nil)
-		assert.NoError(t, err, "Failed to obtain a credential: %v", err)
-
-		ValidateResourceGroup(t, environment.SubscriptionID, cred, resourceGroupName, vaultLocation)
-		ValidateBackupVault(t, environment.SubscriptionID, cred, resourceGroupName, fullVaultName, vaultLocation)
+		validateResourceGroup(t, environment.SubscriptionID, credential, resourceGroupName, vaultLocation)
+		validateBackupVault(t, environment.SubscriptionID, credential, resourceGroupName, backupVaultName, vaultLocation)
 	})
 }
 
 /*
  * Validates the resource group has been deployed correctly
  */
-func ValidateResourceGroup(t *testing.T, subscriptionID string,
-	cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultLocation string) {
+func validateResourceGroup(t *testing.T, subscriptionID string,
+	credential *azidentity.ClientSecretCredential, resourceGroupName string, vaultLocation string) {
 	// Create a new resource groups client
-	client, err := armresources.NewResourceGroupsClient(subscriptionID, cred, nil)
+	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
 
 	// Get the resource group
@@ -101,18 +96,19 @@ func ValidateResourceGroup(t *testing.T, subscriptionID string,
 /*
  * Validates the backup vault has been deployed correctly
  */
-func ValidateBackupVault(t *testing.T, subscriptionID string, cred *azidentity.ClientSecretCredential, resourceGroupName string, vaultName string, vaultLocation string) {
+func validateBackupVault(t *testing.T, subscriptionID string, credential *azidentity.ClientSecretCredential,
+	resourceGroupName string, backupVaultName string, vaultLocation string) {
 	// Create a new Data Protection Backup Vaults client
-	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, cred, nil)
+	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create data protection client: %v", err)
 
 	// Get the backup vault
-	resp, err := client.Get(context.Background(), resourceGroupName, vaultName, nil)
+	resp, err := client.Get(context.Background(), resourceGroupName, backupVaultName, nil)
 	assert.NoError(t, err, "Failed to get backup vault: %v", err)
 
 	// Validate the backup vault
 	assert.NotNil(t, resp.BackupVaultResource, "Backup vault does not exist")
-	assert.Equal(t, vaultName, *resp.BackupVaultResource.Name, "Backup vault name does not match")
+	assert.Equal(t, backupVaultName, *resp.BackupVaultResource.Name, "Backup vault name does not match")
 	assert.Equal(t, vaultLocation, *resp.BackupVaultResource.Location, "Backup vault location does not match")
 	assert.NotNil(t, resp.BackupVaultResource.Identity.PrincipalID, "Backup vault identity does not exist")
 	assert.Equal(t, "SystemAssigned", *resp.BackupVaultResource.Identity.Type, "Backup vault identity type does not match")
