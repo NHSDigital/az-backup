@@ -30,6 +30,16 @@ func TestBasicDeployment(t *testing.T) {
 	vaultLocation := "uksouth"
 	vaultRedundancy := "LocallyRedundant"
 
+	// Teardown stage - deferred so it runs after the other test stages
+	// regardless of whether they succeed or fail.
+	// ...
+
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
+
+		terraform.Destroy(t, terraformOptions)
+	})
+
 	// Setup stage
 	// ...
 
@@ -37,7 +47,6 @@ func TestBasicDeployment(t *testing.T) {
 		terraformOptions := &terraform.Options{
 			TerraformDir: terraformFolder,
 
-			// Variables to pass to our Terraform code using -var options
 			Vars: map[string]interface{}{
 				"vault_name":       vaultName,
 				"vault_location":   vaultLocation,
@@ -52,7 +61,6 @@ func TestBasicDeployment(t *testing.T) {
 			},
 		}
 
-		// Save options for later test stages
 		test_structure.SaveTerraformOptions(t, terraformFolder, terraformOptions)
 
 		terraform.InitAndApply(t, terraformOptions)
@@ -64,26 +72,14 @@ func TestBasicDeployment(t *testing.T) {
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
 
-		// Check if the vault name is as expected
 		expectedVaultName := fmt.Sprintf("bvault-%s", vaultName)
 		actualVaultName := terraform.OutputMap(t, terraformOptions, "backup_vault")["name"]
 		assert.Equal(t, expectedVaultName, actualVaultName)
 
-		// Check if the vault location is as expected
 		actualVaultLocation := terraform.OutputMap(t, terraformOptions, "backup_vault")["location"]
 		assert.Equal(t, vaultLocation, actualVaultLocation)
 
-		// Check if the vault redundancy is as expected
 		actualVaultRedundancy := terraform.OutputMap(t, terraformOptions, "backup_vault")["redundancy"]
 		assert.Equal(t, vaultRedundancy, actualVaultRedundancy)
-	})
-
-	// Teardown stage
-	// ...
-
-	test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
-
-		terraform.Destroy(t, terraformOptions)
 	})
 }

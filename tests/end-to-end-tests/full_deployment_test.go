@@ -34,6 +34,16 @@ func TestFullDeployment(t *testing.T) {
 	vaultLocation := "uksouth"
 	vaultRedundancy := "LocallyRedundant"
 
+	// Teardown stage - deferred so it runs after the other test stages
+	// regardless of whether they succeed or fail.
+	// ...
+
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
+
+		terraform.Destroy(t, terraformOptions)
+	})
+
 	// Setup stage
 	// ...
 
@@ -41,7 +51,6 @@ func TestFullDeployment(t *testing.T) {
 		terraformOptions := &terraform.Options{
 			TerraformDir: terraformFolder,
 
-			// Variables to pass to our Terraform code using -var options
 			Vars: map[string]interface{}{
 				"vault_name":       vaultName,
 				"vault_location":   vaultLocation,
@@ -86,15 +95,6 @@ func TestFullDeployment(t *testing.T) {
 		ValidateResourceGroup(t, subscriptionID, cred, resourceGroupName, vaultLocation)
 		ValidateBackupVault(t, subscriptionID, cred, resourceGroupName, fullVaultName, vaultLocation)
 		ValidateBackupPolicies(t, subscriptionID, cred, resourceGroupName, fullVaultName, vaultName)
-	})
-
-	// Teardown stage
-	// ...
-
-	test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, terraformFolder)
-
-		terraform.Destroy(t, terraformOptions)
 	})
 }
 
