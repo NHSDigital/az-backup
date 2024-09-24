@@ -361,7 +361,7 @@ To run the tests, take the following steps:
 
 #### Debugging
 
-To debug the tests in vscode, add the following configuration to launch settings and run the configuration with the test file you want to debug open:
+To debug the tests in vscode, add the following configuration to launch settings and run the configuration:
 
 ```json
 {
@@ -371,7 +371,7 @@ To debug the tests in vscode, add the following configuration to launch settings
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${file}",
+            "program": "${workspaceFolder}/tests/end-to-end-tests",
             "env": {
                 "ARM_TENANT_ID": "<your-tenant-id>",
                 "ARM_SUBSCRIPTION_ID": "<your-subscription-id>",
