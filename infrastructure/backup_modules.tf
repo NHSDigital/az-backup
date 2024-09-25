@@ -11,15 +11,16 @@ module "blob_storage_backup" {
 }
 
 module "managed_disk_backup" {
-  for_each                    = var.managed_disk_backups
-  source                      = "./modules/backup/managed_disk"
-  vault_id                    = azurerm_data_protection_backup_vault.backup_vault.id
-  vault_name                  = var.vault_name
-  vault_location              = var.vault_location
-  backup_name                 = each.value.backup_name
-  retention_period            = each.value.retention_period
-  backup_intervals            = each.value.backup_intervals
-  managed_disk_id             = each.value.managed_disk_id
-  managed_disk_resource_group = each.value.managed_disk_resource_group
-  vault_principal_id          = azurerm_data_protection_backup_vault.backup_vault.identity[0].principal_id
+  for_each                          = var.managed_disk_backups
+  source                            = "./modules/backup/managed_disk"
+  vault_id                          = azurerm_data_protection_backup_vault.backup_vault.id
+  vault_name                        = var.vault_name
+  vault_location                    = var.vault_location
+  backup_name                       = each.value.backup_name
+  retention_period                  = each.value.retention_period
+  backup_intervals                  = each.value.backup_intervals
+  managed_disk_id                   = each.value.managed_disk_id
+  managed_disk_resource_group       = each.value.managed_disk_resource_group
+  vault_principal_id                = azurerm_data_protection_backup_vault.backup_vault.identity[0].principal_id
+  assign_resource_group_level_roles = each.key == keys(var.managed_disk_backups)[0] ? true : false
 }

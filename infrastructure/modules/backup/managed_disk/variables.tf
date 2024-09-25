@@ -36,3 +36,7 @@ variable "managed_disk_resource_group" {
     name = string
   })
 }
+
+variable "assign_resource_group_level_roles" {
+  type = bool
+}

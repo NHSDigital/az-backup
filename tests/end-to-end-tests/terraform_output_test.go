@@ -22,8 +22,7 @@ func TestTerraformOutput(t *testing.T) {
 	vaultLocation := "uksouth"
 	vaultRedundancy := "LocallyRedundant"
 
-	// Teardown stage - deferred so it runs after the other test stages
-	// regardless of whether they succeed or fail.
+	// Teardown stage
 	// ...
 
 	defer test_structure.RunTestStage(t, "teardown", func() {

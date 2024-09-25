@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -29,7 +30,7 @@ type Config struct {
 }
 
 /*
- * GetEnvironmentConfiguration gets the configuration for the test environment.
+ * GetEnvironmentConfiguration gets the environment config that is required to execute a test.
  */
 func GetEnvironmentConfiguration(t *testing.T) *Config {
 	terraformFolder := test_structure.CopyTerraformFolderToTemp(t, "../../infrastructure", "")
@@ -94,7 +95,23 @@ func GetAzureCredential(t *testing.T, environment *Config) *azidentity.ClientSec
 }
 
 /*
- * Gets a role definition.
+ * Gets a resource group for the provided name.
+ */
+func GetResourceGroup(t *testing.T, subscriptionID string,
+	credential *azidentity.ClientSecretCredential, name string) armresources.ResourceGroup {
+	// Create a new resource groups client
+	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create resource group client: %v", err)
+
+	// Get the resource group
+	resp, err := client.Get(context.Background(), name, nil)
+	assert.NoError(t, err, "Failed to get resource group: %v", err)
+
+	return resp.ResourceGroup
+}
+
+/*
+ * Gets a role definition for the provided role name.
  */
 func GetRoleDefinition(t *testing.T, credential *azidentity.ClientSecretCredential, roleName string) *armauthorization.RoleDefinition {
 	roleDefinitionsClient, err := armauthorization.NewRoleDefinitionsClient(credential, nil)
@@ -119,7 +136,38 @@ func GetRoleDefinition(t *testing.T, credential *azidentity.ClientSecretCredenti
 }
 
 /*
- * Gets the backup vault for the provided name.
+ * Gets a role assignment in the provided scope for the provided role definition,
+ * that's been assigned to the provided principal id.
+ */
+func GetRoleAssignment(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	principalId string, roleDefinition *armauthorization.RoleDefinition, scope string) *armauthorization.RoleAssignment {
+	roleAssignmentsClient, err := armauthorization.NewRoleAssignmentsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create role assignments client: %v", err)
+
+	// List role assignments for the given scope
+	filter := fmt.Sprintf("principalId eq '%s'", principalId)
+	pager := roleAssignmentsClient.NewListForScopePager(scope, &armauthorization.RoleAssignmentsClientListForScopeOptions{Filter: &filter})
+
+	// Find the role assignment for the given definition
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
+		assert.NoError(t, err, "Failed to list role assignments")
+
+		// Check if the role definition is among the assigned roles
+		for _, roleAssignment := range page.RoleAssignmentListResult.Value {
+			// Use string.contains, as the role definition ID on a role assignment
+			// is a longer URI which includes the subscription scope
+			if strings.Contains(*roleAssignment.Properties.RoleDefinitionID, *roleDefinition.ID) {
+				return roleAssignment
+			}
+		}
+	}
+
+	return nil
+}
+
+/*
+ * Gets a backup vault for the provided name.
  */
 func GetBackupVault(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string) armdataprotection.BackupVaultResource {
 	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, credential, nil)
@@ -201,7 +249,7 @@ func GetBackupPolicyRuleForName(policyRules []armdataprotection.BasePolicyRuleCl
 }
 
 /*
- * Gets a backup policy from the provided list for the provided name
+ * Gets a backup instance from the provided list for the provided name
  */
 func GetBackupInstanceForName(instances []*armdataprotection.BackupInstanceResource, name string) *armdataprotection.BackupInstanceResource {
 	for _, instance := range instances {
@@ -235,25 +283,6 @@ func CreateResourceGroup(t *testing.T, subscriptionID string, credential *aziden
 	t.Logf("Resource group %s created successfully", resourceGroupName)
 
 	return resp.ResourceGroup
-}
-
-/*
- * Deletes a resource group.
- */
-func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string) {
-	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
-	assert.NoError(t, err, "Failed to create resource group client: %v", err)
-
-	t.Logf("Deleting resource group %s", resourceGroupName)
-
-	pollerResp, err := client.BeginDelete(context.Background(), resourceGroupName, nil)
-	assert.NoError(t, err, "Failed to delete resource group: %v", err)
-
-	// Wait for the creation to complete
-	_, err = pollerResp.PollUntilDone(context.Background(), nil)
-	assert.NoError(t, err, "Failed to create storage account: %v", err)
-
-	t.Logf("Resource group %s deleted successfully", resourceGroupName)
 }
 
 /*
@@ -291,7 +320,7 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 }
 
 /*
- * Creates a storage account that can be used for testing purposes.
+ * Creates a managed disk that can be used for testing purposes.
  */
 func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
 	resourceGroupName string, diskName string, diskLocation string, diskSizeGB int32) armcompute.Disk {
@@ -325,4 +354,23 @@ func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredenti
 	t.Logf("Managed disk %s created successfully", diskName)
 
 	return resp.Disk
+}
+
+/*
+ * Deletes a resource group.
+ */
+func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string) {
+	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create resource group client: %v", err)
+
+	t.Logf("Deleting resource group %s", resourceGroupName)
+
+	pollerResp, err := client.BeginDelete(context.Background(), resourceGroupName, nil)
+	assert.NoError(t, err, "Failed to delete resource group: %v", err)
+
+	// Wait for the creation to complete
+	_, err = pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create storage account: %v", err)
+
+	t.Logf("Resource group %s deleted successfully", resourceGroupName)
 }

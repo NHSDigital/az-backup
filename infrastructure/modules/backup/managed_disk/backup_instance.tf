@@ -1,4 +1,5 @@
 resource "azurerm_role_assignment" "role_assignment_snapshot_contributor" {
+  count                = var.assign_resource_group_level_roles == "" ? 1 : 0
   scope                = var.managed_disk_resource_group.id
   role_definition_name = "Disk Snapshot Contributor"
   principal_id         = var.vault_principal_id
