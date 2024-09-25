@@ -8,25 +8,25 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
 
-type TestBlobStorageBackupExternalResources struct {
-	ResourceGroup     armresources.ResourceGroup
-	StorageAccountOne armstorage.Account
-	StorageAccountTwo armstorage.Account
+type TestManagedDiskBackupExternalResources struct {
+	ResourceGroup armresources.ResourceGroup
+	ManagedDisk1  armcompute.Disk
+	ManagedDisk2  armcompute.Disk
 }
 
 /*
- * TestBlobStorageBackup tests the deployment of a backup vault and backup policies for blob storage accounts.
+ * TestManagedDiskBackup tests the deployment of a backup vault and backup policies for blob storage accounts.
  */
-func TestBlobStorageBackup(t *testing.T) {
+func TestManagedDiskBackup(t *testing.T) {
 	t.Parallel()
 
 	environment := GetEnvironmentConfiguration(t)
@@ -38,7 +38,7 @@ func TestBlobStorageBackup(t *testing.T) {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
 	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
 
-	externalResources := testBlobStorageBackupSetupExternalResources(t, credential, environment.SubscriptionID, vaultName, vaultLocation)
+	externalResources := testManagedDiskBackupSetupExternalResources(t, credential, environment.SubscriptionID, vaultName, vaultLocation)
 
 	// A map of backups which we'll use to apply the TF module, and then validate the
 	// policies have been created correctly
@@ -64,7 +64,7 @@ func TestBlobStorageBackup(t *testing.T) {
 
 		terraform.Destroy(t, terraformOptions)
 
-		testBlobStorageBackupDestroyExternalResources(t, credential, environment.SubscriptionID, externalResources)
+		testManagedDiskBackupDestroyExternalResources(t, credential, environment.SubscriptionID, externalResources)
 	})
 
 	// Setup stage
@@ -103,14 +103,14 @@ func TestBlobStorageBackup(t *testing.T) {
 		backupPolicies := GetBackupPolicies(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 		backupInstances := GetBackupInstances(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 
-		testBlobStorageBackupValidateBackups(t, credential, environment.SubscriptionID, vaultName, backupVault, backupPolicies, backupInstances, blobStorageBackups)
+		testManagedDiskBackupValidateBackups(t, credential, environment.SubscriptionID, vaultName, backupVault, backupPolicies, backupInstances, blobStorageBackups)
 	})
 }
 
 /*
  * Validates the backup instances have been deployed correctly
  */
-func testBlobStorageBackupValidateBackups(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+func testManagedDiskBackupValidateBackups(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
 	vaultName string, backupVault armdataprotection.BackupVaultResource, policies []*armdataprotection.BaseBackupPolicyResource,
 	instances []*armdataprotection.BackupInstanceResource, blobStorageBackups map[string]map[string]interface{}) {
 	assert.Equal(t, len(blobStorageBackups), len(instances), "Expected to find %2 backup instances in vault", len(blobStorageBackups))
@@ -131,16 +131,16 @@ func testBlobStorageBackupValidateBackups(t *testing.T, credential *azidentity.C
 		roleDefinition := GetRoleDefinition(t, credential, "Storage Account Backup Contributor")
 		assert.NotNil(t, roleDefinition, "Expected to find a role definition called %s", "Storage Account Backup Contributor")
 
-		testBlobStorageBackupValidateBackupPolicy(t, backupPolicy, retentionPeriod)
-		testBlobStorageBackupValidateBackupInstance(t, backupInstance, backupPolicy, storageAccountId)
-		testBlobStorageBackupValidateRoleAssignment(t, credential, subscriptionID, *backupVault.Identity.PrincipalID, roleDefinition, storageAccountId)
+		testManagedDiskBackupValidateBackupPolicy(t, backupPolicy, retentionPeriod)
+		testManagedDiskBackupValidateBackupInstance(t, backupInstance, backupPolicy, storageAccountId)
+		testManagedDiskBackupValidateRoleAssignment(t, credential, subscriptionID, *backupVault.Identity.PrincipalID, roleDefinition, storageAccountId)
 	}
 }
 
 /*
  * Validates a role assignment.
  */
-func testBlobStorageBackupValidateRoleAssignment(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+func testManagedDiskBackupValidateRoleAssignment(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
 	principalId string, roleDefinition *armauthorization.RoleDefinition, storageAccountId string) {
 	roleAssignmentsClient, err := armauthorization.NewRoleAssignmentsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create role assignments client: %v", err)
@@ -169,7 +169,7 @@ func testBlobStorageBackupValidateRoleAssignment(t *testing.T, credential *azide
 /*
  * Validates a backup instance
  */
-func testBlobStorageBackupValidateBackupInstance(t *testing.T, instance *armdataprotection.BackupInstanceResource, policy *armdataprotection.BaseBackupPolicyResource, expectedStorageAccountId string) {
+func testManagedDiskBackupValidateBackupInstance(t *testing.T, instance *armdataprotection.BackupInstanceResource, policy *armdataprotection.BaseBackupPolicyResource, expectedStorageAccountId string) {
 	assert.Equal(t, expectedStorageAccountId, *instance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", expectedStorageAccountId)
 	assert.Equal(t, *policy.ID, *instance.Properties.PolicyInfo.PolicyID, "Expected the backup instance policy ID to be %s", policy.ID)
 }
@@ -177,7 +177,7 @@ func testBlobStorageBackupValidateBackupInstance(t *testing.T, instance *armdata
 /*
  * Validates a backup policy
  */
-func testBlobStorageBackupValidateBackupPolicy(t *testing.T, policy *armdataprotection.BaseBackupPolicyResource, expectedRetentionPeriod string) {
+func testManagedDiskBackupValidateBackupPolicy(t *testing.T, policy *armdataprotection.BaseBackupPolicyResource, expectedRetentionPeriod string) {
 	blobStoragePolicyProperties := policy.Properties.(*armdataprotection.BackupPolicy)
 	retentionPeriodPolicyRule := GetBackupPolicyRuleForName(blobStoragePolicyProperties.PolicyRules, "Default")
 	assert.NotNil(t, retentionPeriodPolicyRule, "Expected to find a policy rule called Default in the backup policies")
@@ -190,20 +190,20 @@ func testBlobStorageBackupValidateBackupPolicy(t *testing.T, policy *armdataprot
 /*
  * Creates resources which are "external" to the az-backup module, and will be backed up in a real scenario.
  */
-func testBlobStorageBackupSetupExternalResources(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestBlobStorageBackupExternalResources {
+func testManagedDiskBackupSetupExternalResources(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestBlobStorageBackupExternalResources {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
 	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
 
-	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(vault_name))
-	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, storageAccountOneName, vault_location)
+	managedDiskOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(vault_name))
+	managedDiskOne := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, managedDiskOneName, vault_location)
 
-	storageAccountTwoName := fmt.Sprintf("sa%sexternal2", strings.ToLower(vault_name))
-	storageAccountTwo := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, storageAccountTwoName, vault_location)
+	managedDiskTwoName := fmt.Sprintf("sa%sexternal2", strings.ToLower(vault_name))
+	managedDiskTwo := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, managedDiskTwoName, vault_location)
 
-	externalResources := &TestBlobStorageBackupExternalResources{
+	externalResources := &TestManagedDiskBackupExternalResources{
 		ResourceGroup:     resourceGroup,
-		StorageAccountOne: storageAccountOne,
-		StorageAccountTwo: storageAccountTwo,
+		StorageAccountOne: managedDiskOne,
+		StorageAccountTwo: managedDiskTwo,
 	}
 
 	return externalResources
@@ -212,6 +212,6 @@ func testBlobStorageBackupSetupExternalResources(t *testing.T, credential *azide
 /*
  * Destroys the external resources.
  */
-func testBlobStorageBackupDestroyExternalResources(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, externalResources *TestBlobStorageBackupExternalResources) {
+func testManagedDiskBackupDestroyExternalResources(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, externalResources *TestBlobStorageBackupExternalResources) {
 	DeleteResourceGroup(t, credential, subscriptionID, *externalResources.ResourceGroup.Name)
 }

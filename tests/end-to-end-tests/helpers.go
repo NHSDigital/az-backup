@@ -2,11 +2,14 @@ package e2e_tests
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
@@ -88,6 +91,31 @@ func GetAzureCredential(t *testing.T, environment *Config) *azidentity.ClientSec
 	assert.NoError(t, err, "Failed to obtain a credential: %v", err)
 
 	return credential
+}
+
+/*
+ * Gets a role definition.
+ */
+func GetRoleDefinition(t *testing.T, credential *azidentity.ClientSecretCredential, roleName string) *armauthorization.RoleDefinition {
+	roleDefinitionsClient, err := armauthorization.NewRoleDefinitionsClient(credential, nil)
+	assert.NoError(t, err, "Failed to create role definition client: %v", err)
+
+	// Create a pager to list role definitions
+	filter := fmt.Sprintf("roleName eq '%s'", roleName)
+	pager := roleDefinitionsClient.NewListPager("", &armauthorization.RoleDefinitionsClientListOptions{Filter: &filter})
+
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
+		assert.NoError(t, err, "Failed to list role definitions")
+
+		for _, roleDefinition := range page.RoleDefinitionListResult.Value {
+			if *roleDefinition.Properties.RoleName == roleName {
+				return roleDefinition
+			}
+		}
+	}
+
+	return nil
 }
 
 /*
@@ -260,4 +288,41 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 	t.Logf("Storage account %s created successfully", storageAccountName)
 
 	return resp.Account
+}
+
+/*
+ * Creates a storage account that can be used for testing purposes.
+ */
+func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, diskName string, diskLocation string, diskSizeGB int32) armcompute.Disk {
+	client, err := armcompute.NewDisksClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create disks client: %v", err)
+
+	t.Logf("Creating managed disk %s in location %s", diskName, diskLocation)
+
+	pollerResp, err := client.BeginCreateOrUpdate(
+		context.Background(),
+		resourceGroupName,
+		diskName,
+		armcompute.Disk{
+			Location: &diskLocation,
+			SKU: &armcompute.DiskSKU{
+				Name: to.Ptr(armcompute.DiskStorageAccountTypesStandardLRS),
+			},
+			Properties: &armcompute.DiskProperties{
+				DiskSizeGB:   &diskSizeGB,
+				CreationData: &armcompute.CreationData{CreateOption: to.Ptr(armcompute.DiskCreateOptionEmpty)},
+			},
+		},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to begin creating managed disk: %v", err)
+
+	// Wait for the creation to complete
+	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create managed disk: %v", err)
+
+	t.Logf("Managed disk %s created successfully", diskName)
+
+	return resp.Disk
 }
