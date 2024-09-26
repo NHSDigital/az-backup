@@ -140,7 +140,7 @@ func TestManagedDiskBackup(t *testing.T) {
 			backupName := backup["backup_name"].(string)
 			retentionPeriod := backup["retention_period"].(string)
 			backupIntervals := backup["backup_intervals"].([]string)
-			managedDiskId := backup["storage_account_id"].(string)
+			managedDiskId := backup["managed_disk_id"].(string)
 			managedDiskResourceGroup := backup["managed_disk_resource_group"].(map[string]interface{})
 			managedDiskResourceGroupId := managedDiskResourceGroup["id"].(string)
 
@@ -156,10 +156,10 @@ func TestManagedDiskBackup(t *testing.T) {
 			assert.Equal(t, retentionPeriod, *deleteOption.Duration, "Expected the backup policy retention period to be %s", retentionPeriod)
 
 			// Validate backup intervals
-			backupRule := GetBackupPolicyRuleForName(backupPolicyProperties.PolicyRules, "Default").(*armdataprotection.AzureBackupRule)
+			backupRule := GetBackupPolicyRuleForName(backupPolicyProperties.PolicyRules, "BackupIntervals").(*armdataprotection.AzureBackupRule)
 			schedule := backupRule.Trigger.(*armdataprotection.ScheduleBasedTriggerContext).Schedule
 			for index, interval := range schedule.RepeatingTimeIntervals {
-				assert.Equal(t, backupIntervals[index], interval, "Expected backup policy repeating interval %s to be %s", index, backupIntervals[index])
+				assert.Equal(t, backupIntervals[index], *interval, "Expected backup policy repeating interval %s to be %s", index, backupIntervals[index])
 			}
 
 			// Validate backup instance
