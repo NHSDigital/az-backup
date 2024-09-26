@@ -3,6 +3,7 @@ package e2e_tests
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -268,7 +269,7 @@ func CreateResourceGroup(t *testing.T, subscriptionID string, credential *aziden
 	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
 
-	t.Logf("Creating resource group %s in location %s", resourceGroupName, resourceGroupLocation)
+	log.Printf("Creating resource group %s in location %s", resourceGroupName, resourceGroupLocation)
 
 	resp, err := client.CreateOrUpdate(
 		context.Background(),
@@ -280,7 +281,7 @@ func CreateResourceGroup(t *testing.T, subscriptionID string, credential *aziden
 	)
 	assert.NoError(t, err, "Failed to create resource group: %v", err)
 
-	t.Logf("Resource group %s created successfully", resourceGroupName)
+	log.Printf("Resource group %s created successfully", resourceGroupName)
 
 	return resp.ResourceGroup
 }
@@ -293,7 +294,7 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 	client, err := armstorage.NewAccountsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create storage account client: %v", err)
 
-	t.Logf("Creating storage account %s in location %s", storageAccountName, storageAccountLocation)
+	log.Printf("Creating storage account %s in location %s", storageAccountName, storageAccountLocation)
 
 	pollerResp, err := client.BeginCreate(
 		context.Background(),
@@ -314,7 +315,7 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
 	assert.NoError(t, err, "Failed to create storage account: %v", err)
 
-	t.Logf("Storage account %s created successfully", storageAccountName)
+	log.Printf("Storage account %s created successfully", storageAccountName)
 
 	return resp.Account
 }
@@ -327,7 +328,7 @@ func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredenti
 	client, err := armcompute.NewDisksClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create disks client: %v", err)
 
-	t.Logf("Creating managed disk %s in location %s", diskName, diskLocation)
+	log.Printf("Creating managed disk %s in location %s", diskName, diskLocation)
 
 	pollerResp, err := client.BeginCreateOrUpdate(
 		context.Background(),
@@ -351,7 +352,7 @@ func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredenti
 	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
 	assert.NoError(t, err, "Failed to create managed disk: %v", err)
 
-	t.Logf("Managed disk %s created successfully", diskName)
+	log.Printf("Managed disk %s created successfully", diskName)
 
 	return resp.Disk
 }
@@ -363,7 +364,7 @@ func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCreden
 	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
 
-	t.Logf("Deleting resource group %s", resourceGroupName)
+	log.Printf("Deleting resource group %s", resourceGroupName)
 
 	pollerResp, err := client.BeginDelete(context.Background(), resourceGroupName, nil)
 	assert.NoError(t, err, "Failed to delete resource group: %v", err)
@@ -372,5 +373,5 @@ func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCreden
 	_, err = pollerResp.PollUntilDone(context.Background(), nil)
 	assert.NoError(t, err, "Failed to create storage account: %v", err)
 
-	t.Logf("Resource group %s deleted successfully", resourceGroupName)
+	log.Printf("Resource group %s deleted successfully", resourceGroupName)
 }
