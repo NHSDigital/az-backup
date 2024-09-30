@@ -8,6 +8,10 @@ variable "vault_location" {
   default = "UK South"
 }
 
+variable "datastore_type" {
+  type    = string
+  default = "VaultStore"
+}
 variable "vault_redundancy" {
   type    = string
   default = "LocallyRedundant"
