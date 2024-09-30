@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repository is a blueprint solution for deploying immutable backups to Azure. It's aim is to give developers tooling and templates that can be used to create, configure and manage immutable backups using Azure Backup Vault and Azure Recovery Services Vault.
+This repository is a blueprint accelerator solution that supports teams in taking immutable backups in Azure. It's aim is to give developers tooling and templates that can be used to create, configure and manage immutable backups using Azure Backup Vault.
 
 The following technologies are used:
 
@@ -10,6 +10,7 @@ The following technologies are used:
 * Azure CLI
 * Azure Pipelines
 * Terraform
+* Go (used for end-to-end testing)
 
 ### Outstanding Questions
 
@@ -103,45 +104,37 @@ The repository consists of the following directories:
 The following are pre-reqs to working with the solution:
 
 * An Azure subscription
-* An Azure identity assigned the subscription Contributor role (required to create resources)
+* An Azure identity which has been assigned the subscription Contributor role (required to create resources)
 * [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
+* [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
 
-> Ensure all installed components have been added to the `%PATH%` - e.g. `az` and `terraform`.
+> Ensure all installed components have been added to the `%PATH%` - e.g. `az`, `terraform` and `go`.
 
 ### Getting Started
 
 Take the following steps to get started in configuring and verifying the infrastructure for your development environment:
 
-1. Login to Azure
+1. Setup environment variables
 
-   Use Azure CLI to login to Azure by running the following command:
+   Set the following environment variables in order to connect to Azure in the following steps:
 
    ```pwsh
-   az login
+   $env:ARM_TENANT_ID="<your-tenant-id>"
+   $env:ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+   $env:ARM_CLIENT_ID="<your-client-id>"
+   $env:ARM_CLIENT_SECRET="<your-client-secret>"
    ```
 
 2. Create Backend
 
    A backend (e.g. storage account) is required in order to store the tfstate and work with Terraform.
 
-   Run the following powershell script to create the backend with default settings: `./scripts/create-tf-backend.ps1`.
+   Run the following powershell script to create the backend with default settings: `./scripts/create-tf-backend.ps1`. This script will create a resource group called `rg-nhsbackup` containing a storage account called `satfstate<random-id>`.
 
-   Make a note of the name of the storage account - it's generated with a random suffix, and you'll need it in the following steps.
+   Make a note of the name of the storage account in the script output - it's generated with a random suffix, and you'll need it in the following steps to initialise the terraform.
 
-3. Create Access Key
-
-   An access key must be created as an environment variable so Terraform can authenticate with Azure.
-
-   Run the following commands to generate an access key and store it as an environment variable:
-
-   ```pwsh
-   $ACCOUNT_KEY=$(az storage account keys list --resource-group "rg-nhsbackup" --account-name "<storage-account-name>" --query '[0].value' -o tsv)
-
-   $env:ARM_ACCESS_KEY=$ACCOUNT_KEY
-   ```
-
-4. Prepare Terraform Variables (Optional)
+3. Prepare Terraform Variables (Optional)
 
    If you want to override the Terraform variables, make a copy of `tfvars.template` and amend any default settings as required.
 
@@ -151,7 +144,7 @@ Take the following steps to get started in configuring and verifying the infrast
    -var-file="<your-var-file>.tfvars
    ```
 
-5. Initialise Terraform
+4. Initialise Terraform
 
    Change the working directory to `./infrastructure`.
 
@@ -161,7 +154,7 @@ Take the following steps to get started in configuring and verifying the infrast
    terraform init -backend=true -backend-config="resource_group_name=rg-nhsbackup" -backend-config="storage_account_name=<storage-account-name>" -backend-config="container_name=tfstate" -backend-config="key=terraform.tfstate"
    ````
 
-6. Apply Terraform
+5. Apply Terraform
 
    Apply the Terraform code to create the infrastructure.
 
@@ -197,13 +190,94 @@ Take the following steps to run the test suite:
 
    > NOTE: There's no need to initialise a backend for the purposes of running the tests.
 
-2. Run the Tests
+2. Run the tests
 
    Run the tests with the following command:
 
    ````pwsh
    terraform test
    ````
+
+#### End to End Tests
+
+The end to end tests are written in go, and use the [terratest library](https://terratest.gruntwork.io/) and the [Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go/tree/main).
+
+The tests depend on a connection to Azure so it can create an environment that the tests can be executed against - the environment is torn down once the test run has completed.
+
+See the following resources for docs and examples of terratest and the Azure SDK:
+
+[Terratest docs](https://terratest.gruntwork.io/docs/)
+[Terratest repository](https://github.com/gruntwork-io/terratest)
+[Terratest test examples](https://github.com/gruntwork-io/terratest/tree/master/test)
+[Azure SDK](https://github.com/Azure/azure-sdk-for-go/tree/main)
+[Azure SDK Data Protection Module](https://github.com/Azure/azure-sdk-for-go/tree/main/sdk/resourcemanager/dataprotection/armdataprotection)
+
+To run the tests, take the following steps:
+
+1. Install go packages
+
+   You only need to do this once when setting up your environment.
+
+   Change the working directory to `./tests/end-to-end-tests`.
+
+   Run the following command:
+
+   ````pwsh
+   go mod tidy
+   ````
+
+2. Setup environment variables
+
+   The end-to-end test suite needs to login to Azure in order to execute the tests and therefore the following environment variables must be set.
+
+   ```pwsh
+   $env:ARM_TENANT_ID="<your-tenant-id>"
+   $env:ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+   $env:ARM_CLIENT_ID="<your-client-id>"
+   $env:ARM_CLIENT_SECRET="<your-client-secret>"
+   $env:TF_STATE_RESOURCE_GROUP="rg-nhsbackup"
+   $env:TF_STATE_STORAGE_ACCOUNT="<storage-account-name>"
+   $env:TF_STATE_STORAGE_CONTAINER="terraform"
+   ```
+
+   > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
+
+3. Run the tests
+
+   Run the tests with the following command:
+
+   ````pwsh
+   go test -v -timeout 10m
+   ````
+
+##### Debugging
+
+To debug the tests in vscode, add the following configuration to launch settings and run the configuration with the test file you want to debug open:
+
+```json
+{
+    "configurations": [
+        {
+            "name": "Go Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${file}",
+            "env": {
+                "ARM_TENANT_ID": "<your-tenant-id>",
+                "ARM_SUBSCRIPTION_ID": "<your-subscription-id>",
+                "ARM_CLIENT_ID": "<your-client-id>",
+                "ARM_CLIENT_SECRET": "<your-client-secret>",
+                "TF_STATE_RESOURCE_GROUP": "rg-nhsbackup",
+                "TF_STATE_STORAGE_ACCOUNT": "<storage-account-name>",
+                "TF_STATE_STORAGE_CONTAINER": "terraform"
+            }
+        }       
+    ]
+}
+```
+
+> For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
 
 ### Contributing
 
@@ -233,16 +307,39 @@ The CI pipeline builds and verifies the solution and runs a number of static cod
 
 Part of the build verification is the end to end testing step. This requires the pipeline to login to Azure in order to deploy an environment on which to execute the tests.
 
-In order for the CI pipeline to login to Azure the following GitHub actions secret must be created called `AZURE_CREDENTIALS` set as a JSON object in the following structure:
+A storage account must be provisioned with a container called `github-actions`, which is used by the CI pipeline to persist the terraform state.
 
-```json
-{
-    "clientSecret":  "******",
-    "subscriptionId":  "******",
-    "tenantId":  "******",
-    "clientId":  "******"
-}
-```
+In order for the CI pipeline to login to Azure and use the terraform state storage account, the following GitHub actions secrets must be created:
+
+* `AZURE_TENANT_ID`
+
+  The ID of an Azure tenant which can be used for the end to end test environment.
+
+* `AZURE_SUBSCRIPTION_ID`
+
+  The ID of an Azure subscription which can be used for the end to end test environment.
+
+* `AZURE_CLIENT_ID`
+
+  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment.
+  
+  The app registration must have contributor permissions on the subscription in order to create resources.
+
+* `AZURE_CLIENT_SECRET`
+
+  The client secret of an Azure app registration which can be used to authenticate with the end to end test environment.
+
+* `TF_STATE_RESOURCE_GROUP`
+
+  The resource group which contains the TF state storage account.
+
+* `TF_STATE_STORAGE_ACCOUNT`
+
+  The storage account used for TF state.
+
+* `TF_STATE_STORAGE_COMTAINER`
+
+  The storage container used for TF state.
 
 ### Static Code Analysis
 
