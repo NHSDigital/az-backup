@@ -4,7 +4,7 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
   location            = var.vault_location
   datastore_type      = "VaultStore"
   redundancy          = var.vault_redundancy
-  soft_delete         = "Off"
+  soft_delete         = var.softDeleteSettingsState
   tags                = var.tags
   identity {
     type = "SystemAssigned"
@@ -20,25 +20,25 @@ resource "azapi_update_resource" "immutabilitysettings" {
     properties = {
       monitoringSettings = {
         azureMonitorAlertSettings = {
-          alertsForAllJobFailures = "Disabled"
+          alertsForAllJobFailures = var.monitoringSettings
         }
       }
       securitySettings = {
         immutabilitySettings = {
-          state = "Unlocked"
+          state = var.immutabilitySettings
         }
         softDeleteSettings = {
-          retentionDurationInDays = 14
-          state = "Off"
+          retentionDurationInDays = var.softDeleteSettingsretentionDays
+          state = var.softDeleteSettingsState
         }
       }
       storageSettings = [
         {
           datastoreType = "VaultStore"
-          type = "LocallyRedundant"
+          type = var.vault_redundancy
         }
       ]
     }
-    eTag = "KRTest"
+    
   })
 }
