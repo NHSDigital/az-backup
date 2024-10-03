@@ -21,12 +21,12 @@ run "create_blob_storage_backup" {
     blob_storage_backups = {
       backup1 = {
         backup_name        = "storage1"
-        retention_period   = "P7D"
+        retention_period   = "P1D"
         storage_account_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
       }
       backup2 = {
         backup_name        = "storage2"
-        retention_period   = "P30D"
+        retention_period   = "P7D"
         storage_account_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage2"
       }
     }
@@ -53,7 +53,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup["backup1"].backup_policy.operational_default_retention_duration == "P7D"
+    condition     = module.blob_storage_backup["backup1"].backup_policy.operational_default_retention_duration == "P1D"
     error_message = "Blob storage backup policy retention period not as expected."
   }
 
@@ -103,7 +103,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup["backup2"].backup_policy.operational_default_retention_duration == "P30D"
+    condition     = module.blob_storage_backup["backup2"].backup_policy.operational_default_retention_duration == "P7D"
     error_message = "Blob storage backup policy retention period not as expected."
   }
 
@@ -136,4 +136,79 @@ run "create_blob_storage_backup" {
     condition     = module.blob_storage_backup["backup2"].backup_instance.backup_policy_id == module.blob_storage_backup["backup2"].backup_policy.id
     error_message = "Blob storage backup instance backup policy id not as expected."
   }
+}
+
+run "validate_blob_storage_backup_retention" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    vault_name     = run.setup_tests.vault_name
+    vault_location = "uksouth"
+    blob_storage_backups = {
+      backup1 = {
+        backup_name        = "storage1"
+        retention_period   = "P30D"
+        storage_account_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.blob_storage_backups,
+  ]
+}
+
+run "validate_blob_storage_backup_retention_with_extended_retention_valid" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    vault_name     = run.setup_tests.vault_name
+    vault_location = "uksouth"
+    use_extended_retention = true
+    blob_storage_backups = {
+      backup1 = {
+        backup_name        = "storage1"
+        retention_period   = "P30D"
+        storage_account_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(module.blob_storage_backup) == 1
+    error_message = "Number of backup modules not as expected."
+  }
+}
+
+run "validate_blob_storage_backup_retention_with_extended_retention_invalid" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    vault_name     = run.setup_tests.vault_name
+    vault_location = "uksouth"
+    use_extended_retention = true
+    blob_storage_backups = {
+      backup1 = {
+        backup_name        = "storage1"
+        retention_period   = "P366D"
+        storage_account_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.blob_storage_backups,
+  ]
 }
