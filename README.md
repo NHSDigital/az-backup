@@ -126,6 +126,22 @@ module "my_backup" {
       }
     }
   }
+  postgresql_flexible_server_backups = {
+    backup1 = {
+      backup_name      = "server1"
+      retention_period = "P7D"
+      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P1D"]
+      server_id  = azurerm_postgresql_flexible_server.my_server_1.id
+      server_resource_group_id = azurerm_resource_group.my_resource_group.id
+    }
+    backup2 = {
+      backup_name      = "server2"
+      retention_period = "P30D"
+      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      server_id  = azurerm_postgresql_flexible_server.my_server_2.id
+      server_resource_group_id = azurerm_resource_group.my_resource_group.id
+    }
+  }
 }
 ```
 
@@ -136,9 +152,11 @@ To deploy the module an Azure identity (typically an app registration with clien
 * Contributor (required to create resources)
 * Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
   * **With a condition that limits the roles which can be assigned to:**
-    * Storage Account Backup Contributor
-    * Disk Snapshot Contributor
     * Disk Backup Reader
+    * Disk Snapshot Contributor
+    * PostgreSQL Flexible Server Long Term Retention Backup Role
+    * Storage Account Backup Contributor
+    * Reader
 
 ### Module Variables
 
@@ -147,15 +165,23 @@ To deploy the module an Azure identity (typically an app registration with clien
 | `vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `vault_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
 | `vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
-| `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `storage_account_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
-| `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |
+| `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `backup_name`, `storage_account_id` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |
+| `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |
 | `blob_storage_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
-| `managed_disk_backups` | A map of managed disk backups that should be created. For each backup the following values should be provided: `managed_disk_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
-| `managed_disk_backups.managed_disk_id` | The id of the managed disk that should be backed up. | Yes | n/a |
+| `managed_disk_backups` | A map of managed disk backups that should be created. For each backup the following values should be provided: `backup_name`, `managed_disk_id`, `managed_disk_resource_group`, `retention_period` and `backup_intervals`. When no value is provided then no backups are created. | No | n/a |
 | `managed_disk_backups.backup_name` | The name of the backup, which must be unique across managed disk backups. | Yes | n/a |
+| `managed_disk_backups.managed_disk_id` | The id of the managed disk that should be backed up. | Yes | n/a |
+| `managed_disk_backups.managed_disk_resource_group.id` | The id of the resource group which the managed disk resides in. | Yes | n/a |
+| `managed_disk_backups.managed_disk_resource_group.name` | The name of the resource group which the managed disk resides in. | Yes | n/a |
 | `managed_disk_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
 | `managed_disk_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `postgresql_flexible_server_backups` | A map of postgresql flexible server backups that should be created. For each backup the following values should be provided: `backup_name`, `server_id`, `server_resource_group_id`, `retention_period` and `backup_intervals`. When no value is provided then no backups are created. | No | n/a |
+| `postgresql_flexible_server_backups.backup_name` | The name of the backup, which must be unique across postgresql flexible server backups. | Yes | n/a |
+| `postgresql_flexible_server_backups.server_id` | The id of the postgresql flexible server that should be backed up. | Yes | n/a |
+| `postgresql_flexible_server_backups.server_resource_group_id` | The id of the resource group which the postgresql flexible server resides in. | Yes | n/a |
+| `postgresql_flexible_server_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
+| `postgresql_flexible_server_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
 
 ## Developer Guide
 
@@ -206,9 +232,11 @@ The following are pre-requisites to working with the solution:
   * Contributor (required to create resources)
   * Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
     * **With a condition that limits the roles which can be assigned to:**
-      * Storage Account Backup Contributor
-      * Disk Snapshot Contributor
       * Disk Backup Reader
+      * Disk Snapshot Contributor
+      * PostgreSQL Flexible Server Long Term Retention Backup Role
+      * Storage Account Backup Contributor
+      * Reader
 * [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
 * [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
