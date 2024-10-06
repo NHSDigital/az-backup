@@ -1,5 +1,7 @@
 # Azure Immutable Backup
 
+![CI](https://github.com/nhsdigital/az-backup/actions/workflows/ci-pipeline.yaml/badge.svg)
+
 ## Introduction
 
 This repository is a blueprint accelerator solution that supports teams in taking immutable backups in Azure. It's aim is to give developers tooling and templates that can be used to create, configure and manage immutable backups using Azure Backup Vault.
