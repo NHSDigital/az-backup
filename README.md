@@ -88,10 +88,11 @@ The following is an example of how the module should be used:
 
 ```terraform
 module "my_backup" {
-  source           = "github.com/nhsdigital/az-backup//infrastructure"
-  vault_name       = "myvault"
-  vault_location   = "uksouth"
-  vault_redundancy = "LocallyRedundant"
+  source                 = "github.com/nhsdigital/az-backup//infrastructure"
+  vault_name             = "myvault"
+  vault_location         = "uksouth"
+  vault_redundancy       = "LocallyRedundant"
+  use_extended_retention = true
   blob_storage_backups = {
     backup1 = {
       backup_name        = "storage1"
