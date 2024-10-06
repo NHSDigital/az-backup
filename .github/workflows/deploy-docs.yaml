@@ -1,4 +1,4 @@
-name: ci
+name: Deploys Docs
 
 permissions:
   contents: write
