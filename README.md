@@ -297,14 +297,8 @@ Take the following steps to get started in configuring and verifying the infrast
    ```
 
    Now review the deployed infrastructure in the Azure portal. You will find the resources deployed to a resource group called `rg-nhsbackup-myvault` (unless you specified a different vault name in the tfvars).
-   Now review the deployed infrastructure in the Azure portal. You will find the resources deployed to a resource group called `rg-nhsbackup-myvault` (unless you specified a different vault name in the tfvars).
 
    Should you want to, you can remove the infrastructure with the following command:
-   Should you want to, you can remove the infrastructure with the following command:
-
-   ```pwsh
-   terraform destroy -auto-approve
-   ```
 
    ```pwsh
    terraform destroy -auto-approve
@@ -380,7 +374,6 @@ To run the tests, take the following steps:
    $env:TF_STATE_RESOURCE_GROUP="rg-nhsbackup"
    $env:TF_STATE_STORAGE_ACCOUNT="<storage-account-name>"
    $env:TF_STATE_STORAGE_CONTAINER="tfstate"
-   $env:TF_STATE_STORAGE_CONTAINER="tfstate"
    ```
 
    > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
@@ -406,7 +399,6 @@ To debug the tests in vscode, add the following configuration to launch settings
             "request": "launch",
             "mode": "test",
             "program": "${workspaceFolder}/tests/end-to-end-tests",
-            "program": "${workspaceFolder}/tests/end-to-end-tests",
             "env": {
                 "ARM_TENANT_ID": "<your-tenant-id>",
                 "ARM_SUBSCRIPTION_ID": "<your-subscription-id>",
@@ -414,7 +406,6 @@ To debug the tests in vscode, add the following configuration to launch settings
                 "ARM_CLIENT_SECRET": "<your-client-secret>",
                 "TF_STATE_RESOURCE_GROUP": "rg-nhsbackup",
                 "TF_STATE_STORAGE_ACCOUNT": "<storage-account-name>",
-                "TF_STATE_STORAGE_CONTAINER": "tfstate"
                 "TF_STATE_STORAGE_CONTAINER": "tfstate"
             }
         }       
@@ -462,3 +453,23 @@ The following static code analysis checks are executed:
 * [Checkov scan](https://www.checkov.io/)
 * [Gitleaks scan](https://github.com/gitleaks/gitleaks)
 * [Trivy vulnerability scan](https://github.com/aquasecurity/trivy)
+
+### Contributing
+
+If you want to contribute to the project, raise a PR on GitHub.
+
+We use pre-commit to run analysis and checks on the changes being committed. Take the following steps to ensure the pre-commit hook is installed and working:
+
+1. Install git
+    * Ensure the git `bin` directory has been added to %PATH%: `C:\Program Files\Git\bin`
+
+1. Install Python
+    * Ensure the python `bin` directory has been added to %PATH%
+
+1. Install pre-commit
+    * Open a terminal and navigate to the repository root directory
+    * Install pre-commit with the following command: `pip install pre-commit`
+    * Install pre-commit within the repository with the following command: `pre-commit install`
+    * Run `pre-commit run --all-files` to check pre-commit is working
+
+> For full details [see this link](https://pre-commit.com/#installation)
