@@ -1,4 +1,4 @@
-name: Deploys Documentation
+name: Deploy Documentation
 
 permissions:
   contents: write

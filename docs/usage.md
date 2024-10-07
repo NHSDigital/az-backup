@@ -63,9 +63,9 @@ To deploy the module an Azure identity (typically an app registration with clien
 
 * Contributor (required to create resources)
 * Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition that limits the roles which can be assigned to:**
-  * Storage Account Backup Contributor
-  * Disk Snapshot Contributor
-  * Disk Backup Reader
+    * Storage Account Backup Contributor
+    * Disk Snapshot Contributor
+    * Disk Backup Reader
 
 ## Module Variables
 
