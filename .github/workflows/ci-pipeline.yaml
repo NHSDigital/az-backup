@@ -50,6 +50,7 @@ jobs:
           go test -v -timeout 30m
         working-directory: tests/end-to-end-tests
         env:
+          GOMAXPROCS: 8
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
