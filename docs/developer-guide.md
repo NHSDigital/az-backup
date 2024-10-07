@@ -11,11 +11,10 @@ The following are pre-requisites to working with the solution:
 * An Azure subscription for development purposes
 * An Azure identity which has been assigned the following roles at the subscription level:
   * Contributor (required to create resources)
-  * Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
-    * **With a condition that limits the roles which can be assigned to:**
-      * Storage Account Backup Contributor
-      * Disk Snapshot Contributor
-      * Disk Backup Reader
+  * Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition that limits the roles which can be assigned to:**
+    * Storage Account Backup Contributor
+    * Disk Snapshot Contributor
+    * Disk Backup Reader
 * [Azure CLI installed](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli)
 * [Terraform installed](https://developer.hashicorp.com/terraform/install)
 * [Go installed (to run the end-to-end tests)](https://go.dev/dl/)
@@ -121,11 +120,11 @@ The tests depend on a connection to Azure so it can create an environment that t
 
 See the following resources for docs and examples of terratest and the Azure SDK:
 
-[Terratest docs](https://terratest.gruntwork.io/docs/)
-[Terratest repository](https://github.com/gruntwork-io/terratest)
-[Terratest test examples](https://github.com/gruntwork-io/terratest/tree/master/test)
-[Azure SDK](https://github.com/Azure/azure-sdk-for-go/tree/main)
-[Azure SDK Data Protection Module](https://github.com/Azure/azure-sdk-for-go/tree/main/sdk/resourcemanager/dataprotection/armdataprotection)
+* [Terratest docs](https://terratest.gruntwork.io/docs/)
+* [Terratest repository](https://github.com/gruntwork-io/terratest)
+* [Terratest test examples](https://github.com/gruntwork-io/terratest/tree/master/test)
+* [Azure SDK](https://github.com/Azure/azure-sdk-for-go/tree/main)
+* [Azure SDK Data Protection Module](https://github.com/Azure/azure-sdk-for-go/tree/main/sdk/resourcemanager/dataprotection/armdataprotection)
 
 To run the tests, take the following steps:
 

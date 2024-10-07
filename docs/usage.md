@@ -62,11 +62,10 @@ module "my_backup" {
 To deploy the module an Azure identity (typically an app registration with client secret) is required which has been assigned the following roles at the subscription level:
 
 * Contributor (required to create resources)
-* Role Based Access Control Administrator (to assign roles to the backup vault managed identity)
-  * **With a condition that limits the roles which can be assigned to:**
-    * Storage Account Backup Contributor
-    * Disk Snapshot Contributor
-    * Disk Backup Reader
+* Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition that limits the roles which can be assigned to:**
+  * Storage Account Backup Contributor
+  * Disk Snapshot Contributor
+  * Disk Backup Reader
 
 ## Module Variables
 
