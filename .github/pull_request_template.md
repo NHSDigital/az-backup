@@ -21,8 +21,8 @@ Please check or cross through each option:
 - [ ] My code aligns with the style of this project
 - [ ] I have added comments in hard to understand areas
 - [ ] I have added tests that prove my change works
+- [ ] I have updated the documentation
 - [ ] The CI build is passing for my PR
-- [ ] I have updated the documentation if necessary
 
 ## Additional Information
 
