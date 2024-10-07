@@ -52,7 +52,7 @@ The repository consists of the following directories:
 
 ## Documentation
 
-The documentation is built and served as a static site using dockerised [MkDocs](https://www.mkdocs.org/).
+The documentation in markdown format resides in [`./docs`](./docs/index.md). It can also be built and served as a static site using [MkDocs](https://www.mkdocs.org/).
 
 To build and run the docs locally, install Docker then run the following command from the root of the repository:
 
@@ -60,7 +60,7 @@ To build and run the docs locally, install Docker then run the following command
 docker-compose -f ./docs/docker-compose.yml up
 ```
 
-Once the container is running, navigate to [http://localhost:8000](http://localhost:8000) to access the docs.
+Once the container is running, navigate to [http://localhost:8000](http://localhost:8000).
 
 ## Contributing
 
