@@ -12,11 +12,11 @@ In future we will use release tags to ensure consumers can depend on a specific 
 
 ## Example
 
-The following is an example of how the module should be used:
+The following is an example of how the module should be used - **update the ref with the release version that you want to use**:
 
 ```terraform
 module "my_backup" {
-  source           = "github.com/nhsdigital/az-backup//infrastructure"
+  source           = "github.com/nhsdigital/az-backup//infrastructure?ref=<version-number>"
   vault_name       = "myvault"
   vault_location   = "uksouth"
   vault_redundancy = "LocallyRedundant"
