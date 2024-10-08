@@ -52,6 +52,8 @@ The following static code analysis checks are executed:
 
 For the release tag to be added to the repository the following secrets must be created:
 
-* `GITHUB_TOKEN`
+* `RELEASE_TOKEN`
   
-  A personal access token (yuk) which allows the pipeline to commit a release tag to the repository. The PAT will expire periodically and must be maintained.
+  A personal access token which allows the pipeline to commit a release tag to the repository. The PAT will expire periodically and must be maintained.
+
+  The PAT should be a "fine grained" access token, restricted to the `az-backup` repository, with Read/Write permissions for "Actions".
