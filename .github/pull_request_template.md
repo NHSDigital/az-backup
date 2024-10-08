@@ -12,6 +12,7 @@ Please check the relevant options:
 - [ ] Bug fix (a change which fixes an issue)
 - [ ] Refactoring (code cleanup or optimization)
 - [ ] Testing (enhanced test coverage, or test improvement)
+- [ ] Pipelines (changes related to pipelines and workflows)
 - [ ] Documentation (changes to documentation)
 - [ ] Other (something that's not listed here - please explain in the description or additional information)
 
