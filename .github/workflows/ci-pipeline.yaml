@@ -122,6 +122,13 @@ jobs:
       - name: Create Semantic Release
         uses: cycjimmy/semantic-release-action@v4.1.0
         id: semantic-release
+        with:
+          branches: |
+            ['main']
+          extra_plugins: |
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/github
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
