@@ -24,6 +24,7 @@ Please check or cross through each option:
 - [ ] I have added tests that prove my change works
 - [ ] I have updated the documentation
 - [ ] The CI build is passing for my PR
+- [ ] If merging into main the PR will be squash merged with [a commit message that adheres to the semantic release format](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
 
 ## Additional Information
 
