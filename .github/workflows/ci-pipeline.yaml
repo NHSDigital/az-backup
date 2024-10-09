@@ -44,20 +44,20 @@ jobs:
           terraform test
         working-directory: tests/integration-tests
 
-      # - name: Run End to End Tests
-      #   run: |
-      #     go mod tidy
-      #     go test -v -timeout 30m
-      #   working-directory: tests/end-to-end-tests
-      #   env:
-      #     GOMAXPROCS: 8
-      #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      #     ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      #     TF_STATE_RESOURCE_GROUP: ${{ secrets.TF_STATE_RESOURCE_GROUP }}
-      #     TF_STATE_STORAGE_ACCOUNT: ${{ secrets.TF_STATE_STORAGE_ACCOUNT }}
-      #     TF_STATE_STORAGE_CONTAINER: ${{ secrets.TF_STATE_STORAGE_CONTAINER }}
+      - name: Run End to End Tests
+        run: |
+          go mod tidy
+          go test -v -timeout 30m
+        working-directory: tests/end-to-end-tests
+        env:
+          GOMAXPROCS: 8
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_STATE_RESOURCE_GROUP: ${{ secrets.TF_STATE_RESOURCE_GROUP }}
+          TF_STATE_STORAGE_ACCOUNT: ${{ secrets.TF_STATE_STORAGE_ACCOUNT }}
+          TF_STATE_STORAGE_CONTAINER: ${{ secrets.TF_STATE_STORAGE_CONTAINER }}
 
   static-code-analysis:
     name: Static Code Analysis
@@ -108,7 +108,7 @@ jobs:
       - name: Run Trivy Scan
         run: trivy filesystem --security-checks vuln,config --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed .
 
-  publish:
+  publishing:
     name: Publish Release
     runs-on: ubuntu-latest
     needs: [build-verification, static-code-analysis]
@@ -123,9 +123,8 @@ jobs:
         uses: cycjimmy/semantic-release-action@v4.1.0
         id: semantic-release
         with:
-          dry_run: true
           branches: |
-            ['main', 'johnc/semantic-release']
+            ['main']
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
