@@ -126,10 +126,6 @@ jobs:
           dry_run: true
           branches: |
             ['main', 'johnc/semantic-release']
-          extra_plugins: |
-            @semantic-release/commit-analyzer
-            @semantic-release/release-notes-generator
-            @semantic-release/github
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
