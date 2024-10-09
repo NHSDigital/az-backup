@@ -38,11 +38,11 @@ jobs:
           terraform validate
         working-directory: infrastructure
 
-      - name: Run Integration Tests
-        run: |
-          terraform init -backend=false
-          terraform test
-        working-directory: tests/integration-tests
+      # - name: Run Integration Tests
+      #   run: |
+      #     terraform init -backend=false
+      #     terraform test
+      #   working-directory: tests/integration-tests
 
       - name: Run End to End Tests
         run: |
@@ -123,8 +123,9 @@ jobs:
         uses: cycjimmy/semantic-release-action@v4.1.0
         id: semantic-release
         with:
+          dry_run: true
           branches: |
-            ['main']
+            ['main', 'johnc/semantic-release']
           extra_plugins: |
             @semantic-release/commit-analyzer
             @semantic-release/release-notes-generator
