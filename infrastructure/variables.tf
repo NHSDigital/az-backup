@@ -12,6 +12,11 @@ variable "vault_redundancy" {
   default = "LocallyRedundant"
 }
 
+variable "log_analytics_workspace_id" {
+  type    = string
+  default = ""
+}
+
 variable "blob_storage_backups" {
   type = map(object({
     backup_name        = string
