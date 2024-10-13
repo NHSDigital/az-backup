@@ -24,3 +24,18 @@ module "managed_disk_backup" {
   vault_principal_id                = azurerm_data_protection_backup_vault.backup_vault.identity[0].principal_id
   assign_resource_group_level_roles = each.key == keys(var.managed_disk_backups)[0] ? true : false
 }
+
+module "postgresql_flexible_server_backup" {
+  for_each                          = var.postgresql_flexible_server_backups
+  source                            = "./modules/backup/postgresql_flexible_server"
+  vault_id                          = azurerm_data_protection_backup_vault.backup_vault.id
+  vault_name                        = var.vault_name
+  vault_location                    = var.vault_location
+  backup_name                       = each.value.backup_name
+  retention_period                  = each.value.retention_period
+  backup_intervals                  = each.value.backup_intervals
+  server_id                         = each.value.server_id
+  server_resource_group_id          = each.value.server_resource_group_id
+  vault_principal_id                = azurerm_data_protection_backup_vault.backup_vault.identity[0].principal_id
+  assign_resource_group_level_roles = each.key == keys(var.postgresql_flexible_server_backups)[0] ? true : false
+}

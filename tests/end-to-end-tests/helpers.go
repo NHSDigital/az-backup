@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
@@ -355,6 +356,48 @@ func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredenti
 	log.Printf("Managed disk %s created successfully", diskName)
 
 	return resp.Disk
+}
+
+/*
+ * Creates a postgresql flexible server that can be used for testing purposes.
+ */
+func CreatePostgresqlFlexibleServer(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, serverName string, serverLocation string, storageSizeGB int32) armpostgresqlflexibleservers.Server {
+	client, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create servers client: %v", err)
+
+	log.Printf("Creating postgresql flexible server %s in location %s", serverName, serverLocation)
+
+	pollerResp, err := client.BeginCreate(
+		context.Background(),
+		resourceGroupName,
+		serverName,
+		armpostgresqlflexibleservers.Server{
+			Location: &serverLocation,
+			SKU: &armpostgresqlflexibleservers.SKU{
+				Name: to.Ptr("Standard_B1ms"),
+				Tier: to.Ptr(armpostgresqlflexibleservers.SKUTierBurstable),
+			},
+			Properties: &armpostgresqlflexibleservers.ServerProperties{
+				AdministratorLogin:         to.Ptr("supersecurelogin"),
+				AdministratorLoginPassword: to.Ptr("supersecurepassword"),
+				Version:                    to.Ptr(armpostgresqlflexibleservers.ServerVersionFourteen),
+				Storage: &armpostgresqlflexibleservers.Storage{
+					StorageSizeGB: &storageSizeGB,
+				},
+			},
+		},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to begin creating postgresql flexible server: %v", err)
+
+	// Wait for the creation to complete
+	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create postgresql flexible server: %v", err)
+
+	log.Printf("Postgresql flexible server %s created successfully", serverName)
+
+	return resp.Server
 }
 
 /*
