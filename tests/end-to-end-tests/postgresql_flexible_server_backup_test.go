@@ -27,7 +27,7 @@ type TestPostgresqlFlexibleServerBackupExternalResources struct {
  */
 func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestPostgresqlFlexibleServerBackupExternalResources {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, resourceGroupName, vault_location)
 
 	PostgresqlFlexibleServerOneName := fmt.Sprintf("pgflexserver-%s-external-1", strings.ToLower(vault_name))
 	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, resourceGroupName, PostgresqlFlexibleServerOneName, vault_location, int32(32))
