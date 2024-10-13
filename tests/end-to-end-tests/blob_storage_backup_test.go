@@ -27,7 +27,7 @@ type TestBlobStorageBackupExternalResources struct {
  */
 func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestBlobStorageBackupExternalResources {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, resourceGroupName, vault_location)
 
 	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(vault_name))
 	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, storageAccountOneName, vault_location)
