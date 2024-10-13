@@ -16,10 +16,11 @@ The following is an example of how the module should be used:
 
 ```terraform
 module "my_backup" {
-  source           = "github.com/nhsdigital/az-backup//infrastructure"
-  vault_name       = "myvault"
-  vault_location   = "uksouth"
-  vault_redundancy = "LocallyRedundant"
+  source                 = "github.com/nhsdigital/az-backup//infrastructure"
+  vault_name             = "myvault"
+  vault_location         = "uksouth"
+  vault_redundancy       = "LocallyRedundant"
+  use_extended_retention = true
   blob_storage_backups = {
     backup1 = {
       backup_name        = "storage1"
@@ -92,14 +93,15 @@ To deploy the module an Azure identity (typically an app registration with clien
 | `vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `vault_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
 | `vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+| `use_extended_retention` | If set to on, then retention periods can be configured up to 365 days (otherwise they are limited to 7 days). | No | `false` |
 | `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `storage_account_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |
-| `blob_storage_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
+| `blob_storage_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on, in which case it can be up to 365 days. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
 | `managed_disk_backups` | A map of managed disk backups that should be created. For each backup the following values should be provided: `managed_disk_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `managed_disk_backups.managed_disk_id` | The id of the managed disk that should be backed up. | Yes | n/a |
 | `managed_disk_backups.backup_name` | The name of the backup, which must be unique across managed disk backups. | Yes | n/a |
-| `managed_disk_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
+| `managed_disk_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on, in which case it can be up to 365 days. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
 | `managed_disk_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
 | `postgresql_flexible_server_backups` | A map of postgresql flexible server backups that should be created. For each backup the following values should be provided: `backup_name`, `server_id`, `server_resource_group_id`, `retention_period` and `backup_intervals`. When no value is provided then no backups are created. | No | n/a |
 | `postgresql_flexible_server_backups.backup_name` | The name of the backup, which must be unique across postgresql flexible server backups. | Yes | n/a |
