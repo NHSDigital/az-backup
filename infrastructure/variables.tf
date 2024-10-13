@@ -65,3 +65,23 @@ variable "managed_disk_backups" {
     error_message = "Invalid retention period. Valid periods are up to 7 days. If extended retention is enabled, valid periods are any duration less than 365 days (e.g., P30D, P60D, etc.)."
   }
 }
+
+variable "postgresql_flexible_server_backups" {
+  type = map(object({
+    backup_name              = string
+    retention_period         = string
+    backup_intervals         = list(string)
+    server_id                = string
+    server_resource_group_id = string
+  }))
+
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.postgresql_flexible_server_backups :
+      contains(local.valid_retention_periods, v.retention_period)
+    ])
+    error_message = "Invalid retention period. Valid periods are up to 7 days. If extended retention is enabled, valid periods are any duration less than 365 days (e.g., P30D, P60D, etc.)."
+  }
+}
