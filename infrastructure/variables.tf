@@ -39,3 +39,15 @@ variable "managed_disk_backups" {
   }))
   default = {}
 }
+
+variable "postgresql_flexible_server_backups" {
+  type = map(object({
+    backup_name              = string
+    retention_period         = string
+    backup_intervals         = list(string)
+    server_id                = string
+    server_resource_group_id = string
+  }))
+  default = {}
+}
+

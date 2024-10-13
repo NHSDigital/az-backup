@@ -45,7 +45,7 @@ func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *az
 }
 
 /*
- * TestManagedDiskBackup tests the deployment of a backup vault and backup policies for blob storage accounts.
+ * TestManagedDiskBackup tests the deployment of a backup vault and backup policies for managed disks.
  */
 func TestManagedDiskBackup(t *testing.T) {
 	t.Parallel()
