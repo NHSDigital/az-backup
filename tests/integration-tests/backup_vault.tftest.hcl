@@ -19,6 +19,7 @@ run "create_backup_vault" {
     vault_name       = run.setup_tests.vault_name
     vault_location   = "uksouth"
     vault_redundancy = "LocallyRedundant"
+    tags             = run.setup_tests.tags
   }
 
   assert {
