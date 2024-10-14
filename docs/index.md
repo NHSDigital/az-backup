@@ -13,6 +13,7 @@ The following technologies have been used:
 * [Azure](<https://azure.microsoft.com/en-gb/>)
 * [Azure CLI](https://learn.microsoft.com/en-us/cli/azure)
 * [Terraform](https://developer.hashicorp.com/terraform)
-* [Go (used for end-to-end testing)](https://go.dev/dl/)
+* [MkDocs](https://www.mkdocs.org/) and the [Squidfunk MkDocs Material UI theme](https://squidfunk.github.io/mkdocs-material/)
+* [Go (for end-to-end testing)](https://go.dev/dl/)
 * [Terratest](https://terratest.gruntwork.io/)
 * [Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go)

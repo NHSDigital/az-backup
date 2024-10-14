@@ -12,6 +12,7 @@ Please check the relevant options:
 - [ ] Bug fix (a change which fixes an issue)
 - [ ] Refactoring (code cleanup or optimization)
 - [ ] Testing (enhanced test coverage, or test improvement)
+- [ ] Pipelines (changes related to pipelines and workflows)
 - [ ] Documentation (changes to documentation)
 - [ ] Other (something that's not listed here - please explain in the description or additional information)
 
@@ -23,7 +24,10 @@ Please check or cross through each option:
 - [ ] I have added comments in hard to understand areas
 - [ ] I have added tests that prove my change works
 - [ ] I have updated the documentation
-- [ ] The CI build is passing for my PR
+
+## Reminder
+
+- [ ] If merging into main the PR will be squash merged with [a commit message that adheres to the semantic release format](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
 
 ## Additional Information
 

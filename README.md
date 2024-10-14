@@ -13,6 +13,7 @@ See the following key docs for more information:
 * [Design](./docs/design.md)
 * [Usage](./docs/usage.md)
 * [Developer Guide](./docs/developer-guide.md)
+* [Pipelines](./docs/pipelines.md)
 
 ## Repository Structure
 
@@ -61,6 +62,10 @@ docker-compose -f ./docs/docker-compose.yml up
 ```
 
 Once the container is running, navigate to [http://localhost:8000](http://localhost:8000).
+
+## Releases
+
+The project uses [Semantic Release](https://github.com/cycjimmy/semantic-release-action) to create and publish releases within the CI pipeline, which relies on [commit message conventions.](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
 
 ## Contributing
 
