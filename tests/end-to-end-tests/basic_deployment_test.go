@@ -26,6 +26,21 @@ func TestBasicDeployment(t *testing.T) {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
 	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
 
+	tags := map[string]string{
+		"environment":         "production",
+		"owner":               "owner_name",
+		"created_by":          "creator_name",
+		"costing_pcode":       "pcode_value",
+		"ch_cost_centre":      "cost_centre_value",
+		"project":             "project_name",
+		"service_level":       "gold",
+		"directorate":         "directorate_name",
+		"sub_directorate":     "sub_directorate_name",
+		"data_classification": "3",
+		"service_product":     "product_name",
+		"team":                "team_name",
+	}
+
 	// Teardown stage
 	// ...
 
@@ -46,6 +61,7 @@ func TestBasicDeployment(t *testing.T) {
 				"vault_name":       vaultName,
 				"vault_location":   vaultLocation,
 				"vault_redundancy": vaultRedundancy,
+				"tags":             tags,
 			},
 
 			BackendConfig: map[string]interface{}{
@@ -70,6 +86,15 @@ func TestBasicDeployment(t *testing.T) {
 		assert.NotNil(t, resourceGroup, "Resource group does not exist")
 		assert.Equal(t, resourceGroupName, *resourceGroup.Name, "Resource group name does not match")
 		assert.Equal(t, vaultLocation, *resourceGroup.Location, "Resource group location does not match")
+
+		// Validate resource group tags
+		assert.Equal(t, len(tags), len(resourceGroup.Tags), "Expected to find %2 tags in resource group", len(tags))
+
+		for key, expectedValue := range tags {
+			value, exists := resourceGroup.Tags[key]
+			assert.True(t, exists, "Tag %s does not exist", key)
+			assert.Equal(t, expectedValue, value, "Tag %s value does not match", key)
+		}
 
 		// Validate backup vault
 		backupVault := GetBackupVault(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
