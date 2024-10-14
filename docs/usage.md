@@ -20,6 +20,20 @@ module "my_backup" {
   vault_name       = "myvault"
   vault_location   = "uksouth"
   vault_redundancy = "LocallyRedundant"
+  tags             = {
+    environment         = "production"
+    owner               = "owner_name"
+    created_by          = "creator_name"
+    costing_pcode       = "pcode_value"
+    ch_cost_centre      = "cost_centre_value"
+    project             = "project_name"
+    service_level       = "gold"
+    directorate         = "directorate_name"
+    sub_directorate     = "sub_directorate_name"
+    data_classification = "3"
+    service_product     = "product_name"
+    team                = "team_name"
+  }
   blob_storage_backups = {
     backup1 = {
       backup_name        = "storage1"
@@ -92,6 +106,7 @@ To deploy the module an Azure identity (typically an app registration with clien
 | `vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `vault_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
 | `vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+| `tags` | The tags which will be applied to the resource group. The tags are based on the CCOE tagging policy and must contain the following fields: environment [production, integration, staging, development], owner, created_by, costing_pcode, ch_cost_centre, project, service_level, directorate, sub_directorate, data_classification, service_product, team. [See the following link for more details](https://nhsd-confluence.digital.nhs.uk/pages/viewpage.action?spaceKey=NHSUK1&title=Tagging+Policy) | Yes | n/a |
 | `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `storage_account_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |
