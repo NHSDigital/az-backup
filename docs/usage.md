@@ -20,6 +20,7 @@ module "my_backup" {
   vault_name       = "myvault"
   vault_location   = "uksouth"
   vault_redundancy = "LocallyRedundant"
+  vault_immutabilitySettings = "Unlocked"
   blob_storage_backups = {
     backup1 = {
       backup_name        = "storage1"
