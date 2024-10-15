@@ -18,18 +18,15 @@ variable "vault_redundancy" {
 variable "tags" {
   description = "A map of tags to assign to the resource group, as mandated by the CCOE tagging policy"
   type = object({
-    environment         = string
-    owner               = string
-    created_by          = string
-    costing_pcode       = string
-    ch_cost_centre      = string
-    project             = string
-    service_level       = string
-    directorate         = string
-    sub_directorate     = string
-    data_classification = string
-    service_product     = string
-    team                = string
+    environment     = string
+    cost_code       = string
+    created_by      = string
+    created_date    = string
+    tech_lead       = string
+    requested_by    = string
+    service_product = string
+    team            = string
+    service_level   = string
   })
 
   validation {
@@ -40,11 +37,6 @@ variable "tags" {
   validation {
     condition     = contains(["bronze", "silver", "gold", "platinum"], var.tags["service_level"])
     error_message = "The service_level tag must be one of the following values: bronze, silver, gold, platinum."
-  }
-
-  validation {
-    condition     = contains(["1", "2", "3", "4", "5"], var.tags["data_classification"])
-    error_message = "The data_classification tag must be one of the following values: 1, 2, 3, 4, 5."
   }
 }
 

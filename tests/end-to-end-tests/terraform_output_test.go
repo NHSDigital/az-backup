@@ -23,18 +23,15 @@ func TestTerraformOutput(t *testing.T) {
 	vaultRedundancy := "LocallyRedundant"
 
 	tags := map[string]string{
-		"environment":         "production",
-		"owner":               "owner_name",
-		"created_by":          "creator_name",
-		"costing_pcode":       "pcode_value",
-		"ch_cost_centre":      "cost_centre_value",
-		"project":             "project_name",
-		"service_level":       "gold",
-		"directorate":         "directorate_name",
-		"sub_directorate":     "sub_directorate_name",
-		"data_classification": "3",
-		"service_product":     "product_name",
-		"team":                "team_name",
+		"environment":     "production",
+		"cost_code":       "code_value",
+		"created_by":      "creator_name",
+		"created_date":    "01/01/2024",
+		"tech_lead":       "tech_lead_name",
+		"requested_by":    "requester_name",
+		"service_product": "product_name",
+		"team":            "team_name",
+		"service_level":   "gold",
 	}
 
 	// Teardown stage

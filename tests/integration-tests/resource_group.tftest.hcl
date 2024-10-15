@@ -56,18 +56,15 @@ run "validate_resource_group_tags_environment" {
     vault_name     = run.setup_tests.vault_name
     vault_location = "uksouth"
     tags = {
-      environment         = "invalid-environment"
-      owner               = "owner_name"
-      created_by          = "creator_name"
-      costing_pcode       = "pcode_value"
-      ch_cost_centre      = "cost_centre_value"
-      project             = "project_name"
-      service_level       = "gold"
-      directorate         = "directorate_name"
-      sub_directorate     = "sub_directorate_name"
-      data_classification = "3"
-      service_product     = "product_name"
-      team                = "team_name"
+      environment     = "invalid-environment"
+      cost_code       = "code_value"
+      created_by      = "creator_name"
+      created_date    = "01/01/2024"
+      tech_lead       = "tech_lead_name"
+      requested_by    = "requester_name"
+      service_product = "product_name"
+      team            = "team_name"
+      service_level   = "gold"
     }
   }
 
@@ -87,49 +84,15 @@ run "validate_resource_group_tags_service_level" {
     vault_name     = run.setup_tests.vault_name
     vault_location = "uksouth"
     tags = {
-      environment         = "production"
-      owner               = "owner_name"
-      created_by          = "creator_name"
-      costing_pcode       = "pcode_value"
-      ch_cost_centre      = "cost_centre_value"
-      project             = "project_name"
-      service_level       = "invalid-service-level"
-      directorate         = "directorate_name"
-      sub_directorate     = "sub_directorate_name"
-      data_classification = "3"
-      service_product     = "product_name"
-      team                = "team_name"
-    }
-  }
-
-  expect_failures = [
-    var.tags,
-  ]
-}
-
-run "validate_resource_group_tags_data_classification" {
-  command = plan
-
-  module {
-    source = "../../infrastructure"
-  }
-
-  variables {
-    vault_name     = run.setup_tests.vault_name
-    vault_location = "uksouth"
-    tags = {
-      environment         = "production"
-      owner               = "owner_name"
-      created_by          = "creator_name"
-      costing_pcode       = "pcode_value"
-      ch_cost_centre      = "cost_centre_value"
-      project             = "project_name"
-      service_level       = "gold"
-      directorate         = "directorate_name"
-      sub_directorate     = "sub_directorate_name"
-      data_classification = "invalid-data-classification"
-      service_product     = "product_name"
-      team                = "team_name"
+      environment     = "production"
+      cost_code       = "code_value"
+      created_by      = "creator_name"
+      created_date    = "01/01/2024"
+      tech_lead       = "tech_lead_name"
+      requested_by    = "requester_name"
+      service_product = "product_name"
+      team            = "team_name"
+      service_level   = "invalid-service-level"
     }
   }
 
