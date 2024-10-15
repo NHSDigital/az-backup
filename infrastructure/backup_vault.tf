@@ -9,3 +9,22 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
     type = "SystemAssigned"
   }
 }
+
+
+resource "azapi_update_resource" "immutabilitysettings" {
+  type = "Microsoft.DataProtection/backupVaults@2022-11-01-preview"
+  resource_id  = azurerm_data_protection_backup_vault.backup_vault.id
+   
+  
+  body = jsonencode({
+    properties = {
+ 
+      securitySettings = {
+        immutabilitySettings = {
+          state = var.immutabilitySettings
+        }
+      }
+    }
+    
+  })
+}
