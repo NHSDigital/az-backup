@@ -46,7 +46,7 @@ variable "postgresql_flexible_server_backups" {
   default = {}
 }
 
-variable "immutabilitySettings" {
+variable "vault_immutabilitySettings" {
   type    = string
   default = "Unlocked" 	#"Disabled" "Locked" "Unlocked"
 }

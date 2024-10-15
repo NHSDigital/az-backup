@@ -21,7 +21,7 @@ resource "azapi_update_resource" "immutabilitysettings" {
  
       securitySettings = {
         immutabilitySettings = {
-          state = var.immutabilitySettings
+          state = var.vault_immutabilitySettings
         }
       }
     }
