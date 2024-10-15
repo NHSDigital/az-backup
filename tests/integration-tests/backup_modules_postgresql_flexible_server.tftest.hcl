@@ -2,6 +2,10 @@ mock_provider "azurerm" {
   source = "./azurerm"
 }
 
+mock_provider "azapi" {
+  source = "./azapi"
+}
+
 run "setup_tests" {
   module {
     source = "./setup"
@@ -20,17 +24,17 @@ run "create_postgresql_flexible_server_backup" {
     vault_location = "uksouth"
     postgresql_flexible_server_backups = {
       backup1 = {
-        backup_name      = "server1"
-        retention_period = "P7D"
-        backup_intervals = ["R/2024-01-01T00:00:00+00:00/P1D"]
-        server_id  = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
+        backup_name              = "server1"
+        retention_period         = "P7D"
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
+        server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
       }
       backup2 = {
-        backup_name      = "server2"
-        retention_period = "P30D"
-        backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
-        server_id  = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-2"
+        backup_name              = "server2"
+        retention_period         = "P30D"
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-2"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group2"
       }
     }
