@@ -93,6 +93,9 @@ To deploy the module an Azure identity (typically an app registration with clien
 | `vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `vault_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
 | `vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+| `vault_immutabilitySettings` | The Immutability of vault . [See the following link for the possible values](https://learn.microsoft.com/en-us/azure/templates/microsoft.dataprotection/backupvaults?pivots=deployment-language-terraform) | No | "Disabled"
+"Locked"
+"Unlocked"|
 | `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `storage_account_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |
