@@ -10,6 +10,8 @@ The az-backup module resides in the `./infrastructure` sub directory of the repo
 
 In future we will use release tags to ensure consumers can depend on a specific release of the module, however this has not currently been implemented.
 
+The module will create a dedicated resource group to contain the backup vault, therefore the resource group name provided to the module must be unique within the scope of the subscription.
+
 ## Example
 
 The following is an example of how the module should be used:
