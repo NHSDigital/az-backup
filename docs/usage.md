@@ -91,7 +91,7 @@ To deploy the module an Azure identity (typically an app registration with clien
 
 | Name | Description | Mandatory | Default |
 |------|-------------|-----------|---------|
-| `resource_group_name` | The name of the resource group that is created to contain the vault. | Yes | n/a |
+| `resource_group_name` | The name of the resource group that is created to contain the vault - this cannot be an existing resource group. | Yes | n/a |
 | `resource_group_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
