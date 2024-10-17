@@ -27,7 +27,7 @@ type TestManagedDiskBackupExternalResources struct {
  */
 func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestManagedDiskBackupExternalResources {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, resourceGroupName, vault_location)
 
 	managedDiskOneName := fmt.Sprintf("disk-%s-external-1", strings.ToLower(vault_name))
 	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, resourceGroupName, managedDiskOneName, vault_location, int32(1))
