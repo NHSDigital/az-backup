@@ -16,8 +16,9 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   variables {
-    vault_name     = run.setup_tests.vault_name
-    vault_location = "uksouth"
+    resource_group_name     = run.setup_tests.resource_group_name
+    resource_group_location = "uksouth"
+    backup_vault_name     = run.setup_tests.backup_vault_name
     postgresql_flexible_server_backups = {
       backup1 = {
         backup_name      = "server1"
