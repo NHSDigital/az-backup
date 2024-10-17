@@ -1,13 +1,17 @@
-variable "vault_name" {
+variable "resource_group_name" {
   type = string
 }
 
-variable "vault_location" {
+variable "resource_group_location" {
   type    = string
   default = "uksouth"
 }
 
-variable "vault_redundancy" {
+variable "backup_vault_name" {
+  type = string
+}
+
+variable "backup_vault_redundancy" {
   type    = string
   default = "LocallyRedundant"
 }
