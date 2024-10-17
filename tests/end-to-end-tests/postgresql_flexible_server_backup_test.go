@@ -30,10 +30,10 @@ func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, c
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
 	PostgresqlFlexibleServerOneName := fmt.Sprintf("pgflexserver-%s-external-1", strings.ToLower(uniqueId))
-	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, resourceGroupName, PostgresqlFlexibleServerOneName, resourceGroupLocation, int32(32))
+	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerOneName, resourceGroupLocation, int32(32))
 
 	PostgresqlFlexibleServerTwoName := fmt.Sprintf("pgflexserver-%s-external-2", strings.ToLower(uniqueId))
-	PostgresqlFlexibleServerTwo := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, resourceGroupName, PostgresqlFlexibleServerTwoName, resourceGroupLocation, int32(32))
+	PostgresqlFlexibleServerTwo := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerTwoName, resourceGroupLocation, int32(32))
 
 	externalResources := &TestPostgresqlFlexibleServerBackupExternalResources{
 		ResourceGroup:               resourceGroup,
@@ -139,7 +139,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 			ServerResourceGroupId := backup["server_resource_group_id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-%s-pgflexserver-%s", backupVaultName, backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-pgflex-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -157,7 +157,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 			}
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-%s-pgflexserver-%s", backupVaultName, backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-pgflex-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, ServerId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", ServerId)

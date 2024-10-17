@@ -30,10 +30,10 @@ func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *az
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
 	managedDiskOneName := fmt.Sprintf("disk-%s-external-1", strings.ToLower(uniqueId))
-	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, resourceGroupName, managedDiskOneName, resourceGroupLocation, int32(1))
+	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskOneName, resourceGroupLocation, int32(1))
 
 	managedDiskTwoName := fmt.Sprintf("disk-%s-external-2", strings.ToLower(uniqueId))
-	managedDiskTwo := CreateManagedDisk(t, credential, subscriptionID, resourceGroupName, managedDiskTwoName, resourceGroupLocation, int32(1))
+	managedDiskTwo := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskTwoName, resourceGroupLocation, int32(1))
 
 	externalResources := &TestManagedDiskBackupExternalResources{
 		ResourceGroup:  resourceGroup,
@@ -146,7 +146,7 @@ func TestManagedDiskBackup(t *testing.T) {
 			managedDiskResourceGroupId := managedDiskResourceGroup["id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-%s-manageddisk-%s", backupVaultName, backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-disk-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -164,7 +164,7 @@ func TestManagedDiskBackup(t *testing.T) {
 			}
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-%s-manageddisk-%s", backupVaultName, backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-disk-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, managedDiskId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", managedDiskId)

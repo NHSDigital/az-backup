@@ -133,7 +133,7 @@ func TestBlobStorageBackup(t *testing.T) {
 			storageAccountId := backup["storage_account_id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-%s-blobstorage-%s", backupVaultName, backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-blob-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -144,7 +144,7 @@ func TestBlobStorageBackup(t *testing.T) {
 			assert.Equal(t, retentionPeriod, *deleteOption.Duration, "Expected the backup policy retention period to be %s", retentionPeriod)
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-%s-blobstorage-%s", backupVaultName, backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-blob-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, storageAccountId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", storageAccountId)

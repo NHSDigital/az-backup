@@ -28,7 +28,7 @@ func setupExternalResourcesForDiagnosticSettingsTest(t *testing.T, credential *a
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
 	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
-	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, resourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
 
 	externalResources := &TestDiagnosticSettingsExternalResources{
 		ResourceGroup:         resourceGroup,
