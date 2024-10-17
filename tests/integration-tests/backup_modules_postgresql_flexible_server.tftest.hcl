@@ -47,7 +47,7 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   assert {
-    condition     = module.postgresql_flexible_server_backup["backup1"].backup_policy.name == "bkpol-${var.vault_name}-pgflexserver-server1"
+    condition     = module.postgresql_flexible_server_backup["backup1"].backup_policy.name == "bkpol-pgflex-server1"
     error_message = "Postgresql flexible server backup policy name not as expected."
   }
 
@@ -72,7 +72,7 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   assert {
-    condition     = module.postgresql_flexible_server_backup["backup1"].backup_instance.name == "bkinst-${var.vault_name}-pgflexserver-server1"
+    condition     = module.postgresql_flexible_server_backup["backup1"].backup_instance.name == "bkinst-pgflex-server1"
     error_message = "Postgresql flexible server backup instance name not as expected."
   }
 
@@ -102,7 +102,7 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   assert {
-    condition     = module.postgresql_flexible_server_backup["backup2"].backup_policy.name == "bkpol-${var.vault_name}-pgflexserver-server2"
+    condition     = module.postgresql_flexible_server_backup["backup2"].backup_policy.name == "bkpol-pgflex-server2"
     error_message = "Postgresql flexible server backup policy name not as expected."
   }
 
@@ -127,7 +127,7 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   assert {
-    condition     = module.postgresql_flexible_server_backup["backup2"].backup_instance.name == "bkinst-${var.vault_name}-pgflexserver-server2"
+    condition     = module.postgresql_flexible_server_backup["backup2"].backup_instance.name == "bkinst-pgflex-server2"
     error_message = "Postgresql flexible server backup instance name not as expected."
   }
 
