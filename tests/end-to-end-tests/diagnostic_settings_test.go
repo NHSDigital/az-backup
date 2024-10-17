@@ -23,12 +23,12 @@ type TestDiagnosticSettingsExternalResources struct {
  * Creates resources which are "external" to the az-backup module, and models
  * what would be backed up in a real scenario.
  */
-func setupExternalResourcesForDiagnosticSettingsTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestDiagnosticSettingsExternalResources {
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, resourceGroupName, vault_location)
+func setupExternalResourcesForDiagnosticSettingsTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestDiagnosticSettingsExternalResources {
+	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
-	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(vault_name))
-	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, resourceGroupName, logAnalyticsWorkspaceName, vault_location)
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, resourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
 
 	externalResources := &TestDiagnosticSettingsExternalResources{
 		ResourceGroup:         resourceGroup,
@@ -48,13 +48,13 @@ func TestDiagnosticSettings(t *testing.T) {
 	environment := GetEnvironmentConfiguration(t)
 	credential := GetAzureCredential(t, environment)
 
-	vaultName := random.UniqueId()
-	vaultLocation := "uksouth"
-	vaultRedundancy := "LocallyRedundant"
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
-	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
+	uniqueId := random.UniqueId()
+	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
+	resourceGroupLocation := "uksouth"
+	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
+	backupVaultRedundancy := "LocallyRedundant"
 
-	externalResources := setupExternalResourcesForDiagnosticSettingsTest(t, credential, environment.SubscriptionID, vaultName, vaultLocation)
+	externalResources := setupExternalResourcesForDiagnosticSettingsTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// Teardown stage
 	// ...
@@ -75,9 +75,10 @@ func TestDiagnosticSettings(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"vault_name":                 vaultName,
-				"vault_location":             vaultLocation,
-				"vault_redundancy":           vaultRedundancy,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"backup_vault_name":          backupVaultName,
+				"backup_vault_redundancy":    backupVaultRedundancy,
 				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
 			},
 
@@ -85,7 +86,7 @@ func TestDiagnosticSettings(t *testing.T) {
 				"resource_group_name":  environment.TerraformStateResourceGroup,
 				"storage_account_name": environment.TerraformStateStorageAccount,
 				"container_name":       environment.TerraformStateContainer,
-				"key":                  vaultName + ".tfstate",
+				"key":                  backupVaultName + ".tfstate",
 			},
 		}
 
