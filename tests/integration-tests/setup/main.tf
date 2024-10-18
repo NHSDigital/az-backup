@@ -21,14 +21,8 @@ output "backup_vault_name" {
 
 output "tags" {
   value = {
-    environment     = "production"
-    cost_code       = "code_value"
-    created_by      = "creator_name"
-    created_date    = "01/01/2024"
-    tech_lead       = "tech_lead_name"
-    requested_by    = "requester_name"
-    service_product = "product_name"
-    team            = "team_name"
-    service_level   = "gold"
+    tagOne   = "tagOneValue"
+    tagTwo   = "tagTwoValue"
+    tagThree = "tagThreeValue"
   }
 }

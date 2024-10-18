@@ -27,15 +27,9 @@ func TestBasicDeployment(t *testing.T) {
 	backupVaultRedundancy := "LocallyRedundant"
 
 	tags := map[string]string{
-		"environment":     "production",
-		"cost_code":       "code_value",
-		"created_by":      "creator_name",
-		"created_date":    "01/01/2024",
-		"tech_lead":       "tech_lead_name",
-		"requested_by":    "requester_name",
-		"service_product": "product_name",
-		"team":            "team_name",
-		"service_level":   "gold",
+		"tagOne":   "tagOneValue",
+		"tagTwo":   "tagTwoValue",
+		"tagThree": "tagThreeValue",
 	}
 
 	// Teardown stage
@@ -83,7 +77,16 @@ func TestBasicDeployment(t *testing.T) {
 		resourceGroup := GetResourceGroup(t, environment.SubscriptionID, credential, resourceGroupName)
 		assert.NotNil(t, resourceGroup, "Resource group does not exist")
 		assert.Equal(t, resourceGroupName, *resourceGroup.Name, "Resource group name does not match")
-		assert.Equal(t, vaultLocation, *resourceGroup.Location, "Resource group location does not match")
+		assert.Equal(t, resourceGroupLocation, *resourceGroup.Location, "Resource group location does not match")
+
+		// Validate resource group tags
+		assert.Equal(t, len(tags), len(resourceGroup.Tags), "Expected to find %2 tags in resource group", len(tags))
+
+		for key, expectedValue := range tags {
+			value, exists := resourceGroup.Tags[key]
+			assert.True(t, exists, "Tag %s does not exist", key)
+			assert.Equal(t, expectedValue, *value, "Tag %s value does not match", key)
+		}
 
 		// Validate backup vault
 		backupVault := GetBackupVault(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
@@ -94,5 +97,14 @@ func TestBasicDeployment(t *testing.T) {
 		assert.Equal(t, "SystemAssigned", *backupVault.Identity.Type, "Backup vault identity type does not match")
 		assert.Equal(t, armdataprotection.StorageSettingTypesLocallyRedundant, *backupVault.Properties.StorageSettings[0].Type, "Backup vault redundancy does not match")
 		assert.Equal(t, armdataprotection.StorageSettingStoreTypesVaultStore, *backupVault.Properties.StorageSettings[0].DatastoreType, "Backup vault datastore type does not match")
+
+		// Validate backup vault tags
+		assert.Equal(t, len(tags), len(backupVault.Tags), "Expected to find %2 tags in backup vault", len(tags))
+
+		for key, expectedValue := range tags {
+			value, exists := backupVault.Tags[key]
+			assert.True(t, exists, "Tag %s does not exist", key)
+			assert.Equal(t, expectedValue, *value, "Tag %s value does not match", key)
+		}
 	})
 }

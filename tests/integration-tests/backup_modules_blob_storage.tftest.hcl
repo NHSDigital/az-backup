@@ -18,8 +18,8 @@ run "create_blob_storage_backup" {
   variables {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
-    backup_vault_name     = run.setup_tests.backup_vault_name
-    tags           = run.setup_tests.tags
+    backup_vault_name       = run.setup_tests.backup_vault_name
+    tags                    = run.setup_tests.tags
     blob_storage_backups = {
       backup1 = {
         backup_name        = "storage1"

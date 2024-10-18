@@ -25,15 +25,9 @@ func TestTerraformOutput(t *testing.T) {
 	backupVaultRedundancy := "LocallyRedundant"
 
 	tags := map[string]string{
-		"environment":     "production",
-		"cost_code":       "code_value",
-		"created_by":      "creator_name",
-		"created_date":    "01/01/2024",
-		"tech_lead":       "tech_lead_name",
-		"requested_by":    "requester_name",
-		"service_product": "product_name",
-		"team":            "team_name",
-		"service_level":   "gold",
+		"tagOne":   "tagOneValue",
+		"tagTwo":   "tagTwoValue",
+		"tagThree": "tagThreeValue",
 	}
 
 	// Teardown stage
@@ -57,7 +51,7 @@ func TestTerraformOutput(t *testing.T) {
 				"resource_group_location": resourceGroupLocation,
 				"backup_vault_name":       backupVaultName,
 				"backup_vault_redundancy": backupVaultRedundancy,
-				"tags":                     tags,
+				"tags":                    tags,
 			},
 
 			BackendConfig: map[string]interface{}{

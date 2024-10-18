@@ -1,24 +1,34 @@
 variable "resource_group_name" {
-  type = string
+  description = "The name of the resource group which the backup vault will be created in - must be unique within the subscription"
+  type        = string
 }
 
 variable "resource_group_location" {
-  type    = string
-  default = "uksouth"
+  description = "The location of the resource group which the backup vault will be created in"
+  type        = string
+  default     = "uksouth"
 }
 
 variable "backup_vault_name" {
-  type = string
+  description = "The name of the backup vault"
+  type        = string
 }
 
 variable "backup_vault_redundancy" {
-  type    = string
-  default = "LocallyRedundant"
+  description = "The redundancy of the backup vault"
+  type        = string
+  default     = "LocallyRedundant"
 }
 
 variable "log_analytics_workspace_id" {
-  type    = string
-  default = ""
+  description = "The id of the log analytics workspace to use for backup vault diagnostic settings"
+  type        = string
+  default     = ""
+}
+
+variable "tags" {
+  description = "A map of tags to assign to the resource group, as mandated by the CCOE tagging policy"
+  type        = map(string)
 }
 
 variable "blob_storage_backups" {
