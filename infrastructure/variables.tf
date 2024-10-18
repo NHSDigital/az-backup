@@ -29,6 +29,7 @@ variable "log_analytics_workspace_id" {
 variable "tags" {
   description = "A map of tags to assign to the resource group, as mandated by the CCOE tagging policy"
   type        = map(string)
+  default     = {}
 }
 
 variable "blob_storage_backups" {
