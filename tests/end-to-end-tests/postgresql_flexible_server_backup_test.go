@@ -25,15 +25,15 @@ type TestPostgresqlFlexibleServerBackupExternalResources struct {
  * Creates resources which are "external" to the az-backup module, and models
  * what would be backed up in a real scenario.
  */
-func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestPostgresqlFlexibleServerBackupExternalResources {
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
+func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestPostgresqlFlexibleServerBackupExternalResources {
+	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
-	PostgresqlFlexibleServerOneName := fmt.Sprintf("pgflexserver-%s-external-1", strings.ToLower(vault_name))
-	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, resourceGroupName, PostgresqlFlexibleServerOneName, vault_location, int32(32))
+	PostgresqlFlexibleServerOneName := fmt.Sprintf("pgflexserver-%s-external-1", strings.ToLower(uniqueId))
+	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerOneName, resourceGroupLocation, int32(32))
 
-	PostgresqlFlexibleServerTwoName := fmt.Sprintf("pgflexserver-%s-external-2", strings.ToLower(vault_name))
-	PostgresqlFlexibleServerTwo := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, resourceGroupName, PostgresqlFlexibleServerTwoName, vault_location, int32(32))
+	PostgresqlFlexibleServerTwoName := fmt.Sprintf("pgflexserver-%s-external-2", strings.ToLower(uniqueId))
+	PostgresqlFlexibleServerTwo := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerTwoName, resourceGroupLocation, int32(32))
 
 	externalResources := &TestPostgresqlFlexibleServerBackupExternalResources{
 		ResourceGroup:               resourceGroup,
@@ -53,11 +53,11 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 	environment := GetEnvironmentConfiguration(t)
 	credential := GetAzureCredential(t, environment)
 
-	vaultName := random.UniqueId()
-	vaultLocation := "uksouth"
-	vaultRedundancy := "LocallyRedundant"
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
-	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
+	uniqueId := random.UniqueId()
+	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
+	resourceGroupLocation := "uksouth"
+	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
+	backupVaultRedundancy := "LocallyRedundant"
 
 	tags := map[string]string{
 		"environment":     "production",
@@ -71,7 +71,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 		"service_level":   "gold",
 	}
 
-	externalResources := setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t, credential, environment.SubscriptionID, vaultName, vaultLocation)
+	externalResources := setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// A map of backups which we'll use to apply the TF module, and then validate the
 	// policies have been created correctly
@@ -111,9 +111,10 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"vault_name":                         vaultName,
-				"vault_location":                     vaultLocation,
-				"vault_redundancy":                   vaultRedundancy,
+				"resource_group_name":                resourceGroupName,
+				"resource_group_location":            resourceGroupLocation,
+				"backup_vault_name":                  backupVaultName,
+				"backup_vault_redundancy":            backupVaultRedundancy,
 				"tags":                               tags,
 				"postgresql_flexible_server_backups": PostgresqlFlexibleServerBackups,
 			},
@@ -122,7 +123,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 				"resource_group_name":  environment.TerraformStateResourceGroup,
 				"storage_account_name": environment.TerraformStateStorageAccount,
 				"container_name":       environment.TerraformStateContainer,
-				"key":                  vaultName + ".tfstate",
+				"key":                  backupVaultName + ".tfstate",
 			},
 		}
 
@@ -151,7 +152,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 			ServerResourceGroupId := backup["server_resource_group_id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-%s-pgflexserver-%s", vaultName, backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-pgflex-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -169,7 +170,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 			}
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-%s-pgflexserver-%s", vaultName, backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-pgflex-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, ServerId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", ServerId)

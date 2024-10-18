@@ -25,15 +25,15 @@ type TestBlobStorageBackupExternalResources struct {
  * Creates resources which are "external" to the az-backup module, and models
  * what would be backed up in a real scenario.
  */
-func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestBlobStorageBackupExternalResources {
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
+func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestBlobStorageBackupExternalResources {
+	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
-	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(vault_name))
-	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, storageAccountOneName, vault_location)
+	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(uniqueId))
+	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, resourceGroupLocation)
 
-	storageAccountTwoName := fmt.Sprintf("sa%sexternal2", strings.ToLower(vault_name))
-	storageAccountTwo := CreateStorageAccount(t, credential, subscriptionID, resourceGroupName, storageAccountTwoName, vault_location)
+	storageAccountTwoName := fmt.Sprintf("sa%sexternal2", strings.ToLower(uniqueId))
+	storageAccountTwo := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, resourceGroupLocation)
 
 	externalResources := &TestBlobStorageBackupExternalResources{
 		ResourceGroup:     resourceGroup,
@@ -53,11 +53,11 @@ func TestBlobStorageBackup(t *testing.T) {
 	environment := GetEnvironmentConfiguration(t)
 	credential := GetAzureCredential(t, environment)
 
-	vaultName := random.UniqueId()
-	vaultLocation := "uksouth"
-	vaultRedundancy := "LocallyRedundant"
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
-	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
+	uniqueId := random.UniqueId()
+	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
+	resourceGroupLocation := "uksouth"
+	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
+	backupVaultRedundancy := "LocallyRedundant"
 
 	tags := map[string]string{
 		"environment":     "production",
@@ -71,7 +71,7 @@ func TestBlobStorageBackup(t *testing.T) {
 		"service_level":   "gold",
 	}
 
-	externalResources := setupExternalResourcesForBlobStorageBackupTest(t, credential, environment.SubscriptionID, vaultName, vaultLocation)
+	externalResources := setupExternalResourcesForBlobStorageBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// A map of backups which we'll use to apply the TF module, and then validate the
 	// policies have been created correctly
@@ -107,18 +107,19 @@ func TestBlobStorageBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"vault_name":           vaultName,
-				"vault_location":       vaultLocation,
-				"vault_redundancy":     vaultRedundancy,
-				"tags":                 tags,
-				"blob_storage_backups": blobStorageBackups,
+				"resource_group_name":     resourceGroupName,
+				"resource_group_location": resourceGroupLocation,
+				"backup_vault_name":       backupVaultName,
+				"backup_vault_redundancy": backupVaultRedundancy,
+				"tags":                    tags,
+				"blob_storage_backups":    blobStorageBackups,
 			},
 
 			BackendConfig: map[string]interface{}{
 				"resource_group_name":  environment.TerraformStateResourceGroup,
 				"storage_account_name": environment.TerraformStateStorageAccount,
 				"container_name":       environment.TerraformStateContainer,
-				"key":                  vaultName + ".tfstate",
+				"key":                  backupVaultName + ".tfstate",
 			},
 		}
 
@@ -145,7 +146,7 @@ func TestBlobStorageBackup(t *testing.T) {
 			storageAccountId := backup["storage_account_id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-%s-blobstorage-%s", vaultName, backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-blob-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -156,7 +157,7 @@ func TestBlobStorageBackup(t *testing.T) {
 			assert.Equal(t, retentionPeriod, *deleteOption.Duration, "Expected the backup policy retention period to be %s", retentionPeriod)
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-%s-blobstorage-%s", vaultName, backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-blob-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, storageAccountId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", storageAccountId)

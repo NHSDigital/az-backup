@@ -1,43 +1,24 @@
-variable "vault_name" {
-  description = "The name of the vault"
-  type        = string
+variable "resource_group_name" {
+  type = string
 }
 
-variable "vault_location" {
-  description = "The location of the vault"
-  type        = string
-  default     = "uksouth"
+variable "resource_group_location" {
+  type    = string
+  default = "uksouth"
 }
 
-variable "vault_redundancy" {
-  description = "The redundancy of the vault"
-  type        = string
-  default     = "LocallyRedundant"
+variable "backup_vault_name" {
+  type = string
 }
 
-variable "tags" {
-  description = "A map of tags to assign to the resource group, as mandated by the CCOE tagging policy"
-  type = object({
-    environment     = string
-    cost_code       = string
-    created_by      = string
-    created_date    = string
-    tech_lead       = string
-    requested_by    = string
-    service_product = string
-    team            = string
-    service_level   = string
-  })
+variable "backup_vault_redundancy" {
+  type    = string
+  default = "LocallyRedundant"
+}
 
-  validation {
-    condition     = contains(["production", "development", "integration", "staging"], var.tags["environment"])
-    error_message = "The environment tag must be one of the following values: production, development, integration, staging."
-  }
-
-  validation {
-    condition     = contains(["bronze", "silver", "gold", "platinum"], var.tags["service_level"])
-    error_message = "The service_level tag must be one of the following values: bronze, silver, gold, platinum."
-  }
+variable "log_analytics_workspace_id" {
+  type    = string
+  default = ""
 }
 
 variable "blob_storage_backups" {
@@ -76,3 +57,4 @@ variable "postgresql_flexible_server_backups" {
   }))
   default = {}
 }
+

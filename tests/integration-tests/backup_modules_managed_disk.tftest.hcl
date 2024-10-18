@@ -16,8 +16,9 @@ run "create_managed_disk_backup" {
   }
 
   variables {
-    vault_name     = run.setup_tests.vault_name
-    vault_location = "uksouth"
+    resource_group_name     = run.setup_tests.resource_group_name
+    resource_group_location = "uksouth"
+    backup_vault_name     = run.setup_tests.backup_vault_name
     tags           = run.setup_tests.tags
     managed_disk_backups = {
       backup1 = {
@@ -54,7 +55,7 @@ run "create_managed_disk_backup" {
   }
 
   assert {
-    condition     = module.managed_disk_backup["backup1"].backup_policy.name == "bkpol-${var.vault_name}-manageddisk-disk1"
+    condition     = module.managed_disk_backup["backup1"].backup_policy.name == "bkpol-disk-disk1"
     error_message = "Managed disk backup policy name not as expected."
   }
 
@@ -79,7 +80,7 @@ run "create_managed_disk_backup" {
   }
 
   assert {
-    condition     = module.managed_disk_backup["backup1"].backup_instance.name == "bkinst-${var.vault_name}-manageddisk-disk1"
+    condition     = module.managed_disk_backup["backup1"].backup_instance.name == "bkinst-disk-disk1"
     error_message = "Managed disk backup instance name not as expected."
   }
 
@@ -114,7 +115,7 @@ run "create_managed_disk_backup" {
   }
 
   assert {
-    condition     = module.managed_disk_backup["backup2"].backup_policy.name == "bkpol-${var.vault_name}-manageddisk-disk2"
+    condition     = module.managed_disk_backup["backup2"].backup_policy.name == "bkpol-disk-disk2"
     error_message = "Managed disk backup policy name not as expected."
   }
 
@@ -139,7 +140,7 @@ run "create_managed_disk_backup" {
   }
 
   assert {
-    condition     = module.managed_disk_backup["backup2"].backup_instance.name == "bkinst-${var.vault_name}-manageddisk-disk2"
+    condition     = module.managed_disk_backup["backup2"].backup_instance.name == "bkinst-disk-disk2"
     error_message = "Managed disk backup instance name not as expected."
   }
 
