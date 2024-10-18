@@ -26,6 +26,12 @@ func TestBasicDeployment(t *testing.T) {
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 	backupVaultRedundancy := "LocallyRedundant"
 
+	tags := map[string]string{
+		"tagOne":   "tagOneValue",
+		"tagTwo":   "tagTwoValue",
+		"tagThree": "tagThreeValue",
+	}
+
 	// Teardown stage
 	// ...
 
@@ -47,6 +53,7 @@ func TestBasicDeployment(t *testing.T) {
 				"resource_group_location": resourceGroupLocation,
 				"backup_vault_name":       backupVaultName,
 				"backup_vault_redundancy": backupVaultRedundancy,
+				"tags":                    tags,
 			},
 
 			BackendConfig: map[string]interface{}{
@@ -72,6 +79,15 @@ func TestBasicDeployment(t *testing.T) {
 		assert.Equal(t, resourceGroupName, *resourceGroup.Name, "Resource group name does not match")
 		assert.Equal(t, resourceGroupLocation, *resourceGroup.Location, "Resource group location does not match")
 
+		// Validate resource group tags
+		assert.Equal(t, len(tags), len(resourceGroup.Tags), "Expected to find %2 tags in resource group", len(tags))
+
+		for key, expectedValue := range tags {
+			value, exists := resourceGroup.Tags[key]
+			assert.True(t, exists, "Tag %s does not exist", key)
+			assert.Equal(t, expectedValue, *value, "Tag %s value does not match", key)
+		}
+
 		// Validate backup vault
 		backupVault := GetBackupVault(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 		assert.NotNil(t, backupVault, "Backup vault does not exist")
@@ -81,5 +97,14 @@ func TestBasicDeployment(t *testing.T) {
 		assert.Equal(t, "SystemAssigned", *backupVault.Identity.Type, "Backup vault identity type does not match")
 		assert.Equal(t, armdataprotection.StorageSettingTypesLocallyRedundant, *backupVault.Properties.StorageSettings[0].Type, "Backup vault redundancy does not match")
 		assert.Equal(t, armdataprotection.StorageSettingStoreTypesVaultStore, *backupVault.Properties.StorageSettings[0].DatastoreType, "Backup vault datastore type does not match")
+
+		// Validate backup vault tags
+		assert.Equal(t, len(tags), len(backupVault.Tags), "Expected to find %2 tags in backup vault", len(tags))
+
+		for key, expectedValue := range tags {
+			value, exists := backupVault.Tags[key]
+			assert.True(t, exists, "Tag %s does not exist", key)
+			assert.Equal(t, expectedValue, *value, "Tag %s value does not match", key)
+		}
 	})
 }

@@ -59,6 +59,12 @@ func TestManagedDiskBackup(t *testing.T) {
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 	backupVaultRedundancy := "LocallyRedundant"
 
+	tags := map[string]string{
+		"tagOne":   "tagOneValue",
+		"tagTwo":   "tagTwoValue",
+		"tagThree": "tagThreeValue",
+	}
+
 	externalResources := setupExternalResourcesForManagedDiskBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// A map of backups which we'll use to apply the TF module, and then validate the
@@ -109,6 +115,7 @@ func TestManagedDiskBackup(t *testing.T) {
 				"resource_group_location": resourceGroupLocation,
 				"backup_vault_name":       backupVaultName,
 				"backup_vault_redundancy": backupVaultRedundancy,
+				"tags":                    tags,
 				"managed_disk_backups":    managedDiskBackups,
 			},
 

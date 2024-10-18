@@ -24,6 +24,11 @@ module "my_backup" {
   backup_vault_name          = "bvault-mybackup"
   backup_vault_redundancy    = "LocallyRedundant"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.my_workspace.id
+  tags = {
+    tagOne   = "tagOneValue"
+    tagTwo   = "tagTwoValue"
+    tagThree = "tagThreeValue"
+  }
   blob_storage_backups = {
     backup1 = {
       backup_name        = "storage1"
@@ -98,6 +103,7 @@ To deploy the module an Azure identity (typically an app registration with clien
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
 | `log_analytics_workspace_id` | The id of the log analytics workspace that backup telemetry and diagnostics should be sent to. When no value is provided then diagnostics will not be sent anywhere. | No | n/a |
+| `tags` | A map of tags which will be applied to the resource group and backup vault. When no tags are specified then no tags are added. | No | n/a |
 | `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `storage_account_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |

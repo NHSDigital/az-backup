@@ -18,3 +18,11 @@ output "resource_group_name" {
 output "backup_vault_name" {
   value = "bvault-${random_pet.backup_vault_name.id}"
 }
+
+output "tags" {
+  value = {
+    tagOne   = "tagOneValue"
+    tagTwo   = "tagTwoValue"
+    tagThree = "tagThreeValue"
+  }
+}

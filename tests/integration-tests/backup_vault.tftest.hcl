@@ -17,9 +17,10 @@ run "create_backup_vault" {
 
   variables {
     resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location   = "uksouth"
+    resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
     backup_vault_redundancy = "LocallyRedundant"
+    tags                    = run.setup_tests.tags
   }
 
   assert {
@@ -56,6 +57,19 @@ run "create_backup_vault" {
     condition     = length(azurerm_data_protection_backup_vault.backup_vault.identity[0].principal_id) > 0
     error_message = "Backup vault identity not as expected."
   }
+
+  assert {
+    condition     = length(azurerm_data_protection_backup_vault.backup_vault.tags) == length(run.setup_tests.tags)
+    error_message = "Tags not as expected."
+  }
+
+  assert {
+    condition = alltrue([
+      for tag_key, tag_value in run.setup_tests.tags :
+      lookup(azurerm_data_protection_backup_vault.backup_vault.tags, tag_key, null) == tag_value
+    ])
+    error_message = "Tags not as expected."
+  }
 }
 
 run "configure_vault_diagnostics_when_enabled" {
@@ -66,10 +80,11 @@ run "configure_vault_diagnostics_when_enabled" {
   }
 
   variables {
-    resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location             = "uksouth"
-    backup_vault_name                 = run.setup_tests.backup_vault_name
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
     log_analytics_workspace_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.OperationalInsights/workspaces/workspace1"
+    tags                       = run.setup_tests.tags
   }
 
   assert {
@@ -117,8 +132,9 @@ run "configure_vault_diagnostics_when_disabled" {
 
   variables {
     resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location             = "uksouth"
-    backup_vault_name                 = run.setup_tests.backup_vault_name
+    resource_group_location = "uksouth"
+    backup_vault_name       = run.setup_tests.backup_vault_name
+    tags                    = run.setup_tests.tags
   }
 
   assert {

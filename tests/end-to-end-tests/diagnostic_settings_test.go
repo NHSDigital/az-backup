@@ -54,6 +54,12 @@ func TestDiagnosticSettings(t *testing.T) {
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 	backupVaultRedundancy := "LocallyRedundant"
 
+	tags := map[string]string{
+		"tagOne":   "tagOneValue",
+		"tagTwo":   "tagTwoValue",
+		"tagThree": "tagThreeValue",
+	}
+
 	externalResources := setupExternalResourcesForDiagnosticSettingsTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// Teardown stage
@@ -80,6 +86,7 @@ func TestDiagnosticSettings(t *testing.T) {
 				"backup_vault_name":          backupVaultName,
 				"backup_vault_redundancy":    backupVaultRedundancy,
 				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
+				"tags":                       tags,
 			},
 
 			BackendConfig: map[string]interface{}{

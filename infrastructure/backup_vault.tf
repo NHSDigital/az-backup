@@ -5,6 +5,7 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
   datastore_type      = "VaultStore"
   redundancy          = var.backup_vault_redundancy
   soft_delete         = "Off"
+  tags                = var.tags
   identity {
     type = "SystemAssigned"
   }

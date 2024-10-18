@@ -18,7 +18,8 @@ run "create_managed_disk_backup" {
   variables {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
-    backup_vault_name     = run.setup_tests.backup_vault_name
+    backup_vault_name       = run.setup_tests.backup_vault_name
+    tags                    = run.setup_tests.tags
     managed_disk_backups = {
       backup1 = {
         backup_name      = "disk1"
