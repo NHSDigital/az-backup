@@ -7,10 +7,14 @@ terraform {
   }
 }
 
-resource "random_pet" "vault_name" {
+resource "random_pet" "backup_vault_name" {
   length = 4
 }
 
-output "vault_name" {
-  value = random_pet.vault_name.id
+output "resource_group_name" {
+  value = "rg-${random_pet.backup_vault_name.id}"
+}
+
+output "backup_vault_name" {
+  value = "bvault-${random_pet.backup_vault_name.id}"
 }

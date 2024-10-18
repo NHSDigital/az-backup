@@ -16,13 +16,14 @@ run "create_backup_vault" {
   }
 
   variables {
-    vault_name       = run.setup_tests.vault_name
-    vault_location   = "uksouth"
-    vault_redundancy = "LocallyRedundant"
+    resource_group_name     = run.setup_tests.resource_group_name
+    resource_group_location   = "uksouth"
+    backup_vault_name       = run.setup_tests.backup_vault_name
+    backup_vault_redundancy = "LocallyRedundant"
   }
 
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.name == "bvault-${var.vault_name}"
+    condition     = azurerm_data_protection_backup_vault.backup_vault.name == var.backup_vault_name
     error_message = "Backup vault name not as expected."
   }
 
@@ -32,7 +33,7 @@ run "create_backup_vault" {
   }
 
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.location == var.vault_location
+    condition     = azurerm_data_protection_backup_vault.backup_vault.location == azurerm_resource_group.resource_group.location
     error_message = "Backup vault location not as expected."
   }
 
@@ -42,7 +43,7 @@ run "create_backup_vault" {
   }
 
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.redundancy == var.vault_redundancy
+    condition     = azurerm_data_protection_backup_vault.backup_vault.redundancy == var.backup_vault_redundancy
     error_message = "Backup vault redundancy not as expected."
   }
 
@@ -65,8 +66,9 @@ run "configure_vault_diagnostics_when_enabled" {
   }
 
   variables {
-    vault_name                 = run.setup_tests.vault_name
-    vault_location             = "uksouth"
+    resource_group_name     = run.setup_tests.resource_group_name
+    resource_group_location             = "uksouth"
+    backup_vault_name                 = run.setup_tests.backup_vault_name
     log_analytics_workspace_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.OperationalInsights/workspaces/workspace1"
   }
 
@@ -114,8 +116,9 @@ run "configure_vault_diagnostics_when_disabled" {
   }
 
   variables {
-    vault_name     = run.setup_tests.vault_name
-    vault_location = "uksouth"
+    resource_group_name     = run.setup_tests.resource_group_name
+    resource_group_location             = "uksouth"
+    backup_vault_name                 = run.setup_tests.backup_vault_name
   }
 
   assert {
