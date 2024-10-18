@@ -24,19 +24,10 @@ module "my_backup" {
   backup_vault_name          = "bvault-mybackup"
   backup_vault_redundancy    = "LocallyRedundant"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.my_workspace.id
-  tags             = {
-    environment         = "production"
-    owner               = "owner_name"
-    created_by          = "creator_name"
-    costing_pcode       = "pcode_value"
-    ch_cost_centre      = "cost_centre_value"
-    project             = "project_name"
-    service_level       = "gold"
-    directorate         = "directorate_name"
-    sub_directorate     = "sub_directorate_name"
-    data_classification = "3"
-    service_product     = "product_name"
-    team                = "team_name"
+  tags = {
+    tagOne   = "tagOneValue"
+    tagTwo   = "tagTwoValue"
+    tagThree = "tagThreeValue"
   }
   blob_storage_backups = {
     backup1 = {
