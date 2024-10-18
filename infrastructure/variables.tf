@@ -27,7 +27,7 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "tags" {
-  description = "A map of tags to assign to the resource group, as mandated by the CCOE tagging policy"
+  description = "A map of tags to assign to the resources created by the module"
   type        = map(string)
   default     = {}
 }
