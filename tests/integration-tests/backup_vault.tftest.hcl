@@ -20,11 +20,12 @@ run "create_backup_vault" {
   }
 
   variables {
-    resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location = "uksouth"
-    backup_vault_name       = run.setup_tests.backup_vault_name
-    backup_vault_redundancy = "LocallyRedundant"
-    tags                    = run.setup_tests.tags
+    resource_group_name       = run.setup_tests.resource_group_name
+    resource_group_location   = "uksouth"
+    backup_vault_name         = run.setup_tests.backup_vault_name
+    backup_vault_redundancy   = "LocallyRedundant"
+    backup_vault_immutability = "Unlocked"
+    tags                      = run.setup_tests.tags
   }
 
   assert {
@@ -73,6 +74,11 @@ run "create_backup_vault" {
       lookup(azurerm_data_protection_backup_vault.backup_vault.tags, tag_key, null) == tag_value
     ])
     error_message = "Tags not as expected."
+  }
+
+  assert {
+    condition     = jsondecode(azapi_update_resource.backup_vault_settings.body).properties.securitySettings.immutabilitySettings.state == var.backup_vault_immutability
+    error_message = "Backup vault immutability not as expected."
   }
 }
 
