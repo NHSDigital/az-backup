@@ -57,13 +57,6 @@ func TestBlobStorageBackup(t *testing.T) {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
-	backupVaultRedundancy := "LocallyRedundant"
-
-	tags := map[string]string{
-		"tagOne":   "tagOneValue",
-		"tagTwo":   "tagTwoValue",
-		"tagThree": "tagThreeValue",
-	}
 
 	externalResources := setupExternalResourcesForBlobStorageBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
@@ -104,8 +97,6 @@ func TestBlobStorageBackup(t *testing.T) {
 				"resource_group_name":     resourceGroupName,
 				"resource_group_location": resourceGroupLocation,
 				"backup_vault_name":       backupVaultName,
-				"backup_vault_redundancy": backupVaultRedundancy,
-				"tags":                    tags,
 				"blob_storage_backups":    blobStorageBackups,
 			},
 

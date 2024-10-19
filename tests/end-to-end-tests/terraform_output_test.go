@@ -24,12 +24,6 @@ func TestTerraformOutput(t *testing.T) {
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 	backupVaultRedundancy := "LocallyRedundant"
 
-	tags := map[string]string{
-		"tagOne":   "tagOneValue",
-		"tagTwo":   "tagTwoValue",
-		"tagThree": "tagThreeValue",
-	}
-
 	// Teardown stage
 	// ...
 
@@ -51,7 +45,6 @@ func TestTerraformOutput(t *testing.T) {
 				"resource_group_location": resourceGroupLocation,
 				"backup_vault_name":       backupVaultName,
 				"backup_vault_redundancy": backupVaultRedundancy,
-				"tags":                    tags,
 			},
 
 			BackendConfig: map[string]interface{}{
