@@ -25,15 +25,15 @@ type TestManagedDiskBackupExternalResources struct {
  * Creates resources which are "external" to the az-backup module, and models
  * what would be backed up in a real scenario.
  */
-func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, vault_name string, vault_location string) *TestManagedDiskBackupExternalResources {
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s-external", vault_name)
-	resourceGroup := CreateResourceGroup(t, subscriptionID, credential, resourceGroupName, vault_location)
+func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestManagedDiskBackupExternalResources {
+	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
-	managedDiskOneName := fmt.Sprintf("disk-%s-external-1", strings.ToLower(vault_name))
-	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, resourceGroupName, managedDiskOneName, vault_location, int32(1))
+	managedDiskOneName := fmt.Sprintf("disk-%s-external-1", strings.ToLower(uniqueId))
+	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskOneName, resourceGroupLocation, int32(1))
 
-	managedDiskTwoName := fmt.Sprintf("disk-%s-external-2", strings.ToLower(vault_name))
-	managedDiskTwo := CreateManagedDisk(t, credential, subscriptionID, resourceGroupName, managedDiskTwoName, vault_location, int32(1))
+	managedDiskTwoName := fmt.Sprintf("disk-%s-external-2", strings.ToLower(uniqueId))
+	managedDiskTwo := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskTwoName, resourceGroupLocation, int32(1))
 
 	externalResources := &TestManagedDiskBackupExternalResources{
 		ResourceGroup:  resourceGroup,
@@ -53,13 +53,19 @@ func TestManagedDiskBackup(t *testing.T) {
 	environment := GetEnvironmentConfiguration(t)
 	credential := GetAzureCredential(t, environment)
 
-	vaultName := random.UniqueId()
-	vaultLocation := "uksouth"
-	vaultRedundancy := "LocallyRedundant"
-	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", vaultName)
-	backupVaultName := fmt.Sprintf("bvault-%s", vaultName)
+	uniqueId := random.UniqueId()
+	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
+	resourceGroupLocation := "uksouth"
+	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
+	backupVaultRedundancy := "LocallyRedundant"
 
-	externalResources := setupExternalResourcesForManagedDiskBackupTest(t, credential, environment.SubscriptionID, vaultName, vaultLocation)
+	tags := map[string]string{
+		"tagOne":   "tagOneValue",
+		"tagTwo":   "tagTwoValue",
+		"tagThree": "tagThreeValue",
+	}
+
+	externalResources := setupExternalResourcesForManagedDiskBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// A map of backups which we'll use to apply the TF module, and then validate the
 	// policies have been created correctly
@@ -105,17 +111,19 @@ func TestManagedDiskBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"vault_name":           vaultName,
-				"vault_location":       vaultLocation,
-				"vault_redundancy":     vaultRedundancy,
-				"managed_disk_backups": managedDiskBackups,
+				"resource_group_name":     resourceGroupName,
+				"resource_group_location": resourceGroupLocation,
+				"backup_vault_name":       backupVaultName,
+				"backup_vault_redundancy": backupVaultRedundancy,
+				"tags":                    tags,
+				"managed_disk_backups":    managedDiskBackups,
 			},
 
 			BackendConfig: map[string]interface{}{
 				"resource_group_name":  environment.TerraformStateResourceGroup,
 				"storage_account_name": environment.TerraformStateStorageAccount,
 				"container_name":       environment.TerraformStateContainer,
-				"key":                  vaultName + ".tfstate",
+				"key":                  backupVaultName + ".tfstate",
 			},
 		}
 
@@ -145,7 +153,7 @@ func TestManagedDiskBackup(t *testing.T) {
 			managedDiskResourceGroupId := managedDiskResourceGroup["id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-%s-manageddisk-%s", vaultName, backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-disk-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -163,7 +171,7 @@ func TestManagedDiskBackup(t *testing.T) {
 			}
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-%s-manageddisk-%s", vaultName, backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-disk-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, managedDiskId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", managedDiskId)
