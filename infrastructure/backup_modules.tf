@@ -1,10 +1,12 @@
 module "blob_storage_backup" {
-  for_each           = var.blob_storage_backups
-  source             = "./modules/backup/blob_storage"
-  vault              = azurerm_data_protection_backup_vault.backup_vault
-  backup_name        = each.value.backup_name
-  retention_period   = each.value.retention_period
-  storage_account_id = each.value.storage_account_id
+  for_each                   = var.blob_storage_backups
+  source                     = "./modules/backup/blob_storage"
+  vault                      = azurerm_data_protection_backup_vault.backup_vault
+  backup_name                = each.value.backup_name
+  retention_period           = each.value.retention_period
+  backup_intervals           = each.value.backup_intervals
+  storage_account_id         = each.value.storage_account_id
+  storage_account_containers = each.value.storage_account_containers
 }
 
 module "managed_disk_backup" {

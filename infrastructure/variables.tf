@@ -35,11 +35,24 @@ variable "tags" {
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
-    backup_name        = string
-    retention_period   = string
-    storage_account_id = string
+    backup_name                = string
+    retention_period           = string
+    backup_intervals           = list(string)
+    storage_account_id         = string
+    storage_account_containers = list(string)
   }))
+
   default = {}
+
+  validation {
+    condition     = length(var.blob_storage_backups) == 0 || alltrue([for k, v in var.blob_storage_backups : length(v.backup_intervals) > 0])
+    error_message = "At least one backup interval must be provided."
+  }
+
+  validation {
+    condition     = length(var.blob_storage_backups) == 0 || alltrue([for k, v in var.blob_storage_backups : length(v.storage_account_containers) > 0])
+    error_message = "At least one storage account container must be provided."
+  }
 }
 
 variable "managed_disk_backups" {
@@ -54,7 +67,13 @@ variable "managed_disk_backups" {
       name = string
     })
   }))
+
   default = {}
+
+  validation {
+    condition     = length(var.managed_disk_backups) == 0 || alltrue([for k, v in var.managed_disk_backups : length(v.backup_intervals) > 0])
+    error_message = "At least one backup interval must be provided."
+  }
 }
 
 variable "postgresql_flexible_server_backups" {
@@ -66,6 +85,12 @@ variable "postgresql_flexible_server_backups" {
     server_id                = string
     server_resource_group_id = string
   }))
+
   default = {}
+
+  validation {
+    condition     = length(var.postgresql_flexible_server_backups) == 0 || alltrue([for k, v in var.postgresql_flexible_server_backups : length(v.backup_intervals) > 0])
+    error_message = "At least one backup interval must be provided."
+  }
 }
 

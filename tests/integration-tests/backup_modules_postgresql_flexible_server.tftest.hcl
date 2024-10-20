@@ -153,3 +153,31 @@ run "create_postgresql_flexible_server_backup" {
     error_message = "Postgresql flexible server backup instance backup policy id not as expected."
   }
 }
+
+run "validate_backup_intervals" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    resource_group_name     = run.setup_tests.resource_group_name
+    resource_group_location = "uksouth"
+    backup_vault_name       = run.setup_tests.backup_vault_name
+    tags                    = run.setup_tests.tags
+    postgresql_flexible_server_backups = {
+      backup1 = {
+        backup_name              = "server1"
+        retention_period         = "P7D"
+        backup_intervals         = []
+        server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
+        server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.postgresql_flexible_server_backups,
+  ]
+}

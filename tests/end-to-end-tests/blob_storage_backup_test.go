@@ -16,9 +16,11 @@ import (
 )
 
 type TestBlobStorageBackupExternalResources struct {
-	ResourceGroup     armresources.ResourceGroup
-	StorageAccountOne armstorage.Account
-	StorageAccountTwo armstorage.Account
+	ResourceGroup              armresources.ResourceGroup
+	StorageAccountOne          armstorage.Account
+	StorageAccountOneContainer armstorage.BlobContainer
+	StorageAccountTwo          armstorage.Account
+	StorageAccountTwoContainer armstorage.BlobContainer
 }
 
 /*
@@ -31,14 +33,18 @@ func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *az
 
 	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(uniqueId))
 	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, resourceGroupLocation)
+	storageAccountOneContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, "test-container")
 
 	storageAccountTwoName := fmt.Sprintf("sa%sexternal2", strings.ToLower(uniqueId))
 	storageAccountTwo := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, resourceGroupLocation)
+	storageAccountTwoContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, "test-container")
 
 	externalResources := &TestBlobStorageBackupExternalResources{
-		ResourceGroup:     resourceGroup,
-		StorageAccountOne: storageAccountOne,
-		StorageAccountTwo: storageAccountTwo,
+		ResourceGroup:              resourceGroup,
+		StorageAccountOne:          storageAccountOne,
+		StorageAccountOneContainer: storageAccountOneContainer,
+		StorageAccountTwo:          storageAccountTwo,
+		StorageAccountTwoContainer: storageAccountTwoContainer,
 	}
 
 	return externalResources
@@ -71,14 +77,18 @@ func TestBlobStorageBackup(t *testing.T) {
 	// policies have been created correctly
 	blobStorageBackups := map[string]map[string]interface{}{
 		"backup1": {
-			"backup_name":        "blob1",
-			"retention_period":   "P7D",
-			"storage_account_id": *externalResources.StorageAccountOne.ID,
+			"backup_name":                "blob1",
+			"retention_period":           "P7D",
+			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P1D"},
+			"storage_account_id":         *externalResources.StorageAccountOne.ID,
+			"storage_account_containers": []string{*externalResources.StorageAccountOneContainer.Name},
 		},
 		"backup2": {
-			"backup_name":        "blob2",
-			"retention_period":   "P30D",
-			"storage_account_id": *externalResources.StorageAccountTwo.ID,
+			"backup_name":                "blob2",
+			"retention_period":           "P30D",
+			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P2D"},
+			"storage_account_id":         *externalResources.StorageAccountTwo.ID,
+			"storage_account_containers": []string{*externalResources.StorageAccountTwoContainer.Name},
 		},
 	}
 
@@ -137,6 +147,7 @@ func TestBlobStorageBackup(t *testing.T) {
 		for _, backup := range blobStorageBackups {
 			backupName := backup["backup_name"].(string)
 			retentionPeriod := backup["retention_period"].(string)
+			backupIntervals := backup["backup_intervals"].([]string)
 			storageAccountId := backup["storage_account_id"].(string)
 
 			// Validate backup policy
@@ -149,6 +160,13 @@ func TestBlobStorageBackup(t *testing.T) {
 			retentionRule := GetBackupPolicyRuleForName(backupPolicyProperties.PolicyRules, "Default").(*armdataprotection.AzureRetentionRule)
 			deleteOption := retentionRule.Lifecycles[0].DeleteAfter.(*armdataprotection.AbsoluteDeleteOption)
 			assert.Equal(t, retentionPeriod, *deleteOption.Duration, "Expected the backup policy retention period to be %s", retentionPeriod)
+
+			// Validate backup intervals
+			backupRule := GetBackupPolicyRuleForName(backupPolicyProperties.PolicyRules, "BackupIntervals").(*armdataprotection.AzureBackupRule)
+			schedule := backupRule.Trigger.(*armdataprotection.ScheduleBasedTriggerContext).Schedule
+			for index, interval := range schedule.RepeatingTimeIntervals {
+				assert.Equal(t, backupIntervals[index], *interval, "Expected backup policy repeating interval %s to be %s", index, backupIntervals[index])
+			}
 
 			// Validate backup instance
 			backupInstanceName := fmt.Sprintf("bkinst-blob-%s", backupName)

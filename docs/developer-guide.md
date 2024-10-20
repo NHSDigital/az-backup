@@ -46,16 +46,6 @@ Take the following steps to get started in configuring and verifying the infrast
 
     Make a note of the name of the storage account in the script output - it's generated with a random suffix, and you'll need it in the following steps to initialise the terraform.
 
-1. Prepare Terraform Variables (Optional)
-
-    If you want to override the Terraform variables, make a copy of `tfvars.template` and amend any default settings as required.
-
-    In the next step add the following flag to the `terraform apply` command in order to use your variables:
-
-    ```pwsh
-    -var-file="<your-var-file>.tfvars
-    ```
-
 1. Initialise Terraform
 
     Change the working directory to `./infrastructure`.
@@ -65,6 +55,22 @@ Take the following steps to get started in configuring and verifying the infrast
     ````pwsh
     terraform init -backend=true -backend-config="resource_group_name=rg-nhsbackup" -backend-config="storage_account_name=<storage-account-name>" -backend-config="container_name=tfstate" -backend-config="key=terraform.tfstate"
     ````
+
+1. Prepare Terraform Variables
+
+    You need to specify the mandatory terraform variables as a minimum, and may want to specify a number of the optional variables.
+
+    You can specify the variables via the command line when executing `terraform apply`, or by preparing a tfvars file and specifying the path to that file.
+
+    Here are examples of each approach:
+
+    ```pwsh
+    terraform apply -var resource_group_name=<resource-group-name> -var backup_vault_name=<backup-vault-name> var tags={"tagOne" = "tagOneValue"} -var blob_storage_backups={"backup1" = { "backup_name" = "myblob", "retention_period" = "P7D", "backup_intervals" = ["R/2024-01-01T00:00:00+00:00/P1D"], "storage_account_id" = "id" }}
+    ```
+
+    ```pwsh
+    terraform apply -var-file="<your-var-file>.tfvars
+    ```
 
 1. Apply Terraform
 
