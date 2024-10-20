@@ -381,6 +381,29 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 }
 
 /*
+ * Creates a storage account container that can be used for testing purposes.
+ */
+func CreateStorageAccountContainer(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, storageAccountName string, containerName string) armstorage.BlobContainer {
+	containerClient, err := armstorage.NewBlobContainersClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create container client: %v", err)
+
+	resp, err := containerClient.Create(
+		context.Background(),
+		resourceGroupName,
+		storageAccountName,
+		containerName,
+		armstorage.BlobContainer{},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to create container: %v", err)
+
+	log.Printf("Container '%s' created successfully in storage account %s", containerName, storageAccountName)
+
+	return resp.BlobContainer
+}
+
+/*
  * Creates a managed disk that can be used for testing purposes.
  */
 func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
