@@ -2,6 +2,10 @@ mock_provider "azurerm" {
   source = "./azurerm"
 }
 
+mock_provider "azapi" {
+  source = "./azapi"
+}
+
 run "setup_tests" {
   module {
     source = "./setup"
