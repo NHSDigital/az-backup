@@ -33,11 +33,13 @@ variable "tags" {
 }
 
 variable "use_extended_retention" {
-  type    = bool
-  default = false
+  description = "A flag which allows the use of extended retention periods beyond 7 days"
+  type        = bool
+  default     = false
 }
 
 locals {
+  # The valid backup retention period - up to 7 days, which can be extended when use_extended_retention is set to true
   valid_retention_periods = [for days in range(1, 8) : "P${days}D"]
 }
 
