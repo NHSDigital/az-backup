@@ -1,17 +1,5 @@
-variable "vault_id" {
-  type = string
-}
-
-variable "vault_name" {
-  type = string
-}
-
-variable "vault_location" {
-  type = string
-}
-
-variable "vault_principal_id" {
-  type = string
+variable "vault" {
+  type = any
 }
 
 variable "backup_name" {

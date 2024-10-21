@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -15,39 +15,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type TestManagedDiskBackupExternalResources struct {
-	ResourceGroup  armresources.ResourceGroup
-	ManagedDiskOne armcompute.Disk
-	ManagedDiskTwo armcompute.Disk
+type TestPostgresqlFlexibleServerBackupExternalResources struct {
+	ResourceGroup               armresources.ResourceGroup
+	PostgresqlFlexibleServerOne armpostgresqlflexibleservers.Server
+	PostgresqlFlexibleServerTwo armpostgresqlflexibleservers.Server
 }
 
 /*
  * Creates resources which are "external" to the az-backup module, and models
  * what would be backed up in a real scenario.
  */
-func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestManagedDiskBackupExternalResources {
+func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestPostgresqlFlexibleServerBackupExternalResources {
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
-	managedDiskOneName := fmt.Sprintf("disk-%s-external-1", strings.ToLower(uniqueId))
-	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskOneName, resourceGroupLocation, int32(1))
+	PostgresqlFlexibleServerOneName := fmt.Sprintf("pgflexserver-%s-external-1", strings.ToLower(uniqueId))
+	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerOneName, resourceGroupLocation, int32(32))
 
-	managedDiskTwoName := fmt.Sprintf("disk-%s-external-2", strings.ToLower(uniqueId))
-	managedDiskTwo := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskTwoName, resourceGroupLocation, int32(1))
+	PostgresqlFlexibleServerTwoName := fmt.Sprintf("pgflexserver-%s-external-2", strings.ToLower(uniqueId))
+	PostgresqlFlexibleServerTwo := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerTwoName, resourceGroupLocation, int32(32))
 
-	externalResources := &TestManagedDiskBackupExternalResources{
-		ResourceGroup:  resourceGroup,
-		ManagedDiskOne: managedDiskOne,
-		ManagedDiskTwo: managedDiskTwo,
+	externalResources := &TestPostgresqlFlexibleServerBackupExternalResources{
+		ResourceGroup:               resourceGroup,
+		PostgresqlFlexibleServerOne: PostgresqlFlexibleServerOne,
+		PostgresqlFlexibleServerTwo: PostgresqlFlexibleServerTwo,
 	}
 
 	return externalResources
 }
 
 /*
- * TestManagedDiskBackup tests the deployment of a backup vault and backup policies for managed disks.
+ * TestPostgresqlFlexibleServerBackup tests the deployment of a backup vault and backup policies for postgresql flexible servers.
  */
-func TestManagedDiskBackup(t *testing.T) {
+func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 	t.Parallel()
 
 	environment := GetEnvironmentConfiguration(t)
@@ -65,30 +65,24 @@ func TestManagedDiskBackup(t *testing.T) {
 		"tagThree": "tagThreeValue",
 	}
 
-	externalResources := setupExternalResourcesForManagedDiskBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
+	externalResources := setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// A map of backups which we'll use to apply the TF module, and then validate the
 	// policies have been created correctly
-	managedDiskBackups := map[string]map[string]interface{}{
+	PostgresqlFlexibleServerBackups := map[string]map[string]interface{}{
 		"backup1": {
-			"backup_name":      "disk1",
-			"retention_period": "P1D",
-			"backup_intervals": []string{"R/2024-01-01T00:00:00+00:00/P1D"},
-			"managed_disk_id":  *externalResources.ManagedDiskOne.ID,
-			"managed_disk_resource_group": map[string]interface{}{
-				"id":   *externalResources.ResourceGroup.ID,
-				"name": *externalResources.ResourceGroup.Name,
-			},
+			"backup_name":              "server1",
+			"retention_period":         "P1D",
+			"backup_intervals":         []string{"R/2024-01-01T00:00:00+00:00/P1D"},
+			"server_id":                *externalResources.PostgresqlFlexibleServerOne.ID,
+			"server_resource_group_id": *externalResources.ResourceGroup.ID,
 		},
 		"backup2": {
-			"backup_name":      "disk2",
-			"retention_period": "P7D",
-			"backup_intervals": []string{"R/2024-01-01T00:00:00+00:00/P2D"},
-			"managed_disk_id":  *externalResources.ManagedDiskTwo.ID,
-			"managed_disk_resource_group": map[string]interface{}{
-				"id":   *externalResources.ResourceGroup.ID,
-				"name": *externalResources.ResourceGroup.Name,
-			},
+			"backup_name":              "server2",
+			"retention_period":         "P7D",
+			"backup_intervals":         []string{"R/2024-01-01T00:00:00+00:00/P2D"},
+			"server_id":                *externalResources.PostgresqlFlexibleServerTwo.ID,
+			"server_resource_group_id": *externalResources.ResourceGroup.ID,
 		},
 	}
 
@@ -111,12 +105,12 @@ func TestManagedDiskBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":     resourceGroupName,
-				"resource_group_location": resourceGroupLocation,
-				"backup_vault_name":       backupVaultName,
-				"backup_vault_redundancy": backupVaultRedundancy,
-				"tags":                    tags,
-				"managed_disk_backups":    managedDiskBackups,
+				"resource_group_name":                resourceGroupName,
+				"resource_group_location":            resourceGroupLocation,
+				"backup_vault_name":                  backupVaultName,
+				"backup_vault_redundancy":            backupVaultRedundancy,
+				"tags":                               tags,
+				"postgresql_flexible_server_backups": PostgresqlFlexibleServerBackups,
 			},
 
 			BackendConfig: map[string]interface{}{
@@ -141,19 +135,18 @@ func TestManagedDiskBackup(t *testing.T) {
 		backupPolicies := GetBackupPolicies(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 		backupInstances := GetBackupInstances(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 
-		assert.Equal(t, len(managedDiskBackups), len(backupPolicies), "Expected to find %2 backup policies in vault", len(managedDiskBackups))
-		assert.Equal(t, len(managedDiskBackups), len(backupInstances), "Expected to find %2 backup instances in vault", len(managedDiskBackups))
+		assert.Equal(t, len(PostgresqlFlexibleServerBackups), len(backupPolicies), "Expected to find %2 backup policies in vault", len(PostgresqlFlexibleServerBackups))
+		assert.Equal(t, len(PostgresqlFlexibleServerBackups), len(backupInstances), "Expected to find %2 backup instances in vault", len(PostgresqlFlexibleServerBackups))
 
-		for _, backup := range managedDiskBackups {
+		for _, backup := range PostgresqlFlexibleServerBackups {
 			backupName := backup["backup_name"].(string)
 			retentionPeriod := backup["retention_period"].(string)
 			backupIntervals := backup["backup_intervals"].([]string)
-			managedDiskId := backup["managed_disk_id"].(string)
-			managedDiskResourceGroup := backup["managed_disk_resource_group"].(map[string]interface{})
-			managedDiskResourceGroupId := managedDiskResourceGroup["id"].(string)
+			ServerId := backup["server_id"].(string)
+			ServerResourceGroupId := backup["server_resource_group_id"].(string)
 
 			// Validate backup policy
-			backupPolicyName := fmt.Sprintf("bkpol-disk-%s", backupName)
+			backupPolicyName := fmt.Sprintf("bkpol-pgflex-%s", backupName)
 			backupPolicy := GetBackupPolicyForName(backupPolicies, backupPolicyName)
 			assert.NotNil(t, backupPolicy, "Expected to find a backup policy called %s", backupPolicyName)
 
@@ -171,20 +164,20 @@ func TestManagedDiskBackup(t *testing.T) {
 			}
 
 			// Validate backup instance
-			backupInstanceName := fmt.Sprintf("bkinst-disk-%s", backupName)
+			backupInstanceName := fmt.Sprintf("bkinst-pgflex-%s", backupName)
 			backupInstance := GetBackupInstanceForName(backupInstances, backupInstanceName)
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
-			assert.Equal(t, managedDiskId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", managedDiskId)
+			assert.Equal(t, ServerId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", ServerId)
 			assert.Equal(t, *backupPolicy.ID, *backupInstance.Properties.PolicyInfo.PolicyID, "Expected the backup instance policy ID to be %s", backupPolicy.ID)
 
 			// Validate role assignments
-			snapshotContributorRoleDefinition := GetRoleDefinition(t, credential, "Disk Snapshot Contributor")
-			snapshotContributorRoleAssignment := GetRoleAssignment(t, credential, environment.SubscriptionID, *backupVault.Identity.PrincipalID, snapshotContributorRoleDefinition, managedDiskResourceGroupId)
-			assert.NotNil(t, snapshotContributorRoleAssignment, "Expected to find role assignment %s for principal %s on scope %s", snapshotContributorRoleDefinition.Name, *backupVault.Identity.PrincipalID, managedDiskResourceGroupId)
+			readerRoleDefinition := GetRoleDefinition(t, credential, "Reader")
+			readerRoleAssignment := GetRoleAssignment(t, credential, environment.SubscriptionID, *backupVault.Identity.PrincipalID, readerRoleDefinition, ServerResourceGroupId)
+			assert.NotNil(t, readerRoleAssignment, "Expected to find role assignment %s for principal %s on scope %s", readerRoleDefinition.Name, *backupVault.Identity.PrincipalID, ServerResourceGroupId)
 
-			backupReaderRoleDefinition := GetRoleDefinition(t, credential, "Disk Backup Reader")
-			backupReaderRoleAssignment := GetRoleAssignment(t, credential, environment.SubscriptionID, *backupVault.Identity.PrincipalID, backupReaderRoleDefinition, managedDiskId)
-			assert.NotNil(t, backupReaderRoleAssignment, "Expected to find role assignment %s for principal %s on scope %s", backupReaderRoleDefinition.Name, *backupVault.Identity.PrincipalID, managedDiskId)
+			longTermRetentionBackupRoleDefinition := GetRoleDefinition(t, credential, "PostgreSQL Flexible Server Long Term Retention Backup Role")
+			longTermRetentionBackupRoleAssignment := GetRoleAssignment(t, credential, environment.SubscriptionID, *backupVault.Identity.PrincipalID, longTermRetentionBackupRoleDefinition, ServerId)
+			assert.NotNil(t, longTermRetentionBackupRoleAssignment, "Expected to find role assignment %s for principal %s on scope %s", longTermRetentionBackupRoleDefinition.Name, *backupVault.Identity.PrincipalID, ServerId)
 		}
 	})
 }

@@ -1,4 +1,5 @@
 resource "azurerm_resource_group" "resource_group" {
-  location = var.vault_location
-  name     = "rg-nhsbackup-${var.vault_name}"
+  location = var.resource_group_location
+  name     = var.resource_group_name
+  tags     = var.tags
 }

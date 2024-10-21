@@ -13,6 +13,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
@@ -167,6 +170,32 @@ func GetRoleAssignment(t *testing.T, credential *azidentity.ClientSecretCredenti
 	return nil
 }
 
+func GetDiagnosticSettings(t *testing.T, credential *azidentity.ClientSecretCredential, resourceID string, resourceName string) *armmonitor.DiagnosticSettingsResource {
+	client, err := armmonitor.NewDiagnosticSettingsClient(credential, nil)
+	assert.NoError(t, err, "Failed to create diagnostic settings client: %v", err)
+
+	// List the diagnostic settings for the given resource
+	pager := client.NewListPager(resourceID, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
+		assert.NoError(t, err, "Failed to list diagnostic settings")
+
+		// We currently only handle when there's only one diagnostic setting per resource
+		// ...
+
+		if len(page.Value) == 0 {
+			assert.Fail(t, "No diagnostic settings found for resource: %s", resourceName)
+		} else if len(page.Value) > 1 {
+			assert.Fail(t, "Multiple diagnostic settings found for resource: %s", resourceName)
+		} else {
+			return page.Value[0]
+		}
+	}
+
+	return nil
+}
+
 /*
  * Gets a backup vault for the provided name.
  */
@@ -265,7 +294,8 @@ func GetBackupInstanceForName(instances []*armdataprotection.BackupInstanceResou
 /*
  * Creates a resource group that can be used for testing purposes.
  */
-func CreateResourceGroup(t *testing.T, subscriptionID string, credential *azidentity.ClientSecretCredential, resourceGroupName string, resourceGroupLocation string) armresources.ResourceGroup {
+func CreateResourceGroup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, resourceGroupLocation string) armresources.ResourceGroup {
 	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
 
@@ -284,6 +314,36 @@ func CreateResourceGroup(t *testing.T, subscriptionID string, credential *aziden
 	log.Printf("Resource group %s created successfully", resourceGroupName)
 
 	return resp.ResourceGroup
+}
+
+/*
+ * Creates a Log Analytics workspace that can be used for testing purposes.
+ */
+func CreateLogAnalyticsWorkspace(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, workspaceName string, workspaceLocation string) armoperationalinsights.Workspace {
+	client, err := armoperationalinsights.NewWorkspacesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create Log Analytics workspace client: %v", err)
+
+	log.Printf("Creating log analytics workspace %s in location %s", workspaceName, workspaceLocation)
+
+	pollerResp, err := client.BeginCreateOrUpdate(
+		context.Background(),
+		resourceGroupName,
+		workspaceName,
+		armoperationalinsights.Workspace{
+			Location: &workspaceLocation,
+		},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to begin creating log analytics workspace: %v", err)
+
+	// Wait for the creation to complete
+	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create log analytics workspace: %v", err)
+
+	log.Printf("Log analytics workspace %s created successfully", workspaceName)
+
+	return resp.Workspace
 }
 
 /*
@@ -321,6 +381,29 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 }
 
 /*
+ * Creates a storage account container that can be used for testing purposes.
+ */
+func CreateStorageAccountContainer(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, storageAccountName string, containerName string) armstorage.BlobContainer {
+	containerClient, err := armstorage.NewBlobContainersClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create container client: %v", err)
+
+	resp, err := containerClient.Create(
+		context.Background(),
+		resourceGroupName,
+		storageAccountName,
+		containerName,
+		armstorage.BlobContainer{},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to create container: %v", err)
+
+	log.Printf("Container '%s' created successfully in storage account %s", containerName, storageAccountName)
+
+	return resp.BlobContainer
+}
+
+/*
  * Creates a managed disk that can be used for testing purposes.
  */
 func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
@@ -355,6 +438,48 @@ func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredenti
 	log.Printf("Managed disk %s created successfully", diskName)
 
 	return resp.Disk
+}
+
+/*
+ * Creates a postgresql flexible server that can be used for testing purposes.
+ */
+func CreatePostgresqlFlexibleServer(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, serverName string, serverLocation string, storageSizeGB int32) armpostgresqlflexibleservers.Server {
+	client, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create servers client: %v", err)
+
+	log.Printf("Creating postgresql flexible server %s in location %s", serverName, serverLocation)
+
+	pollerResp, err := client.BeginCreate(
+		context.Background(),
+		resourceGroupName,
+		serverName,
+		armpostgresqlflexibleservers.Server{
+			Location: &serverLocation,
+			SKU: &armpostgresqlflexibleservers.SKU{
+				Name: to.Ptr("Standard_B1ms"),
+				Tier: to.Ptr(armpostgresqlflexibleservers.SKUTierBurstable),
+			},
+			Properties: &armpostgresqlflexibleservers.ServerProperties{
+				AdministratorLogin:         to.Ptr("supersecurelogin"),
+				AdministratorLoginPassword: to.Ptr("supersecurepassword"),
+				Version:                    to.Ptr(armpostgresqlflexibleservers.ServerVersionFourteen),
+				Storage: &armpostgresqlflexibleservers.Storage{
+					StorageSizeGB: &storageSizeGB,
+				},
+			},
+		},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to begin creating postgresql flexible server: %v", err)
+
+	// Wait for the creation to complete
+	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create postgresql flexible server: %v", err)
+
+	log.Printf("Postgresql flexible server %s created successfully", serverName)
+
+	return resp.Server
 }
 
 /*
