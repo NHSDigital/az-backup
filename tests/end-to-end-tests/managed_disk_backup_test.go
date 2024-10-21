@@ -72,7 +72,7 @@ func TestManagedDiskBackup(t *testing.T) {
 	managedDiskBackups := map[string]map[string]interface{}{
 		"backup1": {
 			"backup_name":      "disk1",
-			"retention_period": "P7D",
+			"retention_period": "P1D",
 			"backup_intervals": []string{"R/2024-01-01T00:00:00+00:00/P1D"},
 			"managed_disk_id":  *externalResources.ManagedDiskOne.ID,
 			"managed_disk_resource_group": map[string]interface{}{
@@ -82,7 +82,7 @@ func TestManagedDiskBackup(t *testing.T) {
 		},
 		"backup2": {
 			"backup_name":      "disk2",
-			"retention_period": "P30D",
+			"retention_period": "P7D",
 			"backup_intervals": []string{"R/2024-01-01T00:00:00+00:00/P2D"},
 			"managed_disk_id":  *externalResources.ManagedDiskTwo.ID,
 			"managed_disk_resource_group": map[string]interface{}{
