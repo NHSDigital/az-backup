@@ -14,8 +14,9 @@ import (
 )
 
 type TestVaultImmutabilityExternalResources struct {
-	ResourceGroup  armresources.ResourceGroup
-	StorageAccount armstorage.Account
+	ResourceGroup           armresources.ResourceGroup
+	StorageAccount          armstorage.Account
+	StorageAccountContainer armstorage.BlobContainer
 }
 
 /*
@@ -28,10 +29,12 @@ func setupExternalResourcesForVaultImmutabilityTest(t *testing.T, credential *az
 
 	storageAccountName := fmt.Sprintf("sa%sexternal", strings.ToLower(uniqueId))
 	storageAccount := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountName, resourceGroupLocation)
+	storageAccountContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountName, "test-container")
 
 	externalResources := &TestVaultImmutabilityExternalResources{
-		ResourceGroup:  resourceGroup,
-		StorageAccount: storageAccount,
+		ResourceGroup:           resourceGroup,
+		StorageAccount:          storageAccount,
+		StorageAccountContainer: storageAccountContainer,
 	}
 
 	return externalResources
@@ -58,9 +61,10 @@ func TestVaultImmutability(t *testing.T) {
 	// policies have been created correctly
 	blobStorageBackups := map[string]map[string]interface{}{
 		"backup1": {
-			"backup_name":        "blob1",
-			"retention_period":   "P7D",
-			"storage_account_id": *externalResources.StorageAccount.ID,
+			"backup_name":                "blob1",
+			"retention_period":           "P7D",
+			"storage_account_id":         *externalResources.StorageAccount.ID,
+			"storage_account_containers": []string{*externalResources.StorageAccountContainer.Name},
 		},
 	}
 
