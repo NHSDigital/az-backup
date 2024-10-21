@@ -1,3 +1,8 @@
+locals {
+  # The valid backup retention period - up to 7 days, which can be bypassed when use_extended_retention is set to true
+  valid_retention_periods = [for days in range(1, 8) : "P${days}D"]
+}
+
 variable "resource_group_name" {
   description = "The name of the resource group which the backup vault will be created in - must be unique within the subscription"
   type        = string
@@ -36,11 +41,6 @@ variable "use_extended_retention" {
   description = "A flag which allows the use of extended retention periods beyond 7 days"
   type        = bool
   default     = false
-}
-
-locals {
-  # The valid backup retention period - up to 7 days, which can be extended when use_extended_retention is set to true
-  valid_retention_periods = [for days in range(1, 8) : "P${days}D"]
 }
 
 variable "blob_storage_backups" {
