@@ -7,6 +7,10 @@ module "blob_storage_backup" {
   backup_intervals           = each.value.backup_intervals
   storage_account_id         = each.value.storage_account_id
   storage_account_containers = each.value.storage_account_containers
+
+  depends_on = [
+    azapi_update_resource.backup_vault_settings
+  ]
 }
 
 module "managed_disk_backup" {
@@ -19,6 +23,10 @@ module "managed_disk_backup" {
   managed_disk_id                   = each.value.managed_disk_id
   managed_disk_resource_group       = each.value.managed_disk_resource_group
   assign_resource_group_level_roles = each.key == keys(var.managed_disk_backups)[0] ? true : false
+
+  depends_on = [
+    azapi_update_resource.backup_vault_settings
+  ]
 }
 
 module "postgresql_flexible_server_backup" {
@@ -31,4 +39,8 @@ module "postgresql_flexible_server_backup" {
   server_id                         = each.value.server_id
   server_resource_group_id          = each.value.server_resource_group_id
   assign_resource_group_level_roles = each.key == keys(var.postgresql_flexible_server_backups)[0] ? true : false
+
+  depends_on = [
+    azapi_update_resource.backup_vault_settings
+  ]
 }
