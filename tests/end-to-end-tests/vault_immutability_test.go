@@ -63,6 +63,7 @@ func TestVaultImmutability(t *testing.T) {
 		"backup1": {
 			"backup_name":                "blob1",
 			"retention_period":           "P7D",
+			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P1D"},
 			"storage_account_id":         *externalResources.StorageAccount.ID,
 			"storage_account_containers": []string{*externalResources.StorageAccountContainer.Name},
 		},
@@ -112,16 +113,31 @@ func TestVaultImmutability(t *testing.T) {
 	// ...
 
 	test_structure.RunTestStage(t, "validate", func() {
-		// Add item to blob storage
+		// Upload the file to the storage account
+		// testFile, err := os.CreateTemp("", "test.txt")
+		// assert.NoError(t, err, "Failed to test file: %v", err)
+		// defer os.Remove(testFile.Name())
 
-		// Execute backup instance manually (avoid waiting for the next scheduled backup)
+		// content := []byte("This is a test file for upload.")
+		// testFile.Write(content)
+		// testFile.Close()
 
-		// Wait for backup instance to complete...
+		// UploadFileToStorageAccount(t, credential, environment.SubscriptionID, *externalResources.ResourceGroup.Name,
+		// 	*externalResources.StorageAccount.Name, *externalResources.StorageAccountContainer.Name, testFile.Name())
 
-		// Try and delete backup instance and assert failure
+		// Take an ad-hoc backup
+		// backupInstanceName := fmt.Sprintf("bkinst-blob-%s", blobStorageBackups["backup1"]["backup_name"].(string))
+		// BeginAdHocBackup(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
 
-		// Disable vault immutability
+		// // Try and delete backup instance and assert failure
+		// err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		// assert.Error(t, err, "Expected an error when deleting a backup instance from an immutable vault: %v", err)
 
-		// Try and delete backup instance and assert success
+		// // Disable vault immutability
+		// UpdateBackupVaultImmutability(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, armdataprotection.ImmutabilityStateDisabled)
+
+		// // Try and delete backup instance and assert success
+		// err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		// assert.NoError(t, err, "Expected no error when deleting a backup instance from an unlocked vault: %v", err)
 	})
 }

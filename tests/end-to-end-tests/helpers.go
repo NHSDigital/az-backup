@@ -12,12 +12,13 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
@@ -499,4 +500,81 @@ func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCreden
 	assert.NoError(t, err, "Failed to create storage account: %v", err)
 
 	log.Printf("Resource group %s deleted successfully", resourceGroupName)
+}
+
+/*
+ * Deletes the backup instance for the provided backup vault and instance name.
+ */
+func DeleteBackupInstance(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, backupInstanceName string) error {
+	client, err := armdataprotection.NewBackupInstancesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create data protection client: %v", err)
+
+	poller, err := client.BeginDelete(context.Background(), resourceGroupName, backupVaultName, backupInstanceName, nil)
+	assert.NoError(t, err, "Failed to initiate delete operation: %v", err)
+
+	_, err = poller.PollUntilDone(context.Background(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete backup instance: %w", err)
+	}
+
+	log.Printf("Backup instance '%s' deleted successfully", backupInstanceName)
+	return nil
+}
+
+/*
+ * Uploads a file to blob storage account
+ */
+func UploadFileToStorageAccount(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, storageAccountName string, containerName string, filePath string) {
+	serviceClient, err := azblob.NewClient(fmt.Sprintf("https://%s.blob.core.windows.net/", storageAccountName), credential, nil)
+	assert.NoError(t, err, "Failed to create service client: %v", err)
+
+	file, err := os.Open(filePath)
+	assert.NoError(t, err, "Failed to open file: %v", err)
+	defer file.Close()
+
+	_, err = serviceClient.UploadFile(context.Background(), containerName, file.Name(), file, nil)
+	assert.NoError(t, err, "Failed to upload file: %v", err)
+
+	log.Printf("File '%s' uploaded successfully to container '%s' in storage account '%s'", filePath, containerName, storageAccountName)
+}
+
+/*
+ * Updates the immutability setting on a backup vault.
+ */
+func UpdateBackupVaultImmutability(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, immutabilitySettings armdataprotection.ImmutabilitySettings) {
+	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create data protection client: %v", err)
+
+	// Set the immutability setting on the backup vault
+	_, err = client.BeginUpdate(context.Background(), resourceGroupName, backupVaultName, armdataprotection.PatchResourceRequestInput{
+		Properties: &armdataprotection.PatchBackupVaultInput{
+			SecuritySettings: &armdataprotection.SecuritySettings{
+				ImmutabilitySettings: &immutabilitySettings,
+			},
+		},
+	}, nil)
+	assert.NoError(t, err, "Failed to set immutability setting on backup vault: %v", err)
+
+	log.Printf("Immutability setting updated on backup vault '%s'", backupVaultName)
+}
+
+/*
+ * Begins an ad-hoc backup for the provided backup instance name.
+ */
+func BeginAdHocBackup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, backupInstanceName string) {
+	client, err := armdataprotection.NewBackupInstancesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create data protection client: %v", err)
+
+	poller, err := client.BeginAdhocBackup(context.Background(), resourceGroupName, backupVaultName, backupInstanceName, armdataprotection.TriggerBackupRequest{
+		BackupRuleOptions: &armdataprotection.AdHocBackupRuleOptions{
+			RuleName:      to.Ptr("Default"),
+			TriggerOption: &armdataprotection.AdhocBackupTriggerOption{},
+		},
+	}, nil)
+	assert.NoError(t, err, "Failed to begin ad-hoc backup: %v", err)
+
+	_, err = poller.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to poll ad-hoc backup status: %v", err)
+
+	log.Printf("Ad-hoc backup '%s' completed successfully", backupInstanceName)
 }
