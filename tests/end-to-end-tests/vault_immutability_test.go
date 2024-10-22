@@ -2,15 +2,18 @@ package e2e_tests
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/stretchr/testify/assert"
 )
 
 type TestVaultImmutabilityExternalResources struct {
@@ -114,30 +117,33 @@ func TestVaultImmutability(t *testing.T) {
 
 	test_structure.RunTestStage(t, "validate", func() {
 		// Upload the file to the storage account
-		// testFile, err := os.CreateTemp("", "test.txt")
-		// assert.NoError(t, err, "Failed to test file: %v", err)
-		// defer os.Remove(testFile.Name())
+		testFile, err := os.CreateTemp("", "test.txt")
+		assert.NoError(t, err, "Failed to test file: %v", err)
+		defer os.Remove(testFile.Name())
 
-		// content := []byte("This is a test file for upload.")
-		// testFile.Write(content)
-		// testFile.Close()
+		content := []byte("This is a test file for upload.")
+		testFile.Write(content)
+		testFile.Close()
 
-		// UploadFileToStorageAccount(t, credential, environment.SubscriptionID, *externalResources.ResourceGroup.Name,
-		// 	*externalResources.StorageAccount.Name, *externalResources.StorageAccountContainer.Name, testFile.Name())
+		UploadFileToStorageAccount(t, credential, environment.SubscriptionID, *externalResources.ResourceGroup.Name,
+			*externalResources.StorageAccount.Name, *externalResources.StorageAccountContainer.Name, testFile.Name())
 
 		// Take an ad-hoc backup
-		// backupInstanceName := fmt.Sprintf("bkinst-blob-%s", blobStorageBackups["backup1"]["backup_name"].(string))
-		// BeginAdHocBackup(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		backupInstanceName := fmt.Sprintf("bkinst-blob-%s", blobStorageBackups["backup1"]["backup_name"].(string))
+		BeginAdHocBackup(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
 
-		// // Try and delete backup instance and assert failure
-		// err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
-		// assert.Error(t, err, "Expected an error when deleting a backup instance from an immutable vault: %v", err)
+		// Try and delete backup instance and assert failure
+		err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		assert.Error(t, err, "Expected an error when deleting a backup instance from an immutable vault: %v", err)
 
-		// // Disable vault immutability
-		// UpdateBackupVaultImmutability(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, armdataprotection.ImmutabilityStateDisabled)
+		// Disable vault immutability
+		disabledState := armdataprotection.ImmutabilityStateDisabled
+		UpdateBackupVaultImmutability(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, armdataprotection.ImmutabilitySettings{
+			State: &disabledState,
+		})
 
-		// // Try and delete backup instance and assert success
-		// err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
-		// assert.NoError(t, err, "Expected no error when deleting a backup instance from an unlocked vault: %v", err)
+		// Try and delete backup instance and assert success
+		err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		assert.NoError(t, err, "Expected no error when deleting a backup instance from an unlocked vault: %v", err)
 	})
 }
