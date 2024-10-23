@@ -8,9 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	arm_policy "github.com/Azure/azure-sdk-for-go/sdk/azcore/arm/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
@@ -565,28 +562,18 @@ func UpdateBackupVaultImmutability(t *testing.T, credential *azidentity.ClientSe
  * Begins an ad-hoc backup for the provided backup instance name.
  */
 func BeginAdHocBackup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, backupInstanceName string) {
-
-	// Configure logging in ClientOptions
-	clientOptions := &arm_policy.ClientOptions{}
-
-	clientOptions.Logging = policy.LogOptions{
-		IncludeBody: true, // Enable logging the request/response body
-	}
-
-	instancesClient, err := armdataprotection.NewBackupInstancesClient(subscriptionID, credential, clientOptions)
+	instancesClient, err := armdataprotection.NewBackupInstancesClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create backup instances client: %v", err)
 
 	poller, err := instancesClient.BeginAdhocBackup(context.Background(), resourceGroupName, backupVaultName, backupInstanceName, armdataprotection.TriggerBackupRequest{
 		BackupRuleOptions: &armdataprotection.AdHocBackupRuleOptions{
-			RuleName: to.Ptr("Default"),
-			TriggerOption: &armdataprotection.AdhocBackupTriggerOption{
-				RetentionTagOverride: to.Ptr("Default"),
-			},
+			RuleName:      to.Ptr("BackupIntervals"),
+			TriggerOption: &armdataprotection.AdhocBackupTriggerOption{},
 		},
 	}, nil)
 	assert.NoError(t, err, "Failed to begin ad-hoc backup: %v", err)
 
-	resp, err := poller.PollUntilDone(context.Background(), &runtime.PollUntilDoneOptions{})
+	resp, err := poller.PollUntilDone(context.Background(), nil)
 	assert.NoError(t, err, "Failed to poll ad-hoc backup status: %v", err)
 	assert.NotNil(t, *resp.JobID, "Expected a job ID to be returned")
 
