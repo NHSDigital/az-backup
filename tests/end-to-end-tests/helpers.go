@@ -535,6 +535,7 @@ func CreateTestFile(t *testing.T) *os.File {
 	content := []byte("This is a test file for upload.")
 	testFile.Write(content)
 	testFile.Close()
+
 	return testFile
 }
 

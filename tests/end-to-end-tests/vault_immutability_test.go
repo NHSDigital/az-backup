@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +52,7 @@ func TestVaultImmutability(t *testing.T) {
 	environment := GetEnvironmentConfiguration(t)
 	credential := GetAzureCredential(t, environment)
 
-	uniqueId := "b1Watt" //random.UniqueId()
+	uniqueId := random.UniqueId()
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
