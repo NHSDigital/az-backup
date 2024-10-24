@@ -2,6 +2,7 @@ package e2e_tests
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
-	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +51,7 @@ func TestVaultImmutability(t *testing.T) {
 	environment := GetEnvironmentConfiguration(t)
 	credential := GetAzureCredential(t, environment)
 
-	uniqueId := random.UniqueId()
+	uniqueId := "b1Watt" //random.UniqueId()
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
@@ -116,6 +116,7 @@ func TestVaultImmutability(t *testing.T) {
 
 	test_structure.RunTestStage(t, "validate", func() {
 		testFile := CreateTestFile(t)
+		defer os.Remove(testFile.Name())
 
 		UploadFileToStorageAccount(t, credential, environment.SubscriptionID, *externalResources.ResourceGroup.Name,
 			*externalResources.StorageAccount.Name, *externalResources.StorageAccountContainer.Name, testFile.Name())

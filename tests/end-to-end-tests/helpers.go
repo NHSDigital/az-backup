@@ -529,9 +529,8 @@ func DeleteBackupInstance(t *testing.T, credential *azidentity.ClientSecretCrede
  * Creates a test file that can be used for test purposes.
  */
 func CreateTestFile(t *testing.T) *os.File {
-	testFile, err := os.CreateTemp("", "test.txt")
+	testFile, err := os.CreateTemp("", "test-*.txt")
 	assert.NoError(t, err, "Failed to test file: %v", err)
-	defer os.Remove(testFile.Name())
 
 	content := []byte("This is a test file for upload.")
 	testFile.Write(content)
@@ -550,7 +549,9 @@ func UploadFileToStorageAccount(t *testing.T, credential *azidentity.ClientSecre
 	assert.NoError(t, err, "Failed to open file: %v", err)
 	defer file.Close()
 
-	_, err = serviceClient.UploadFile(context.Background(), containerName, filepath.Base(file.Name()), file, nil)
+	fileName := filepath.Base(filePath)
+
+	_, err = serviceClient.UploadFile(context.Background(), containerName, fileName, file, nil)
 	assert.NoError(t, err, "Failed to upload file: %v", err)
 
 	log.Printf("File '%s' uploaded successfully to container '%s' in storage account '%s'", filePath, containerName, storageAccountName)
