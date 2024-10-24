@@ -25,6 +25,12 @@ variable "backup_vault_redundancy" {
   default     = "LocallyRedundant"
 }
 
+variable "backup_vault_immutability" {
+  description = "The immutability setting of the backup vault"
+  type        = string
+  default     = "Disabled"
+}
+
 variable "log_analytics_workspace_id" {
   description = "The id of the log analytics workspace to use for backup vault diagnostic settings"
   type        = string

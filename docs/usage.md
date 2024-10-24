@@ -23,6 +23,7 @@ module "my_backup" {
   resource_group_location    = "uksouth"
   backup_vault_name          = "bvault-mybackup"
   backup_vault_redundancy    = "LocallyRedundant"
+  backup_vault_immutability  = "Unlocked"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.my_workspace.id
   tags = {
     tagOne   = "tagOneValue"
@@ -106,7 +107,8 @@ To deploy the module an Azure identity (typically an app registration with clien
 | `resource_group_name` | The name of the resource group that is created to contain the vault - this cannot be an existing resource group. | Yes | n/a |
 | `resource_group_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
-| `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+| `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values.](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+| `backup_vault_immutability` | The immutability of the vault, e.g. `Locked`. [See the following link for the possible values.](https://learn.microsoft.com/en-us/azure/templates/microsoft.dataprotection/backupvaults?pivots=deployment-language-terraform#immutabilitysettings-2) | No | `Disabled` |
 | `log_analytics_workspace_id` | The id of the log analytics workspace that backup telemetry and diagnostics should be sent to. When no value is provided then diagnostics will not be sent anywhere. | No | n/a |
 | `tags` | A map of tags which will be applied to the resource group and backup vault. When no tags are specified then no tags are added. | No | n/a |
 | `use_extended_retention` | If set to true, then the backup retention periods can be set to anything, otherwise they are limited to 7 days. | No | `false` |

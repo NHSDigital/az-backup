@@ -7,7 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -57,13 +57,6 @@ func TestManagedDiskBackup(t *testing.T) {
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
-	backupVaultRedundancy := "LocallyRedundant"
-
-	tags := map[string]string{
-		"tagOne":   "tagOneValue",
-		"tagTwo":   "tagTwoValue",
-		"tagThree": "tagThreeValue",
-	}
 
 	externalResources := setupExternalResourcesForManagedDiskBackupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
@@ -114,8 +107,6 @@ func TestManagedDiskBackup(t *testing.T) {
 				"resource_group_name":     resourceGroupName,
 				"resource_group_location": resourceGroupLocation,
 				"backup_vault_name":       backupVaultName,
-				"backup_vault_redundancy": backupVaultRedundancy,
-				"tags":                    tags,
 				"managed_disk_backups":    managedDiskBackups,
 			},
 

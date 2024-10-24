@@ -11,6 +11,20 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
   }
 }
 
+resource "azapi_update_resource" "backup_vault_settings" {
+  type        = "Microsoft.DataProtection/backupVaults@2022-11-01-preview"
+  resource_id = azurerm_data_protection_backup_vault.backup_vault.id
+  body = jsonencode({
+    properties = {
+      securitySettings = {
+        immutabilitySettings = {
+          state = var.backup_vault_immutability
+        }
+      }
+    }
+  })
+}
+
 locals {
   backup_vault_diagnostics_log_categories = toset([
     "AddonAzureBackupJobs",
