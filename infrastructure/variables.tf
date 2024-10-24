@@ -1,3 +1,8 @@
+locals {
+  # The valid backup retention period - up to 7 days, which can be bypassed when use_extended_retention is set to true
+  valid_retention_periods = [for days in range(1, 8) : "P${days}D"]
+}
+
 variable "resource_group_name" {
   description = "The name of the resource group which the backup vault will be created in - must be unique within the subscription"
   type        = string
@@ -38,6 +43,12 @@ variable "tags" {
   default     = {}
 }
 
+variable "use_extended_retention" {
+  description = "A flag which allows the use of extended retention periods beyond 7 days"
+  type        = bool
+  default     = false
+}
+
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
@@ -51,13 +62,18 @@ variable "blob_storage_backups" {
   default = {}
 
   validation {
-    condition     = length(var.blob_storage_backups) == 0 || alltrue([for k, v in var.blob_storage_backups : length(v.backup_intervals) > 0])
+    condition     = alltrue([for k, v in var.blob_storage_backups : length(v.backup_intervals) > 0])
     error_message = "At least one backup interval must be provided."
   }
 
   validation {
-    condition     = length(var.blob_storage_backups) == 0 || alltrue([for k, v in var.blob_storage_backups : length(v.storage_account_containers) > 0])
+    condition     = alltrue([for k, v in var.blob_storage_backups : length(v.storage_account_containers) > 0])
     error_message = "At least one storage account container must be provided."
+  }
+
+  validation {
+    condition     = var.use_extended_retention == true || alltrue([for k, v in var.blob_storage_backups : contains(local.valid_retention_periods, v.retention_period)])
+    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
   }
 }
 
@@ -77,8 +93,13 @@ variable "managed_disk_backups" {
   default = {}
 
   validation {
-    condition     = length(var.managed_disk_backups) == 0 || alltrue([for k, v in var.managed_disk_backups : length(v.backup_intervals) > 0])
+    condition     = alltrue([for k, v in var.managed_disk_backups : length(v.backup_intervals) > 0])
     error_message = "At least one backup interval must be provided."
+  }
+
+  validation {
+    condition     = var.use_extended_retention == true || alltrue([for k, v in var.managed_disk_backups : contains(local.valid_retention_periods, v.retention_period)])
+    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
   }
 }
 
@@ -95,7 +116,12 @@ variable "postgresql_flexible_server_backups" {
   default = {}
 
   validation {
-    condition     = length(var.postgresql_flexible_server_backups) == 0 || alltrue([for k, v in var.postgresql_flexible_server_backups : length(v.backup_intervals) > 0])
+    condition     = alltrue([for k, v in var.postgresql_flexible_server_backups : length(v.backup_intervals) > 0])
     error_message = "At least one backup interval must be provided."
+  }
+
+  validation {
+    condition     = var.use_extended_retention == true || alltrue([for k, v in var.postgresql_flexible_server_backups : contains(local.valid_retention_periods, v.retention_period)])
+    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
   }
 }
