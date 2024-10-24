@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -510,7 +512,9 @@ func DeleteBackupInstance(t *testing.T, credential *azidentity.ClientSecretCrede
 	assert.NoError(t, err, "Failed to create data protection client: %v", err)
 
 	poller, err := client.BeginDelete(context.Background(), resourceGroupName, backupVaultName, backupInstanceName, nil)
-	assert.NoError(t, err, "Failed to initiate delete operation: %v", err)
+	if err != nil {
+		return fmt.Errorf("failed to delete backup instance: %w", err)
+	}
 
 	_, err = poller.PollUntilDone(context.Background(), nil)
 	if err != nil {
@@ -519,6 +523,20 @@ func DeleteBackupInstance(t *testing.T, credential *azidentity.ClientSecretCrede
 
 	log.Printf("Backup instance '%s' deleted successfully", backupInstanceName)
 	return nil
+}
+
+/*
+ * Creates a test file that can be used for test purposes.
+ */
+func CreateTestFile(t *testing.T) *os.File {
+	testFile, err := os.CreateTemp("", "test.txt")
+	assert.NoError(t, err, "Failed to test file: %v", err)
+	defer os.Remove(testFile.Name())
+
+	content := []byte("This is a test file for upload.")
+	testFile.Write(content)
+	testFile.Close()
+	return testFile
 }
 
 /*
@@ -532,7 +550,7 @@ func UploadFileToStorageAccount(t *testing.T, credential *azidentity.ClientSecre
 	assert.NoError(t, err, "Failed to open file: %v", err)
 	defer file.Close()
 
-	_, err = serviceClient.UploadFile(context.Background(), containerName, file.Name(), file, nil)
+	_, err = serviceClient.UploadFile(context.Background(), containerName, filepath.Base(file.Name()), file, nil)
 	assert.NoError(t, err, "Failed to upload file: %v", err)
 
 	log.Printf("File '%s' uploaded successfully to container '%s' in storage account '%s'", filePath, containerName, storageAccountName)
@@ -576,6 +594,25 @@ func BeginAdHocBackup(t *testing.T, credential *azidentity.ClientSecretCredentia
 	resp, err := poller.PollUntilDone(context.Background(), nil)
 	assert.NoError(t, err, "Failed to poll ad-hoc backup status: %v", err)
 	assert.NotNil(t, *resp.JobID, "Expected a job ID to be returned")
+
+	jobClient, err := armdataprotection.NewJobsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create backup jobs client: %v", err)
+
+	jobId := strings.Split(*resp.JobID, "/")[len(strings.Split(*resp.JobID, "/"))-1]
+
+	for {
+		jobResp, err := jobClient.Get(context.Background(), resourceGroupName, backupVaultName, jobId, nil)
+		assert.NoError(t, err, "Failed to get backup job status: %v", err)
+
+		if *jobResp.Properties.Status != "InProgress" {
+			assert.Equal(t, "Completed", *jobResp.Properties.Status, "Backup job did not succeed")
+			break
+		}
+
+		log.Printf("Backup job '%s' is still in progress...", jobId)
+
+		time.Sleep(10 * time.Second)
+	}
 
 	log.Printf("Ad-hoc backup '%s' completed successfully", backupInstanceName)
 }

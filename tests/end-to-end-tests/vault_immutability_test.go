@@ -2,7 +2,6 @@ package e2e_tests
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -116,34 +115,23 @@ func TestVaultImmutability(t *testing.T) {
 	// ...
 
 	test_structure.RunTestStage(t, "validate", func() {
-		// Upload the file to the storage account
-		testFile, err := os.CreateTemp("", "test.txt")
-		assert.NoError(t, err, "Failed to test file: %v", err)
-		defer os.Remove(testFile.Name())
-
-		content := []byte("This is a test file for upload.")
-		testFile.Write(content)
-		testFile.Close()
+		testFile := CreateTestFile(t)
 
 		UploadFileToStorageAccount(t, credential, environment.SubscriptionID, *externalResources.ResourceGroup.Name,
 			*externalResources.StorageAccount.Name, *externalResources.StorageAccountContainer.Name, testFile.Name())
 
-		// Take an ad-hoc backup
 		backupInstanceName := fmt.Sprintf("bkinst-blob-%s", blobStorageBackups["backup1"]["backup_name"].(string))
 		BeginAdHocBackup(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
 
-		// Try and delete backup instance and assert failure
-		err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
-		assert.Error(t, err, "Expected an error when deleting a backup instance from an immutable vault: %v", err)
+		errOne := DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		assert.Error(t, errOne, "Expected an error when deleting a backup instance from an immutable vault: %v", errOne)
 
-		// Disable vault immutability
 		disabledState := armdataprotection.ImmutabilityStateDisabled
 		UpdateBackupVaultImmutability(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, armdataprotection.ImmutabilitySettings{
 			State: &disabledState,
 		})
 
-		// Try and delete backup instance and assert success
-		err = DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
-		assert.NoError(t, err, "Expected no error when deleting a backup instance from an unlocked vault: %v", err)
+		errTwo := DeleteBackupInstance(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName, backupInstanceName)
+		assert.NoError(t, errTwo, "Expected no error when deleting a backup instance from an unlocked vault: %v", errTwo)
 	})
 }
