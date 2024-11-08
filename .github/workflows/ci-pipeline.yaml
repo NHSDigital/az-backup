@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -28,9 +28,23 @@ jobs:
           terraform_wrapper: false
         
       - name: Install Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v3
         with:
           go-version: 1.21
+
+      - name: Check Version
+        run: |
+          oldVersion=$(git describe origin/main --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          newVersion=$(<version)
+
+          oldVersionNumeric=$(echo "$oldVersion" | awk -F. '{ printf("%03d%03d%03d", $1,$2,$3); }')
+          newVersionNumeric=$(echo "$newVersion" | awk -F. '{ printf("%03d%03d%03d", $1,$2,$3); }')
+          if [[ "$newVersionNumeric" -le "$oldVersionNumeric" ]]; then
+            echo "Error: Version in the version file must be incremented."
+            exit 1
+          fi
+
+          echo "Version check succeeded. Old version: $oldVersion, new version: $newVersion"
 
       - name: Terraform Validate
         run: |
@@ -64,8 +78,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -107,3 +121,33 @@ jobs:
 
       - name: Run Trivy Scan
         run: trivy filesystem --security-checks vuln,config --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed .
+
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-verification, static-code-analysis]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Tag Repository
+        id: tag_repository
+        run: |
+          newVersion=$(<version)
+          tag="v$newVersion"
+          git tag "$tag"
+          git push origin "$tag"
+          echo "tag=$tag" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag_repository.outputs.tag }}
+          release_name: ${{ steps.tag_repository.outputs.tag }}
+          body: "Automatic release for version ${{ steps.tag_repository.outputs.tag }}"
+          draft: false
+          prerelease: false
