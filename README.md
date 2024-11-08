@@ -11,9 +11,9 @@ The solution consists of a configurable Terraform module which deploys the follo
 * Backup vault
 * Backup policies
 * Backup instances for the following resources:
-  * Blob storage
-  * Managed disks
-  * PostgreSQL flexible server
+    * Blob storage
+    * Managed disks
+    * PostgreSQL flexible server
 * Integration of diagnostic settings with Azure Monitor
 
 The resources created by the module reside in their own resource group.
@@ -23,6 +23,7 @@ See the following key docs for more information:
 * [Design](./docs/design.md)
 * [Usage](./docs/usage.md)
 * [Developer Guide](./docs/developer-guide.md)
+* [Pipelines](./docs/pipelines.md)
 
 ## Repository Structure
 
@@ -71,6 +72,14 @@ docker-compose -f ./docs/docker-compose.yml up
 ```
 
 Once the container is running, navigate to [http://localhost:8000](http://localhost:8000).
+
+## Versioning and Release
+
+The project uses the [semver](https://semver.org/) convention for version numbering. Each PR should increment the version number in the `./version` file, bumping either the major, minor or patch number.
+
+The CI pipeline checks that the version has been incremented and will fail if it hasn't.
+
+When the pipeline is run against main, it will tag the git repository with the incremented version number and create a github release.
 
 ## Contributing
 

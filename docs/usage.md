@@ -14,11 +14,11 @@ The module will create a dedicated resource group to contain the backup vault, t
 
 ## Example
 
-The following is an example of how the module should be used:
+The following is an example of how the module should be used- **update the ref with the release version (or commit hash) that you want to pin to**:
 
 ```terraform
 module "my_backup" {
-  source                     = "github.com/nhsdigital/az-backup//infrastructure"
+  source                     = "github.com/nhsdigital/az-backup//infrastructure?ref=<version-number>"
   resource_group_name        = "rg-mybackup"
   resource_group_location    = "uksouth"
   backup_vault_name          = "bvault-mybackup"

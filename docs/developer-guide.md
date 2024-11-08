@@ -90,7 +90,9 @@ Take the following steps to get started in configuring and verifying the infrast
     terraform destroy -auto-approve
     ```
 
-## Integration Tests
+## Testing
+
+### Integration Tests
 
 The test suite consists of a number Terraform HCL integration tests that use a mock azurerm provider.
 
@@ -120,7 +122,7 @@ Take the following steps to run the test suite:
     terraform test
     ````
 
-## End to End Tests
+### End to End Tests
 
 The end to end tests are written in go, and use the [terratest library](https://terratest.gruntwork.io/) and the [Azure SDK for Go](https://github.com/Azure/azure-sdk-for-go/tree/main).
 
@@ -172,7 +174,7 @@ To run the tests, take the following steps:
     go test -v -timeout 10m
     ````
 
-### Debugging
+#### Debugging
 
 To debug the tests in vscode, add the following configuration to launch settings and run the configuration:
 
@@ -200,42 +202,3 @@ To debug the tests in vscode, add the following configuration to launch settings
 ```
 
 > For the storage account name, the TF state backend should have been created during the [getting started guide](#getting-started), at which point the storage account will have been created and the name generated.
-
-## CI Pipeline
-
-The CI pipeline builds and verifies the solution and runs a number of static code analysis steps on the code base.
-
-Part of the build verification is end to end testing. This requires the pipeline to login to Azure and deploy an environment on which to execute the tests. In order for the pipeline to login to Azure the following GitHub actions secrets must be created:
-
-* `AZURE_TENANT_ID`
-  The ID of an Azure tenant which can be used for the end to end test environment.
-
-* `AZURE_SUBSCRIPTION_ID`
-  The ID of an Azure subscription which can be used for the end to end test environment.
-
-* `AZURE_CLIENT_ID`
-  The client ID of an Azure service principal / app registration which can be used to authenticate with the end to end test environment.
-  
-  The app registration must have contributor permissions on the subscription in order to create resources.
-
-* `AZURE_CLIENT_SECRET`
-  The client secret of an Azure app registration which can be used to authenticate with the end to end test environment.
-
-* `TF_STATE_RESOURCE_GROUP`
-  The resource group which contains the TF state storage account.
-
-* `TF_STATE_STORAGE_ACCOUNT`
-  The storage account used for TF state.
-
-* `TF_STATE_STORAGE_COMTAINER`
-  The storage container used for TF state.
-
-### Static Code Analysis
-
-The following static code analysis checks are executed:
-
-* [Terraform format](https://developer.hashicorp.com/terraform/cli/commands/fmt)
-* [Terraform lint](https://github.com/terraform-linters/tflint)
-* [Checkov scan](https://www.checkov.io/)
-* [Gitleaks scan](https://github.com/gitleaks/gitleaks)
-* [Trivy vulnerability scan](https://github.com/aquasecurity/trivy)
