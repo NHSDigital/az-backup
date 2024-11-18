@@ -18,9 +18,11 @@ func TestTerraformOutput(t *testing.T) {
 
 	environment := GetEnvironmentConfiguration(t)
 
-	vaultName := random.UniqueId()
-	vaultLocation := "uksouth"
-	vaultRedundancy := "LocallyRedundant"
+	uniqueId := random.UniqueId()
+	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
+	resourceGroupLocation := "uksouth"
+	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
+	backupVaultRedundancy := "LocallyRedundant"
 
 	// Teardown stage
 	// ...
@@ -39,16 +41,17 @@ func TestTerraformOutput(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"vault_name":       vaultName,
-				"vault_location":   vaultLocation,
-				"vault_redundancy": vaultRedundancy,
+				"resource_group_name":     resourceGroupName,
+				"resource_group_location": resourceGroupLocation,
+				"backup_vault_name":       backupVaultName,
+				"backup_vault_redundancy": backupVaultRedundancy,
 			},
 
 			BackendConfig: map[string]interface{}{
 				"resource_group_name":  environment.TerraformStateResourceGroup,
 				"storage_account_name": environment.TerraformStateStorageAccount,
 				"container_name":       environment.TerraformStateContainer,
-				"key":                  vaultName + ".tfstate",
+				"key":                  backupVaultName + ".tfstate",
 			},
 		}
 
@@ -63,14 +66,13 @@ func TestTerraformOutput(t *testing.T) {
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, environment.TerraformFolder)
 
-		expectedVaultName := fmt.Sprintf("bvault-%s", vaultName)
 		actualVaultName := terraform.OutputMap(t, terraformOptions, "backup_vault")["name"]
-		assert.Equal(t, expectedVaultName, actualVaultName)
+		assert.Equal(t, backupVaultName, actualVaultName)
 
 		actualVaultLocation := terraform.OutputMap(t, terraformOptions, "backup_vault")["location"]
-		assert.Equal(t, vaultLocation, actualVaultLocation)
+		assert.Equal(t, resourceGroupLocation, actualVaultLocation)
 
 		actualVaultRedundancy := terraform.OutputMap(t, terraformOptions, "backup_vault")["redundancy"]
-		assert.Equal(t, vaultRedundancy, actualVaultRedundancy)
+		assert.Equal(t, backupVaultRedundancy, actualVaultRedundancy)
 	})
 }

@@ -5,16 +5,22 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
@@ -167,6 +173,32 @@ func GetRoleAssignment(t *testing.T, credential *azidentity.ClientSecretCredenti
 	return nil
 }
 
+func GetDiagnosticSettings(t *testing.T, credential *azidentity.ClientSecretCredential, resourceID string, resourceName string) *armmonitor.DiagnosticSettingsResource {
+	client, err := armmonitor.NewDiagnosticSettingsClient(credential, nil)
+	assert.NoError(t, err, "Failed to create diagnostic settings client: %v", err)
+
+	// List the diagnostic settings for the given resource
+	pager := client.NewListPager(resourceID, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(context.Background())
+		assert.NoError(t, err, "Failed to list diagnostic settings")
+
+		// We currently only handle when there's only one diagnostic setting per resource
+		// ...
+
+		if len(page.Value) == 0 {
+			assert.Fail(t, "No diagnostic settings found for resource: %s", resourceName)
+		} else if len(page.Value) > 1 {
+			assert.Fail(t, "Multiple diagnostic settings found for resource: %s", resourceName)
+		} else {
+			return page.Value[0]
+		}
+	}
+
+	return nil
+}
+
 /*
  * Gets a backup vault for the provided name.
  */
@@ -265,7 +297,8 @@ func GetBackupInstanceForName(instances []*armdataprotection.BackupInstanceResou
 /*
  * Creates a resource group that can be used for testing purposes.
  */
-func CreateResourceGroup(t *testing.T, subscriptionID string, credential *azidentity.ClientSecretCredential, resourceGroupName string, resourceGroupLocation string) armresources.ResourceGroup {
+func CreateResourceGroup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, resourceGroupLocation string) armresources.ResourceGroup {
 	client, err := armresources.NewResourceGroupsClient(subscriptionID, credential, nil)
 	assert.NoError(t, err, "Failed to create resource group client: %v", err)
 
@@ -284,6 +317,36 @@ func CreateResourceGroup(t *testing.T, subscriptionID string, credential *aziden
 	log.Printf("Resource group %s created successfully", resourceGroupName)
 
 	return resp.ResourceGroup
+}
+
+/*
+ * Creates a Log Analytics workspace that can be used for testing purposes.
+ */
+func CreateLogAnalyticsWorkspace(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, workspaceName string, workspaceLocation string) armoperationalinsights.Workspace {
+	client, err := armoperationalinsights.NewWorkspacesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create Log Analytics workspace client: %v", err)
+
+	log.Printf("Creating log analytics workspace %s in location %s", workspaceName, workspaceLocation)
+
+	pollerResp, err := client.BeginCreateOrUpdate(
+		context.Background(),
+		resourceGroupName,
+		workspaceName,
+		armoperationalinsights.Workspace{
+			Location: &workspaceLocation,
+		},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to begin creating log analytics workspace: %v", err)
+
+	// Wait for the creation to complete
+	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create log analytics workspace: %v", err)
+
+	log.Printf("Log analytics workspace %s created successfully", workspaceName)
+
+	return resp.Workspace
 }
 
 /*
@@ -318,6 +381,29 @@ func CreateStorageAccount(t *testing.T, credential *azidentity.ClientSecretCrede
 	log.Printf("Storage account %s created successfully", storageAccountName)
 
 	return resp.Account
+}
+
+/*
+ * Creates a storage account container that can be used for testing purposes.
+ */
+func CreateStorageAccountContainer(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, storageAccountName string, containerName string) armstorage.BlobContainer {
+	containerClient, err := armstorage.NewBlobContainersClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create container client: %v", err)
+
+	resp, err := containerClient.Create(
+		context.Background(),
+		resourceGroupName,
+		storageAccountName,
+		containerName,
+		armstorage.BlobContainer{},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to create container: %v", err)
+
+	log.Printf("Container '%s' created successfully in storage account %s", containerName, storageAccountName)
+
+	return resp.BlobContainer
 }
 
 /*
@@ -358,6 +444,48 @@ func CreateManagedDisk(t *testing.T, credential *azidentity.ClientSecretCredenti
 }
 
 /*
+ * Creates a postgresql flexible server that can be used for testing purposes.
+ */
+func CreatePostgresqlFlexibleServer(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string,
+	resourceGroupName string, serverName string, serverLocation string, storageSizeGB int32) armpostgresqlflexibleservers.Server {
+	client, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create servers client: %v", err)
+
+	log.Printf("Creating postgresql flexible server %s in location %s", serverName, serverLocation)
+
+	pollerResp, err := client.BeginCreate(
+		context.Background(),
+		resourceGroupName,
+		serverName,
+		armpostgresqlflexibleservers.Server{
+			Location: &serverLocation,
+			SKU: &armpostgresqlflexibleservers.SKU{
+				Name: to.Ptr("Standard_B1ms"),
+				Tier: to.Ptr(armpostgresqlflexibleservers.SKUTierBurstable),
+			},
+			Properties: &armpostgresqlflexibleservers.ServerProperties{
+				AdministratorLogin:         to.Ptr("supersecurelogin"),
+				AdministratorLoginPassword: to.Ptr("supersecurepassword"),
+				Version:                    to.Ptr(armpostgresqlflexibleservers.ServerVersionFourteen),
+				Storage: &armpostgresqlflexibleservers.Storage{
+					StorageSizeGB: &storageSizeGB,
+				},
+			},
+		},
+		nil,
+	)
+	assert.NoError(t, err, "Failed to begin creating postgresql flexible server: %v", err)
+
+	// Wait for the creation to complete
+	resp, err := pollerResp.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to create postgresql flexible server: %v", err)
+
+	log.Printf("Postgresql flexible server %s created successfully", serverName)
+
+	return resp.Server
+}
+
+/*
  * Deletes a resource group.
  */
 func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string) {
@@ -374,4 +502,119 @@ func DeleteResourceGroup(t *testing.T, credential *azidentity.ClientSecretCreden
 	assert.NoError(t, err, "Failed to create storage account: %v", err)
 
 	log.Printf("Resource group %s deleted successfully", resourceGroupName)
+}
+
+/*
+ * Deletes the backup instance for the provided backup vault and instance name.
+ */
+func DeleteBackupInstance(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, backupInstanceName string) error {
+	client, err := armdataprotection.NewBackupInstancesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create data protection client: %v", err)
+
+	poller, err := client.BeginDelete(context.Background(), resourceGroupName, backupVaultName, backupInstanceName, nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete backup instance: %w", err)
+	}
+
+	_, err = poller.PollUntilDone(context.Background(), nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete backup instance: %w", err)
+	}
+
+	log.Printf("Backup instance '%s' deleted successfully", backupInstanceName)
+	return nil
+}
+
+/*
+ * Creates a test file that can be used for test purposes.
+ */
+func CreateTestFile(t *testing.T) *os.File {
+	testFile, err := os.CreateTemp("", "test-*.txt")
+	assert.NoError(t, err, "Failed to test file: %v", err)
+
+	content := []byte("This is a test file for upload.")
+	testFile.Write(content)
+	testFile.Close()
+
+	return testFile
+}
+
+/*
+ * Uploads a file to blob storage account
+ */
+func UploadFileToStorageAccount(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, storageAccountName string, containerName string, filePath string) {
+	serviceClient, err := azblob.NewClient(fmt.Sprintf("https://%s.blob.core.windows.net/", storageAccountName), credential, nil)
+	assert.NoError(t, err, "Failed to create service client: %v", err)
+
+	file, err := os.Open(filePath)
+	assert.NoError(t, err, "Failed to open file: %v", err)
+	defer file.Close()
+
+	fileName := filepath.Base(filePath)
+
+	_, err = serviceClient.UploadFile(context.Background(), containerName, fileName, file, nil)
+	assert.NoError(t, err, "Failed to upload file: %v", err)
+
+	log.Printf("File '%s' uploaded successfully to container '%s' in storage account '%s'", filePath, containerName, storageAccountName)
+}
+
+/*
+ * Updates the immutability setting on a backup vault.
+ */
+func UpdateBackupVaultImmutability(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, immutabilitySettings armdataprotection.ImmutabilitySettings) {
+	client, err := armdataprotection.NewBackupVaultsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create data protection client: %v", err)
+
+	// Set the immutability setting on the backup vault
+	_, err = client.BeginUpdate(context.Background(), resourceGroupName, backupVaultName, armdataprotection.PatchResourceRequestInput{
+		Properties: &armdataprotection.PatchBackupVaultInput{
+			SecuritySettings: &armdataprotection.SecuritySettings{
+				ImmutabilitySettings: &immutabilitySettings,
+			},
+		},
+	}, nil)
+	assert.NoError(t, err, "Failed to set immutability setting on backup vault: %v", err)
+
+	log.Printf("Immutability setting updated on backup vault '%s'", backupVaultName)
+}
+
+/*
+ * Begins an ad-hoc backup for the provided backup instance name.
+ */
+func BeginAdHocBackup(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, backupVaultName string, backupInstanceName string) {
+	instancesClient, err := armdataprotection.NewBackupInstancesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create backup instances client: %v", err)
+
+	poller, err := instancesClient.BeginAdhocBackup(context.Background(), resourceGroupName, backupVaultName, backupInstanceName, armdataprotection.TriggerBackupRequest{
+		BackupRuleOptions: &armdataprotection.AdHocBackupRuleOptions{
+			RuleName:      to.Ptr("BackupIntervals"),
+			TriggerOption: &armdataprotection.AdhocBackupTriggerOption{},
+		},
+	}, nil)
+	assert.NoError(t, err, "Failed to begin ad-hoc backup: %v", err)
+
+	resp, err := poller.PollUntilDone(context.Background(), nil)
+	assert.NoError(t, err, "Failed to poll ad-hoc backup status: %v", err)
+	assert.NotNil(t, *resp.JobID, "Expected a job ID to be returned")
+
+	jobClient, err := armdataprotection.NewJobsClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create backup jobs client: %v", err)
+
+	jobId := strings.Split(*resp.JobID, "/")[len(strings.Split(*resp.JobID, "/"))-1]
+
+	for {
+		jobResp, err := jobClient.Get(context.Background(), resourceGroupName, backupVaultName, jobId, nil)
+		assert.NoError(t, err, "Failed to get backup job status: %v", err)
+
+		if *jobResp.Properties.Status != "InProgress" {
+			assert.Equal(t, "Completed", *jobResp.Properties.Status, "Backup job did not succeed")
+			break
+		}
+
+		log.Printf("Backup job '%s' is still in progress...", jobId)
+
+		time.Sleep(10 * time.Second)
+	}
+
+	log.Printf("Ad-hoc backup '%s' completed successfully", backupInstanceName)
 }

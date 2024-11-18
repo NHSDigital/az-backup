@@ -14,10 +14,14 @@ variable "backup_intervals" {
   type = list(string)
 }
 
-variable "storage_account_id" {
+variable "server_id" {
   type = string
 }
 
-variable "storage_account_containers" {
-  type = list(string)
+variable "server_resource_group_id" {
+  type = string
+}
+
+variable "assign_resource_group_level_roles" {
+  type = bool
 }

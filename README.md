@@ -4,9 +4,19 @@
 
 ## Introduction
 
-This repository is a blueprint accelerator solution that supports teams in implementing immutable backups in Azure.
+This repository is a blueprint accelerator solution that supports teams in implementing immutable backups in Azure. It's aim is to give developers a consistent way of creating, configuring and monitoring immutable backups using Azure Backup Vault.
 
-It's aim is to give developers tooling and templates that can be used to create, configure and manage immutable backups using Azure Backup Vault in a proven way that's consistent across the organisation.
+The solution consists of a configurable Terraform module which deploys the following capabilities:
+
+* Backup vault
+* Backup policies
+* Backup instances for the following resources:
+  * Blob storage
+  * Managed disks
+  * PostgreSQL flexible server
+* Integration of diagnostic settings with Azure Monitor
+
+The resources created by the module reside in their own resource group.
 
 See the following key docs for more information:
 
