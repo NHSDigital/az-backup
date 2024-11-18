@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 -->
+
 # Developer Guide
 
 ## Overview
@@ -205,6 +207,16 @@ To debug the tests in vscode, add the following configuration to launch settings
 
 ## Creating a Release
 
-The CI pipeline workflow uses [Semantic Release](https://github.com/cycjimmy/semantic-release-action) to create semantic version number (e.g. 1.0.0 / major.minor.patch), add a tag to the repository, and publish a release to GitHub.
+The CI pipeline workflow uses the [Semantic Release](https://github.com/cycjimmy/semantic-release-action) GitHub action to create semantic version number (e.g. 1.0.0 / major.minor.patch), add a tag to the repository, and publish a release to GitHub. See the `./releaserc` file at the repo root to view the configuration that has been applied.
 
-Semantic Release relies on commit message conventions, therefore any merge into `main` should squash merged with a commit message that [adheres to the semantic release formatting rules.](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
+Semantic Release relies on commit message conventions, therefore any merge into `main` should squash merged with a commit message that [adheres to the semantic release formatting rules](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format).
+
+**When a PR is merged into `main`, if no commit messages are found that meet the convention then the patch number is incremented by default.**
+
+Here are some example commit messages which will result in a version increment:
+
+|Commit Message|Type|Example|
+|--------------|----|-------|
+|fix: Fixed a bug.|Patch|1.1.**10** -> 1.1.**11**|
+|feat: Added a feature.|Minor|1.**1**.10 -> 1.**2**.0|
+|feat: Changed a feature. <br>BREAKING CHANGE: This change breaks things.|Major|**1**.1.10 -> **2**.0.0|
