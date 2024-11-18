@@ -20,6 +20,8 @@ nav:
   - Design: design.md
   - Usage: usage.md
   - Developer Guide: developer-guide.md
+  - Security Guide: security-guide.md
+  - Pipelines: pipelines.md
 
 markdown_extensions:
   - pymdownx.superfences

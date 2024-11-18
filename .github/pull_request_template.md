@@ -1,6 +1,5 @@
 <!-- markdownlint-disable MD041 -->
-<!-- Use the following icons: Checked ✅ / Unchecked: 🔲 --> 
-<!-- To cross through text ~~surround it in double tildes like this~~ --> 
+<!-- Use the following icons: Checked ✅ / Unchecked: 🔲 -->
 
 ## Description
 
@@ -8,7 +7,7 @@ Please provide a brief summary of the changes made in this pull request.
 
 ## Type of change
 
-Please check the relevant options, or cross through options which are not applicable to this change:
+Please check the relevant options:
 
 🔲 New feature (a change which adds functionality)
 🔲 Bug fix (a change which fixes an issue)
@@ -20,12 +19,13 @@ Please check the relevant options, or cross through options which are not applic
 
 ## Checklist
 
-Please check the relevant options, or cross through options which are not applicable to this change:
+Please check the relevant options:
 
 🔲 My code aligns with the style of this project
 🔲 I have added comments in hard to understand areas
 🔲 I have added tests that prove my change works
 🔲 I have updated the documentation
+🔲 If merging into main, I'm aware that the PR should be squash merged with [a commit message that adheres to the semantic release format](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
 
 ## Additional Information
 

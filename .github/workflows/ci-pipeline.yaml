@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -107,3 +107,28 @@ jobs:
 
       - name: Run Trivy Scan
         run: trivy filesystem --security-checks vuln,config --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed .
+
+  publishing:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [build-verification, static-code-analysis]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Disable default GITHUB_TOKEN persistence
+
+      - name: Create Semantic Release
+        uses: cycjimmy/semantic-release-action@v4.1.0
+        id: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Output Release Details
+        if: steps.semantic-release.outputs.new_release_published == 'true'
+        run: |
+          echo ${{ steps.semantic-release.outputs.new_release_version }}
+          echo ${{ steps.semantic-release.outputs.new_release_major_version }}
+          echo ${{ steps.semantic-release.outputs.new_release_minor_version }}
+          echo ${{ steps.semantic-release.outputs.new_release_patch_version }}
