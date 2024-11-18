@@ -28,7 +28,7 @@ Please check the relevant options:
 
 ## Reminder
 
-- [ ] If merging into main the PR will be squash merged with [a commit message that adheres to the semantic release format](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
+🔲 If merging into main, I'm aware that the PR will be squash merged with [a commit message that adheres to the semantic release format](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
 
 ## Additional Information
 
