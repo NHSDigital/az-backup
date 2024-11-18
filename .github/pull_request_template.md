@@ -25,9 +25,6 @@ Please check the relevant options:
 🔲 I have added comments in hard to understand areas
 🔲 I have added tests that prove my change works
 🔲 I have updated the documentation
-
-## Reminder
-
 🔲 If merging into main, I'm aware that the PR should be squash merged with [a commit message that adheres to the semantic release format](https://github.com/semantic-release/semantic-release/tree/master?tab=readme-ov-file#commit-message-format)
 
 ## Additional Information
