@@ -14,6 +14,12 @@ variable "resource_group_location" {
   default     = "uksouth"
 }
 
+variable "create_resource_group" {
+  description = "States whether the resource group should be created or not (if not, then it must already exist)"
+  type        = bool
+  default     = true
+}
+
 variable "backup_vault_name" {
   description = "The name of the backup vault"
   type        = string

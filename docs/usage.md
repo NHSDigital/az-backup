@@ -10,7 +10,7 @@ The az-backup module resides in the `./infrastructure` sub directory of the repo
 
 In future we will use release tags to ensure consumers can depend on a specific release of the module, however this has not currently been implemented.
 
-The module will create a dedicated resource group to contain the backup vault, therefore the resource group name provided to the module must be unique within the scope of the subscription.
+By default, the module will create a dedicated resource group to contain the backup vault, therefore the resource group name provided to the module must be unique within the scope of the subscription. The creation of a dedicated resource group can be overridden if the vault needs to be deployed into an externally managed resource group.
 
 ## Example
 
@@ -21,6 +21,7 @@ module "my_backup" {
   source                     = "github.com/nhsdigital/az-backup//infrastructure?ref=<version-number>"
   resource_group_name        = "rg-mybackup"
   resource_group_location    = "uksouth"
+  create_resource_group      = true
   backup_vault_name          = "bvault-mybackup"
   backup_vault_redundancy    = "LocallyRedundant"
   backup_vault_immutability  = "Unlocked"
@@ -106,11 +107,12 @@ To deploy the module an Azure identity (typically an app registration with clien
 |------|-------------|-----------|---------|
 | `resource_group_name` | The name of the resource group that is created to contain the vault - this cannot be an existing resource group. | Yes | n/a |
 | `resource_group_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
+| `create_resource_group` | States whether a resource group should be created. Setting this to false means the vault will be deployed into an externally managed resource group, the name of which is defined in `resource_group_name`. | No | `true` |
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values.](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
 | `backup_vault_immutability` | The immutability of the vault, e.g. `Locked`. [See the following link for the possible values.](https://learn.microsoft.com/en-us/azure/templates/microsoft.dataprotection/backupvaults?pivots=deployment-language-terraform#immutabilitysettings-2) | No | `Disabled` |
 | `log_analytics_workspace_id` | The id of the log analytics workspace that backup telemetry and diagnostics should be sent to. When no value is provided then diagnostics will not be sent anywhere. | No | n/a |
-| `tags` | A map of tags which will be applied to the resource group and backup vault. When no tags are specified then no tags are added. | No | n/a |
+| `tags` | A map of tags which will be applied to the resource group and backup vault. When no tags are specified then no tags are added. NOTE when using an externally managed resource group the tags will not be applied to it (they will still be applied to the backup vault). | No | n/a |
 | `use_extended_retention` | If set to true, then the backup retention periods can be set to anything, otherwise they are limited to 7 days. | No | `false` |
 | `blob_storage_backups` | A map of blob storage backups that should be created. For each backup the following values should be provided: `storage_account_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `blob_storage_backups.storage_account_id` | The id of the storage account that should be backed up. | Yes | n/a |

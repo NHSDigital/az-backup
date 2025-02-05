@@ -16,7 +16,7 @@ The solution consists of a configurable Terraform module which deploys the follo
     * PostgreSQL flexible server
 * Integration of diagnostic settings with Azure Monitor
 
-The resources created by the module reside in their own resource group.
+By default the module will create a dedicated resource group to house the vault, however you can overide this behaviour and use your own resource group managed externally to the module.
 
 See the following key docs for more information:
 
