@@ -34,12 +34,12 @@ run "create_backup_vault" {
   }
 
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.resource_group_name == azurerm_resource_group.resource_group.name
+    condition     = azurerm_data_protection_backup_vault.backup_vault.resource_group_name == local.resource_group.name
     error_message = "Resource group not as expected."
   }
 
   assert {
-    condition     = azurerm_data_protection_backup_vault.backup_vault.location == azurerm_resource_group.resource_group.location
+    condition     = azurerm_data_protection_backup_vault.backup_vault.location == local.resource_group.location
     error_message = "Backup vault location not as expected."
   }
 

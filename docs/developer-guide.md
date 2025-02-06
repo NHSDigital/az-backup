@@ -170,10 +170,16 @@ To run the tests, take the following steps:
 
 1. Run the tests
 
-    Run the tests with the following command:
+    Run all the tests with the following command:
 
     ````pwsh
     go test -v -timeout 10m
+    ````
+
+    Run a single test with the following command:
+
+    ````pwsh
+    go test -v -timeout 10m -run <TestFunctionName>
     ````
 
 #### Debugging

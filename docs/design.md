@@ -22,7 +22,7 @@ The following diagram illustrates the high level architecture:
 
 ### Description
 
-1. The **backup vault** stores the backups of a variety of different Azure resources. A number of **backup instances** are created in the vault, which have a policy applied that defines the configuration for a backup such as the retention period and schedule. The vault is configured as **immutable** and **locked** to enforce tamper proof backups. The **backup vault** resides in it's own isolated **resource group**.
+1. The **backup vault** stores the backups of a variety of different Azure resources. A number of **backup instances** are created in the vault, which have a policy applied that defines the configuration for a backup such as the retention period and schedule. The vault is configured as **immutable** and **locked** to enforce tamper proof backups. The **backup vault** resides in it's own isolated **resource group** (NOTE this behaviour can be overridden if the vault needs to be deployed into an externally managed resource group).
 
 1. **Backup instances** link the resources to be backed up and an associated **backup policy**, and one registered trigger the backup process. The resources directly supported are Azure Blob Storage, Managed Disks, PostgreSQL (single server and flexible server) and AKS instances, although other resources are supported indirectly through Azure Storage (see **point 7** for more details). **Backup instances** are created based on the variables supplied to module, which include configuration and details of the resources that need to be backed up.
 
@@ -45,7 +45,7 @@ The following diagram illustrates the terraform design:
 ### Description
 
 1. The **az-backup** module is essentially everything within the `./infrastructure` directory of this repository. It consists of the following resources:
-   * A **resource group** which will contain _most_ of the other resources in the module.
+   * A **resource group** which will contain the other resources in the module.
    * A **backup vault** within which backup policies and instances are configured..
    * A **role assignment** which provides read access to the vault.
    * A number of **backup modules** which can backup a specific type of resource.
