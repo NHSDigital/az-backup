@@ -1,7 +1,7 @@
 resource "azurerm_data_protection_backup_vault" "backup_vault" {
   name                = var.backup_vault_name
-  resource_group_name = azurerm_resource_group.resource_group.name
-  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = local.resource_group.name
+  location            = local.resource_group.location
   datastore_type      = "VaultStore"
   redundancy          = var.backup_vault_redundancy
   soft_delete         = "Off"

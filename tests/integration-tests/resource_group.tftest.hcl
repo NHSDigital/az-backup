@@ -27,24 +27,24 @@ run "create_resource_group" {
   }
 
   assert {
-    condition     = azurerm_resource_group.resource_group.name == var.resource_group_name
+    condition     = local.resource_group.name == var.resource_group_name
     error_message = "Resource group name not as expected."
   }
 
   assert {
-    condition     = azurerm_resource_group.resource_group.location == var.resource_group_location
+    condition     = local.resource_group.location == var.resource_group_location
     error_message = "Resource group location not as expected."
   }
 
   assert {
-    condition     = length(azurerm_resource_group.resource_group.tags) == length(run.setup_tests.tags)
+    condition     = length(local.resource_group.tags) == length(run.setup_tests.tags)
     error_message = "Tags not as expected."
   }
 
   assert {
     condition = alltrue([
       for tag_key, tag_value in run.setup_tests.tags :
-      lookup(azurerm_resource_group.resource_group.tags, tag_key, null) == tag_value
+      lookup(local.resource_group.tags, tag_key, null) == tag_value
     ])
     error_message = "Tags not as expected."
   }
