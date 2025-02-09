@@ -11,6 +11,6 @@
     { "breaking": true, "release": "major" },
     { "revert": true, "release": "patch" },
     { "type": "feat", "release": "minor" },
-    { "message": "**", "release": "patch" }
+    { "message": "*", "release": "patch" }
   ]
 }
