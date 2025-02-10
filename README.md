@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This repository is a blueprint accelerator solution that supports teams in implementing immutable backups in Azure. It's aim is to give developers a consistent way of creating, configuring and monitoring immutable backups using Azure Backup Vault.
+This repository contains a terraform module that supports teams in implementing immutable backups in Azure. It's aim is to give developers a consistent way of creating, configuring and monitoring immutable backups using Azure Backup Vault.
 
 The solution consists of a configurable Terraform module which deploys the following capabilities:
 
@@ -33,12 +33,6 @@ The repository consists of the following directories:
 * `./.github`
   
   Contains the GitHub workflows in `yaml` format.
-  
-  [See the YAML schema documentation for more details.](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines)
-
-* `./.pipelines`
-  
-  Contains the Azure Pipelines in `yaml` format.
   
   [See the YAML schema documentation for more details.](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines)
 
