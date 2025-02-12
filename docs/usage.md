@@ -8,9 +8,42 @@ To use the az-backup terraform module, create a terraform module in your own cod
 
 The az-backup module resides in the `./infrastructure` sub directory of the repository, so you need to specify that in the module source by using the double-slash syntax [as explained in this guide](https://developer.hashicorp.com/terraform/language/modules/sources#modules-in-package-sub-directories).
 
-In future we will use release tags to ensure consumers can depend on a specific release of the module, however this has not currently been implemented.
-
 By default, the module will create a dedicated resource group to contain the backup vault, therefore the resource group name provided to the module must be unique within the scope of the subscription. The creation of a dedicated resource group can be overridden if the vault needs to be deployed into an externally managed resource group.
+
+## Immutability
+
+Immutability is configured by setting the `backup_vault_immutability` variable. The variable can be set as `Disabled` (default), `Unlocked` and `Locked`.
+
+**IMPORTANT:** A backup vault cannot be created in a `Locked` state, therefore you must first deploy it as `Unlocked`, and the update the configuration to `Locked` as a second step.
+
+## Retention
+
+By default the module restricts backup retention to 7 days, in order to protect against immutable copies of data being created which cannot be deleted.
+
+To override the restriction set the `use_extended_retention` variable to true, which will allow you to set a retention of any length.
+
+## Identity
+
+To deploy the module an Azure identity (e.g. an app registration with client secret) is required which has been assigned the following roles at the subscription level:
+
+* Contributor (to create resources)
+* Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition limiting the roles that can be assigned to:**
+    * Disk Backup Reader
+    * Disk Snapshot Contributor
+    * PostgreSQL Flexible Server Long Term Retention Backup Role
+    * Storage Account Backup Contributor
+    * Reader
+
+## Deployment
+
+Configure the tenant, subscription and credentials of the identity as environment variables and deploy with terraform.
+
+```pwsh
+$env:ARM_TENANT_ID="<your-tenant-id>"
+$env:ARM_SUBSCRIPTION_ID="<your-subscription-id>"
+$env:ARM_CLIENT_ID="<your-client-id>"
+$env:ARM_CLIENT_SECRET="<your-client-secret>"
+```
 
 ## Example
 
@@ -26,12 +59,14 @@ module "my_backup" {
   backup_vault_redundancy    = "LocallyRedundant"
   backup_vault_immutability  = "Unlocked"
   log_analytics_workspace_id = azurerm_log_analytics_workspace.my_workspace.id
+  use_extended_retention     = true
+
   tags = {
     tagOne   = "tagOneValue"
     tagTwo   = "tagTwoValue"
     tagThree = "tagThreeValue"
   }
-  use_extended_retention = true
+  
   blob_storage_backups = {
     backup1 = {
       backup_name                = "storage1"
@@ -89,25 +124,13 @@ module "my_backup" {
 }
 ```
 
-## Deployment Identity
+### Input Variables
 
-To deploy the module an Azure identity (typically an app registration with client secret) is required which has been assigned the following roles at the subscription level:
-
-* Contributor (required to create resources)
-* Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition that limits the roles which can be assigned to:**
-    * Disk Backup Reader
-    * Disk Snapshot Contributor
-    * PostgreSQL Flexible Server Long Term Retention Backup Role
-    * Storage Account Backup Contributor
-    * Reader
-
-## Module Variables
-
-| Name | Description | Mandatory | Default |
+| Name | Description | Required | Default |
 |------|-------------|-----------|---------|
 | `resource_group_name` | The name of the resource group that is created to contain the vault - this cannot be an existing resource group. | Yes | n/a |
 | `resource_group_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
-| `create_resource_group` | States whether a resource group should be created. Setting this to false means the vault will be deployed into an externally managed resource group, the name of which is defined in `resource_group_name`. | No | `true` |
+| `create_resource_group` | States whether a resource group should be created. Setting this to `false` means the vault will be deployed into an externally managed resource group, the name of which is defined in `resource_group_name`. | No | `true` |
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values.](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
 | `backup_vault_immutability` | The immutability of the vault, e.g. `Locked`. [See the following link for the possible values.](https://learn.microsoft.com/en-us/azure/templates/microsoft.dataprotection/backupvaults?pivots=deployment-language-terraform#immutabilitysettings-2) | No | `Disabled` |

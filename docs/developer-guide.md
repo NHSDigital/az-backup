@@ -12,8 +12,8 @@ The following are pre-requisites to working with the solution:
 
 * An Azure subscription for development purposes
 * An Azure identity which has been assigned the following roles at the subscription level:
-    * Contributor (required to create resources)
-    * Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition that limits the roles which can be assigned to:**
+    * Contributor (to create resources)
+    * Role Based Access Control Administrator (to assign roles to the backup vault managed identity) **with a condition limiting the roles that can be assigned to:**
         * Disk Backup Reader
         * Disk Snapshot Contributor
         * PostgreSQL Flexible Server Long Term Retention Backup Role
