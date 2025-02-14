@@ -5,25 +5,13 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
   datastore_type      = "VaultStore"
   redundancy          = var.backup_vault_redundancy
   soft_delete         = "Off"
+  immutability        = var.backup_vault_immutability
   tags                = var.tags
   identity {
     type = "SystemAssigned"
   }
 }
 
-resource "azapi_update_resource" "backup_vault_settings" {
-  type        = "Microsoft.DataProtection/backupVaults@2022-11-01-preview"
-  resource_id = azurerm_data_protection_backup_vault.backup_vault.id
-  body = jsonencode({
-    properties = {
-      securitySettings = {
-        immutabilitySettings = {
-          state = var.backup_vault_immutability
-        }
-      }
-    }
-  })
-}
 
 locals {
   backup_vault_diagnostics_log_categories = toset([
