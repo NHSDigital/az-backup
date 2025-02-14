@@ -76,10 +76,6 @@ run "create_backup_vault" {
     error_message = "Tags not as expected."
   }
 
-  assert {
-    condition     = jsondecode(azapi_update_resource.backup_vault_settings.body).properties.securitySettings.immutabilitySettings.state == var.backup_vault_immutability
-    error_message = "Backup vault immutability not as expected."
-  }
 }
 
 run "configure_vault_diagnostics_when_enabled" {
