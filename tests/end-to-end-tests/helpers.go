@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/gruntwork-io/go-commons/files"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,6 +42,8 @@ type Config struct {
  */
 func GetEnvironmentConfiguration(t *testing.T) *Config {
 	terraformFolder := test_structure.CopyTerraformFolderToTemp(t, "../../infrastructure", "")
+
+	files.CopyFile("./provider.tf", terraformFolder+"/provider.tf")
 
 	tenantID := os.Getenv("ARM_TENANT_ID")
 	if tenantID == "" {
