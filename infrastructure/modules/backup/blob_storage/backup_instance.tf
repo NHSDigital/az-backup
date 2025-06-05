@@ -2,6 +2,7 @@ resource "azurerm_role_assignment" "role_assignment" {
   scope                = var.storage_account_id
   role_definition_name = "Storage Account Backup Contributor"
   principal_id         = var.vault.identity[0].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_data_protection_backup_instance_blob_storage" "backup_instance" {
