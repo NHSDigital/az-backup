@@ -71,7 +71,7 @@ run "create_backup_vault" {
     ])
     error_message = "Tags not as expected."
   }
-  
+
   assert {
     condition     = azurerm_data_protection_backup_vault.backup_vault.immutability == var.backup_vault_immutability
     error_message = "Backup vault immutability not as expected."
@@ -119,12 +119,12 @@ run "configure_vault_diagnostics_when_enabled" {
   }
 
   assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault[0].metric) == length(local.backup_vault_diagnostics_metric_categories)
+    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault[0].enabled_metric) == length(local.backup_vault_diagnostics_metric_categories)
     error_message = "Backup vault diagnostic setting metrics not as expected."
   }
 
   assert {
-    condition     = alltrue([for metric in azurerm_monitor_diagnostic_setting.backup_vault[0].metric : contains(local.backup_vault_diagnostics_metric_categories, metric.category)])
+    condition     = alltrue([for metric in azurerm_monitor_diagnostic_setting.backup_vault[0].enabled_metric : contains(local.backup_vault_diagnostics_metric_categories, metric.category)])
     error_message = "Backup vault diagnostic setting metrics not as expected."
   }
 }
