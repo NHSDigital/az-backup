@@ -128,8 +128,8 @@ module "my_backup" {
 
 | Name | Description | Required | Default |
 |------|-------------|-----------|---------|
-| `resource_group_name` | The name of the resource group that is created to contain the vault - this cannot be an existing resource group. | Yes | n/a |
-| `resource_group_location` | The location of the resource group that is created to contain the vault. | No | `uksouth` |
+| `resource_group_name` | The name of the resource group that is created to contain the vault - the resource group will be created if `create_resource_group` = true, and must be an existing resource group if `create_resource_group` = false. | Yes | n/a |
+| `resource_group_location` | The location of the resource group. | No | `uksouth` |
 | `create_resource_group` | States whether a resource group should be created. Setting this to `false` means the vault will be deployed into an externally managed resource group, the name of which is defined in `resource_group_name`. | No | `true` |
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values.](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
