@@ -3,14 +3,30 @@
     "main"
   ],
   "plugins": [
-    "@semantic-release/commit-analyzer", 
-    "@semantic-release/release-notes-generator", 
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
     "@semantic-release/github"
   ],
   "releaseRules": [
-    { "breaking": true, "release": "major" },
-    { "revert": true, "release": "patch" },
-    { "type": "feat", "release": "minor" },
-    { "message": "*", "release": "patch" }
+    {
+      "breaking": true,
+      "release": "major"
+    },
+    {
+      "revert": true,
+      "release": "patch"
+    },
+    {
+      "type": "feat",
+      "release": "minor"
+    },
+    {
+      "message": "*",
+      "release": "patch"
+    },
+    {
+      "type": "*",
+      "release": "patch"
+    }
   ]
 }
