@@ -131,3 +131,14 @@ variable "postgresql_flexible_server_backups" {
     error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
   }
 }
+
+variable "deploy_diagnostic_settings" {
+  description = "A flag to indicate whether to deploy diagnostic settings for the backup vault"
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.deploy_diagnostic_settings || var.log_analytics_workspace_id != ""
+    error_message = "Diagnostic settings can only be deployed if a log analytics workspace ID is provided."
+  }
+}
