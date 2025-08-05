@@ -3,12 +3,14 @@ resource "azurerm_role_assignment" "role_assignment_snapshot_contributor" {
   scope                = var.managed_disk_resource_group.id
   role_definition_name = "Disk Snapshot Contributor"
   principal_id         = var.vault.identity[0].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_role_assignment" "role_assignment_backup_reader" {
   scope                = var.managed_disk_id
   role_definition_name = "Disk Backup Reader"
   principal_id         = var.vault.identity[0].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_data_protection_backup_instance_disk" "backup_instance" {
