@@ -3,12 +3,14 @@ resource "azurerm_role_assignment" "role_assignment_reader" {
   scope                = var.server_resource_group_id
   role_definition_name = "Reader"
   principal_id         = var.vault.identity[0].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_role_assignment" "role_assignment_long_term_retention_backup_role" {
   scope                = var.server_id
   role_definition_name = "PostgreSQL Flexible Server Long Term Retention Backup Role"
   principal_id         = var.vault.identity[0].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_data_protection_backup_instance_postgresql_flexible_server" "backup_instance" {
