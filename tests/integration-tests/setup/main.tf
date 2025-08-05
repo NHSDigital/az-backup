@@ -2,7 +2,7 @@ terraform {
   required_providers {
     random = {
       source  = "hashicorp/random"
-      version = "3.5.1"
+      version = "3.7.2"
     }
   }
 }
@@ -25,4 +25,8 @@ output "tags" {
     tagTwo   = "tagTwoValue"
     tagThree = "tagThreeValue"
   }
+}
+
+output "log_analytics_workspace_id" {
+  value = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.OperationalInsights/workspaces/law-testworkspace"
 }
