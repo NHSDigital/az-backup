@@ -26,3 +26,7 @@ output "tags" {
     tagThree = "tagThreeValue"
   }
 }
+
+output "log_analytics_workspace_id" {
+  value = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.OperationalInsights/workspaces/law-testworkspace"
+}

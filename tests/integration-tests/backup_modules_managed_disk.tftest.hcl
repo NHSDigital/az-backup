@@ -16,10 +16,11 @@ run "create_managed_disk_backup" {
   }
 
   variables {
-    resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location = "uksouth"
-    backup_vault_name       = run.setup_tests.backup_vault_name
-    tags                    = run.setup_tests.tags
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
     managed_disk_backups = {
       backup1 = {
         backup_name      = "disk1"
@@ -181,6 +182,7 @@ run "validate_retention_period" {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                    = run.setup_tests.tags
     managed_disk_backups = {
       backup1 = {
@@ -212,6 +214,7 @@ run "validate_retention_period_with_extended_retention" {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                    = run.setup_tests.tags
     use_extended_retention  = true
     managed_disk_backups = {
@@ -245,6 +248,7 @@ run "validate_backup_intervals" {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                    = run.setup_tests.tags
     managed_disk_backups = {
       backup1 = {

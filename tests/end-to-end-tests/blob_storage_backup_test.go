@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -21,6 +22,7 @@ type TestBlobStorageBackupExternalResources struct {
 	StorageAccountOneContainer armstorage.BlobContainer
 	StorageAccountTwo          armstorage.Account
 	StorageAccountTwoContainer armstorage.BlobContainer
+	LogAnalyticsWorkspace      armoperationalinsights.Workspace
 }
 
 /*
@@ -39,12 +41,16 @@ func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *az
 	storageAccountTwo := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, resourceGroupLocation)
 	storageAccountTwoContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, "test-container")
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	externalResources := &TestBlobStorageBackupExternalResources{
 		ResourceGroup:              resourceGroup,
 		StorageAccountOne:          storageAccountOne,
 		StorageAccountOneContainer: storageAccountOneContainer,
 		StorageAccountTwo:          storageAccountTwo,
 		StorageAccountTwoContainer: storageAccountTwoContainer,
+		LogAnalyticsWorkspace:      logAnalyticsWorkspace,
 	}
 
 	return externalResources
@@ -104,10 +110,11 @@ func TestBlobStorageBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":     resourceGroupName,
-				"resource_group_location": resourceGroupLocation,
-				"backup_vault_name":       backupVaultName,
-				"blob_storage_backups":    blobStorageBackups,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"backup_vault_name":          backupVaultName,
+				"blob_storage_backups":       blobStorageBackups,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
 			},
 
 			BackendConfig: map[string]interface{}{
@@ -131,6 +138,10 @@ func TestBlobStorageBackup(t *testing.T) {
 		backupVault := GetBackupVault(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 		backupPolicies := GetBackupPolicies(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 		backupInstances := GetBackupInstances(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
+
+		// Validate log analytics workspace
+		logAnalyticsWorkspace := GetLogAnalyticsWorkspace(t, credential, environment.SubscriptionID, resourceGroupName, *externalResources.LogAnalyticsWorkspace.Name)
+		assert.NotNil(t, logAnalyticsWorkspace, "Log Analytics Workspace does not exist")
 
 		assert.Equal(t, len(blobStorageBackups), len(backupPolicies), "Expected to find %2 backup policies in vault", len(blobStorageBackups))
 		assert.Equal(t, len(blobStorageBackups), len(backupInstances), "Expected to find %2 backup instances in vault", len(blobStorageBackups))

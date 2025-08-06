@@ -2,14 +2,39 @@ package e2e_tests
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"	
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
+
+type BasicDeploymentTestExternalResources struct {
+	ResourceGroup              armresources.ResourceGroup
+	LogAnalyticsWorkspace      armoperationalinsights.Workspace
+}
+
+/*
+ * Creates resources which are "external" to the az-backup module, and models
+ * what would be backed up in a real scenario.
+ */
+func setupExternalResourcesForBasicDeploymentTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *BasicDeploymentTestExternalResources {
+
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, resourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
+	externalResources := &BasicDeploymentTestExternalResources{
+		LogAnalyticsWorkspace: logAnalyticsWorkspace,
+	}
+
+	return externalResources
+}
 
 /*
  * TestBasicDeployment tests the basic deployment of the infrastructure using Terraform.
@@ -25,6 +50,8 @@ func TestBasicDeployment(t *testing.T) {
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 	backupVaultRedundancy := "LocallyRedundant"
+
+	externalResources := setupExternalResourcesForBasicDeploymentTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	tags := map[string]string{
 		"tagOne":   "tagOneValue",
@@ -54,6 +81,7 @@ func TestBasicDeployment(t *testing.T) {
 				"backup_vault_name":       backupVaultName,
 				"backup_vault_redundancy": backupVaultRedundancy,
 				"tags":                    tags,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
 			},
 
 			BackendConfig: map[string]interface{}{
@@ -106,5 +134,9 @@ func TestBasicDeployment(t *testing.T) {
 			assert.True(t, exists, "Tag %s does not exist", key)
 			assert.Equal(t, expectedValue, *value, "Tag %s value does not match", key)
 		}
+
+		// Validate log analytics workspace
+		logAnalyticsWorkspace := GetLogAnalyticsWorkspace(t, credential, environment.SubscriptionID, resourceGroupName, *externalResources.LogAnalyticsWorkspace.Name)
+		assert.NotNil(t, logAnalyticsWorkspace, "Log Analytics Workspace does not exist")
 	})
 }

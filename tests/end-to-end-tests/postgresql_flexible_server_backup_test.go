@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -19,6 +20,7 @@ type TestPostgresqlFlexibleServerBackupExternalResources struct {
 	ResourceGroup               armresources.ResourceGroup
 	PostgresqlFlexibleServerOne armpostgresqlflexibleservers.Server
 	PostgresqlFlexibleServerTwo armpostgresqlflexibleservers.Server
+	LogAnalyticsWorkspace armoperationalinsights.Workspace
 }
 
 /*
@@ -35,10 +37,14 @@ func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, c
 	PostgresqlFlexibleServerTwoName := fmt.Sprintf("pgflexserver-%s-external-2", strings.ToLower(uniqueId))
 	PostgresqlFlexibleServerTwo := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerTwoName, resourceGroupLocation, int32(32))
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	externalResources := &TestPostgresqlFlexibleServerBackupExternalResources{
 		ResourceGroup:               resourceGroup,
 		PostgresqlFlexibleServerOne: PostgresqlFlexibleServerOne,
 		PostgresqlFlexibleServerTwo: PostgresqlFlexibleServerTwo,
+		LogAnalyticsWorkspace:       logAnalyticsWorkspace,
 	}
 
 	return externalResources
@@ -102,6 +108,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 				"resource_group_location":            resourceGroupLocation,
 				"backup_vault_name":                  backupVaultName,
 				"postgresql_flexible_server_backups": PostgresqlFlexibleServerBackups,
+				"log_analytics_workspace_id":         *externalResources.LogAnalyticsWorkspace.ID,
 			},
 
 			BackendConfig: map[string]interface{}{

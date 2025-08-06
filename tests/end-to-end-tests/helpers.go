@@ -297,6 +297,21 @@ func GetBackupInstanceForName(instances []*armdataprotection.BackupInstanceResou
 	return nil
 }
 
+/* 
+ * Gets a Log Analytics Workspace for the provided name. 
+ */
+func GetLogAnalyticsWorkspace(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, 
+	resourceGroupName string, workspaceName string) armoperationalinsights.Workspace {
+	client, err := armoperationalinsights.NewWorkspacesClient(subscriptionID, credential, nil)
+	assert.NoError(t, err, "Failed to create log analytics workspace client: %v", err)
+
+	// Get the log analytics workspace
+	resp, err := client.Get(context.Background(), resourceGroupName, workspaceName, nil)
+	assert.NoError(t, err, "Failed to get log analytics workspace: %v", err)
+
+	return resp.Workspace
+}
+
 /*
  * Creates a resource group that can be used for testing purposes.
  */

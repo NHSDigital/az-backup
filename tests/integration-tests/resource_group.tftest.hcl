@@ -16,10 +16,11 @@ run "create_resource_group" {
   }
 
   variables {
-    resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location = "uksouth"
-    backup_vault_name       = run.setup_tests.backup_vault_name
-    tags                    = run.setup_tests.tags
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
   }
 
   assert {
