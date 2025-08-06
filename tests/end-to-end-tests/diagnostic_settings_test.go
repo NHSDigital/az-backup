@@ -114,6 +114,10 @@ func TestDiagnosticSettings(t *testing.T) {
 		backupVault := GetBackupVault(t, credential, environment.SubscriptionID, resourceGroupName, backupVaultName)
 		diagnosticSettings := GetDiagnosticSettings(t, credential, *backupVault.ID, *backupVault.Name)
 
+		// Validate log analytics workspace
+		logAnalyticsWorkspace := GetLogAnalyticsWorkspace(t, credential, environment.SubscriptionID, resourceGroupName, *externalResources.LogAnalyticsWorkspace.Name)
+		assert.NotNil(t, logAnalyticsWorkspace, "Log Analytics Workspace does not exist")
+
 		assert.Equal(t, len(diagnosticSettings.Properties.Logs), len(expectedLogCategories), "Expected to find %2 log categories in diagnostic settings", len(expectedLogCategories))
 		assert.Equal(t, len(diagnosticSettings.Properties.Metrics), len(expectedMetricCategories), "Expected to find %2 metric categories in diagnostic settings", len(expectedMetricCategories))
 

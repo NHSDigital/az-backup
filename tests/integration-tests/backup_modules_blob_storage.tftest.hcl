@@ -16,10 +16,11 @@ run "create_blob_storage_backup" {
   }
 
   variables {
-    resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location = "uksouth"
-    backup_vault_name       = run.setup_tests.backup_vault_name
-    tags                    = run.setup_tests.tags
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    tags                       = run.setup_tests.tags
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     blob_storage_backups = {
       backup1 = {
         backup_name                = "storage1"
@@ -175,6 +176,7 @@ run "validate_retention_period" {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                    = run.setup_tests.tags
     blob_storage_backups = {
       backup1 = {
@@ -204,6 +206,7 @@ run "validate_retention_period_with_extended_retention" {
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
     tags                    = run.setup_tests.tags
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     use_extended_retention  = true
     blob_storage_backups = {
       backup1 = {
@@ -233,6 +236,7 @@ run "validate_backup_intervals" {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                    = run.setup_tests.tags
     blob_storage_backups = {
       backup1 = {
@@ -261,6 +265,7 @@ run "validate_storage_account_containers" {
     resource_group_name     = run.setup_tests.resource_group_name
     resource_group_location = "uksouth"
     backup_vault_name       = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                    = run.setup_tests.tags
     blob_storage_backups = {
       backup1 = {
