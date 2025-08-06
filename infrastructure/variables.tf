@@ -78,8 +78,8 @@ variable "blob_storage_backups" {
   }
 
   validation {
-    condition     = var.use_extended_retention == true || alltrue([for k, v in var.blob_storage_backups : contains(local.valid_retention_periods, v.retention_period)])
-    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
+    condition     = var.use_extended_retention ? true : alltrue([for k, v in var.blob_storage_backups : contains(local.valid_retention_periods, v.retention_period)])
+    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_extended_retention to true."
   }
 }
 
@@ -104,8 +104,8 @@ variable "managed_disk_backups" {
   }
 
   validation {
-    condition     = var.use_extended_retention == true || alltrue([for k, v in var.managed_disk_backups : contains(local.valid_retention_periods, v.retention_period)])
-    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
+    condition     = var.use_extended_retention ? true : alltrue([for k, v in var.managed_disk_backups : contains(local.valid_retention_periods, v.retention_period)])
+    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_extended_retention to true."
   }
 }
 
@@ -127,7 +127,7 @@ variable "postgresql_flexible_server_backups" {
   }
 
   validation {
-    condition     = var.use_extended_retention == true || alltrue([for k, v in var.postgresql_flexible_server_backups : contains(local.valid_retention_periods, v.retention_period)])
-    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
+    condition     = var.use_extended_retention ? true : alltrue([for k, v in var.postgresql_flexible_server_backups : contains(local.valid_retention_periods, v.retention_period)])
+    error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_extended_retention to true."
   }
 }
