@@ -2,13 +2,41 @@ package e2e_tests
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
+
+type TestTerraformOutputsExternalResources struct {
+	ResourceGroup         armresources.ResourceGroup
+	LogAnalyticsWorkspace armoperationalinsights.Workspace
+}
+
+/*
+ * Creates resources which are "external" to the az-backup module, and models
+ * what would be backed up in a real scenario.
+ */
+func setupExternalResourcesForTerraformOutputTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestDiagnosticSettingsExternalResources {
+	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
+	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
+
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
+	externalResources := &TestDiagnosticSettingsExternalResources{
+		ResourceGroup:         resourceGroup,
+		LogAnalyticsWorkspace: logAnalyticsWorkspace,
+	}
+
+	return externalResources
+}
 
 /*
  * TestTerraformOutput tests the output variables of the Terraform deployment.
@@ -17,12 +45,15 @@ func TestTerraformOutput(t *testing.T) {
 	t.Parallel()
 
 	environment := GetEnvironmentConfiguration(t)
+	credential := GetAzureCredential(t, environment)
 
 	uniqueId := random.UniqueId()
 	resourceGroupName := fmt.Sprintf("rg-nhsbackup-%s", uniqueId)
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 	backupVaultRedundancy := "LocallyRedundant"
+
+	externalResources := setupExternalResourcesForTerraformOutputTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// Teardown stage
 	// ...
@@ -41,10 +72,11 @@ func TestTerraformOutput(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":     resourceGroupName,
-				"resource_group_location": resourceGroupLocation,
-				"backup_vault_name":       backupVaultName,
-				"backup_vault_redundancy": backupVaultRedundancy,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"backup_vault_name":          backupVaultName,
+				"backup_vault_redundancy":    backupVaultRedundancy,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
 			},
 
 			BackendConfig: map[string]interface{}{

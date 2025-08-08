@@ -2,9 +2,11 @@ package e2e_tests
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -13,17 +15,22 @@ import (
 )
 
 type TestExistingResourceGroupExternalResources struct {
-	ResourceGroup armresources.ResourceGroup
+	ResourceGroup         armresources.ResourceGroup
+	LogAnalyticsWorkspace armoperationalinsights.Workspace
 }
 
 /*
  * Creates resources which are "external" to the az-backup module.
  */
-func setupExternalResourcesForExistingResourceGroupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string) *TestExistingResourceGroupExternalResources {
+func setupExternalResourcesForExistingResourceGroupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestExistingResourceGroupExternalResources {
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, resourceGroupName, resourceGroupLocation)
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, resourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	externalResources := &TestExistingResourceGroupExternalResources{
-		ResourceGroup: resourceGroup,
+		ResourceGroup:         resourceGroup,
+		LogAnalyticsWorkspace: logAnalyticsWorkspace,
 	}
 
 	return externalResources
@@ -43,7 +50,7 @@ func TestExistingResourceGroup(t *testing.T) {
 	resourceGroupLocation := "uksouth"
 	backupVaultName := fmt.Sprintf("bvault-nhsbackup-%s", uniqueId)
 
-	externalResources := setupExternalResourcesForExistingResourceGroupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation)
+	externalResources := setupExternalResourcesForExistingResourceGroupTest(t, credential, environment.SubscriptionID, resourceGroupName, resourceGroupLocation, uniqueId)
 
 	// Teardown stage
 	// ...
@@ -64,10 +71,11 @@ func TestExistingResourceGroup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":     resourceGroupName,
-				"resource_group_location": resourceGroupLocation,
-				"create_resource_group":   false,
-				"backup_vault_name":       backupVaultName,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"create_resource_group":      false,
+				"backup_vault_name":          backupVaultName,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
 			},
 
 			BackendConfig: map[string]interface{}{

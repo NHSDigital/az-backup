@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -18,6 +19,7 @@ import (
 
 type TestVaultImmutabilityExternalResources struct {
 	ResourceGroup           armresources.ResourceGroup
+	LogAnalyticsWorkspace   armoperationalinsights.Workspace
 	StorageAccount          armstorage.Account
 	StorageAccountContainer armstorage.BlobContainer
 }
@@ -30,12 +32,16 @@ func setupExternalResourcesForVaultImmutabilityTest(t *testing.T, credential *az
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	storageAccountName := fmt.Sprintf("sa%sexternal", strings.ToLower(uniqueId))
 	storageAccount := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountName, resourceGroupLocation)
 	storageAccountContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountName, "test-container")
 
 	externalResources := &TestVaultImmutabilityExternalResources{
 		ResourceGroup:           resourceGroup,
+		LogAnalyticsWorkspace:   logAnalyticsWorkspace,
 		StorageAccount:          storageAccount,
 		StorageAccountContainer: storageAccountContainer,
 	}
@@ -91,11 +97,12 @@ func TestVaultImmutability(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":       resourceGroupName,
-				"resource_group_location":   resourceGroupLocation,
-				"backup_vault_name":         backupVaultName,
-				"backup_vault_immutability": backupVaultImmutability,
-				"blob_storage_backups":      blobStorageBackups,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"backup_vault_name":          backupVaultName,
+				"backup_vault_immutability":  backupVaultImmutability,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
+				"blob_storage_backups":       blobStorageBackups,
 			},
 
 			BackendConfig: map[string]interface{}{
