@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -16,9 +17,10 @@ import (
 )
 
 type TestManagedDiskBackupExternalResources struct {
-	ResourceGroup  armresources.ResourceGroup
-	ManagedDiskOne armcompute.Disk
-	ManagedDiskTwo armcompute.Disk
+	ResourceGroup         armresources.ResourceGroup
+	LogAnalyticsWorkspace armoperationalinsights.Workspace
+	ManagedDiskOne        armcompute.Disk
+	ManagedDiskTwo        armcompute.Disk
 }
 
 /*
@@ -29,6 +31,9 @@ func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *az
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	managedDiskOneName := fmt.Sprintf("disk-%s-external-1", strings.ToLower(uniqueId))
 	managedDiskOne := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskOneName, resourceGroupLocation, int32(1))
 
@@ -36,9 +41,10 @@ func setupExternalResourcesForManagedDiskBackupTest(t *testing.T, credential *az
 	managedDiskTwo := CreateManagedDisk(t, credential, subscriptionID, externalResourceGroupName, managedDiskTwoName, resourceGroupLocation, int32(1))
 
 	externalResources := &TestManagedDiskBackupExternalResources{
-		ResourceGroup:  resourceGroup,
-		ManagedDiskOne: managedDiskOne,
-		ManagedDiskTwo: managedDiskTwo,
+		ResourceGroup:         resourceGroup,
+		LogAnalyticsWorkspace: logAnalyticsWorkspace,
+		ManagedDiskOne:        managedDiskOne,
+		ManagedDiskTwo:        managedDiskTwo,
 	}
 
 	return externalResources
@@ -104,10 +110,11 @@ func TestManagedDiskBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":     resourceGroupName,
-				"resource_group_location": resourceGroupLocation,
-				"backup_vault_name":       backupVaultName,
-				"managed_disk_backups":    managedDiskBackups,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"backup_vault_name":          backupVaultName,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
+				"managed_disk_backups":       managedDiskBackups,
 			},
 
 			BackendConfig: map[string]interface{}{

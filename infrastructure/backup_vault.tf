@@ -27,7 +27,6 @@ locals {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "backup_vault" {
-  count                      = length(var.log_analytics_workspace_id) > 0 ? 1 : 0
   name                       = "${var.backup_vault_name}-diagnostic-settings"
   target_resource_id         = azurerm_data_protection_backup_vault.backup_vault.id
   log_analytics_workspace_id = var.log_analytics_workspace_id

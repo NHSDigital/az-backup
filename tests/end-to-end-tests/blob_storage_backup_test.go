@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -17,6 +18,7 @@ import (
 
 type TestBlobStorageBackupExternalResources struct {
 	ResourceGroup              armresources.ResourceGroup
+	LogAnalyticsWorkspace      armoperationalinsights.Workspace
 	StorageAccountOne          armstorage.Account
 	StorageAccountOneContainer armstorage.BlobContainer
 	StorageAccountTwo          armstorage.Account
@@ -31,6 +33,9 @@ func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *az
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(uniqueId))
 	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, resourceGroupLocation)
 	storageAccountOneContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, "test-container")
@@ -41,6 +46,7 @@ func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *az
 
 	externalResources := &TestBlobStorageBackupExternalResources{
 		ResourceGroup:              resourceGroup,
+		LogAnalyticsWorkspace:      logAnalyticsWorkspace,
 		StorageAccountOne:          storageAccountOne,
 		StorageAccountOneContainer: storageAccountOneContainer,
 		StorageAccountTwo:          storageAccountTwo,
@@ -104,10 +110,11 @@ func TestBlobStorageBackup(t *testing.T) {
 			TerraformDir: environment.TerraformFolder,
 
 			Vars: map[string]interface{}{
-				"resource_group_name":     resourceGroupName,
-				"resource_group_location": resourceGroupLocation,
-				"backup_vault_name":       backupVaultName,
-				"blob_storage_backups":    blobStorageBackups,
+				"resource_group_name":        resourceGroupName,
+				"resource_group_location":    resourceGroupLocation,
+				"backup_vault_name":          backupVaultName,
+				"log_analytics_workspace_id": *externalResources.LogAnalyticsWorkspace.ID,
+				"blob_storage_backups":       blobStorageBackups,
 			},
 
 			BackendConfig: map[string]interface{}{

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dataprotection/armdataprotection/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -17,6 +18,7 @@ import (
 
 type TestPostgresqlFlexibleServerBackupExternalResources struct {
 	ResourceGroup               armresources.ResourceGroup
+	LogAnalyticsWorkspace       armoperationalinsights.Workspace
 	PostgresqlFlexibleServerOne armpostgresqlflexibleservers.Server
 	PostgresqlFlexibleServerTwo armpostgresqlflexibleservers.Server
 }
@@ -29,6 +31,9 @@ func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, c
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
 	resourceGroup := CreateResourceGroup(t, credential, subscriptionID, externalResourceGroupName, resourceGroupLocation)
 
+	logAnalyticsWorkspaceName := fmt.Sprintf("law-%s-external", strings.ToLower(uniqueId))
+	logAnalyticsWorkspace := CreateLogAnalyticsWorkspace(t, credential, subscriptionID, externalResourceGroupName, logAnalyticsWorkspaceName, resourceGroupLocation)
+
 	PostgresqlFlexibleServerOneName := fmt.Sprintf("pgflexserver-%s-external-1", strings.ToLower(uniqueId))
 	PostgresqlFlexibleServerOne := CreatePostgresqlFlexibleServer(t, credential, subscriptionID, externalResourceGroupName, PostgresqlFlexibleServerOneName, resourceGroupLocation, int32(32))
 
@@ -37,6 +42,7 @@ func setupExternalResourcesForPostgresqlFlexibleServerBackupTest(t *testing.T, c
 
 	externalResources := &TestPostgresqlFlexibleServerBackupExternalResources{
 		ResourceGroup:               resourceGroup,
+		LogAnalyticsWorkspace:       logAnalyticsWorkspace,
 		PostgresqlFlexibleServerOne: PostgresqlFlexibleServerOne,
 		PostgresqlFlexibleServerTwo: PostgresqlFlexibleServerTwo,
 	}
@@ -101,6 +107,7 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 				"resource_group_name":                resourceGroupName,
 				"resource_group_location":            resourceGroupLocation,
 				"backup_vault_name":                  backupVaultName,
+				"log_analytics_workspace_id":         *externalResources.LogAnalyticsWorkspace.ID,
 				"postgresql_flexible_server_backups": PostgresqlFlexibleServerBackups,
 			},
 

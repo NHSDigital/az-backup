@@ -16,12 +16,13 @@ run "create_backup_vault" {
   }
 
   variables {
-    resource_group_name       = run.setup_tests.resource_group_name
-    resource_group_location   = "uksouth"
-    backup_vault_name         = run.setup_tests.backup_vault_name
-    backup_vault_redundancy   = "LocallyRedundant"
-    backup_vault_immutability = "Unlocked"
-    tags                      = run.setup_tests.tags
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    backup_vault_redundancy    = "LocallyRedundant"
+    backup_vault_immutability  = "Unlocked"
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
   }
 
   assert {
@@ -78,7 +79,7 @@ run "create_backup_vault" {
   }
 }
 
-run "configure_vault_diagnostics_when_enabled" {
+run "configure_vault_diagnostics" {
   command = apply
 
   module {
@@ -89,62 +90,37 @@ run "configure_vault_diagnostics_when_enabled" {
     resource_group_name        = run.setup_tests.resource_group_name
     resource_group_location    = "uksouth"
     backup_vault_name          = run.setup_tests.backup_vault_name
-    log_analytics_workspace_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.OperationalInsights/workspaces/workspace1"
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     tags                       = run.setup_tests.tags
   }
 
   assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault) == 1
-    error_message = "Backup vault diagnostic settings not as expected."
-  }
-
-  assert {
-    condition     = azurerm_monitor_diagnostic_setting.backup_vault[0].target_resource_id == azurerm_data_protection_backup_vault.backup_vault.id
+    condition     = azurerm_monitor_diagnostic_setting.backup_vault.target_resource_id == azurerm_data_protection_backup_vault.backup_vault.id
     error_message = "Backup vault diagnostic setting target resource id not as expected."
   }
 
   assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault[0].log_analytics_workspace_id) > 0
+    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault.log_analytics_workspace_id) > 0
     error_message = "Backup vault diagnostic setting log analytics workspace id not as expected."
   }
 
   assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault[0].enabled_log) == length(local.backup_vault_diagnostics_log_categories)
+    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault.enabled_log) == length(local.backup_vault_diagnostics_log_categories)
     error_message = "Backup vault diagnostic setting enabled logs not as expected."
   }
 
   assert {
-    condition     = alltrue([for enabled_log in azurerm_monitor_diagnostic_setting.backup_vault[0].enabled_log : contains(local.backup_vault_diagnostics_log_categories, enabled_log.category)])
+    condition     = alltrue([for enabled_log in azurerm_monitor_diagnostic_setting.backup_vault.enabled_log : contains(local.backup_vault_diagnostics_log_categories, enabled_log.category)])
     error_message = "Backup vault diagnostic setting enabled logs not as expected."
   }
 
   assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault[0].enabled_metric) == length(local.backup_vault_diagnostics_metric_categories)
+    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault.enabled_metric) == length(local.backup_vault_diagnostics_metric_categories)
     error_message = "Backup vault diagnostic setting metrics not as expected."
   }
 
   assert {
-    condition     = alltrue([for metric in azurerm_monitor_diagnostic_setting.backup_vault[0].enabled_metric : contains(local.backup_vault_diagnostics_metric_categories, metric.category)])
+    condition     = alltrue([for metric in azurerm_monitor_diagnostic_setting.backup_vault.enabled_metric : contains(local.backup_vault_diagnostics_metric_categories, metric.category)])
     error_message = "Backup vault diagnostic setting metrics not as expected."
-  }
-}
-
-run "configure_vault_diagnostics_when_disabled" {
-  command = apply
-
-  module {
-    source = "../../infrastructure"
-  }
-
-  variables {
-    resource_group_name     = run.setup_tests.resource_group_name
-    resource_group_location = "uksouth"
-    backup_vault_name       = run.setup_tests.backup_vault_name
-    tags                    = run.setup_tests.tags
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.backup_vault) == 0
-    error_message = "Backup vault diagnostic settings not as expected."
   }
 }
