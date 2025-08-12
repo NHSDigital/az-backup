@@ -1,12 +1,13 @@
 resource "azurerm_data_protection_backup_vault" "backup_vault" {
-  name                = var.backup_vault_name
-  resource_group_name = local.resource_group.name
-  location            = local.resource_group.location
-  datastore_type      = "VaultStore"
-  redundancy          = var.backup_vault_redundancy
-  soft_delete         = "Off"
-  immutability        = var.backup_vault_immutability
-  tags                = var.tags
+  name                         = var.backup_vault_name
+  resource_group_name          = local.resource_group.name
+  location                     = local.resource_group.location
+  datastore_type               = "VaultStore"
+  redundancy                   = var.backup_vault_redundancy
+  soft_delete                  = "Off"
+  immutability                 = var.backup_vault_immutability
+  tags                         = var.tags
+  
   identity {
     type = "SystemAssigned"
   }

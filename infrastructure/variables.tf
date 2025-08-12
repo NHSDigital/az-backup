@@ -57,11 +57,12 @@ variable "use_extended_retention" {
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
-    backup_name                = string
-    retention_period           = string
-    backup_intervals           = list(string)
-    storage_account_id         = string
-    storage_account_containers = list(string)
+    backup_name                  = string
+    retention_period             = string
+    backup_intervals             = list(string)
+    storage_account_id           = string
+    storage_account_containers   = list(string)
+    operational_retention_period = string
   }))
 
   default = {}
@@ -79,6 +80,18 @@ variable "blob_storage_backups" {
   validation {
     condition     = var.use_extended_retention == true || alltrue([for k, v in var.blob_storage_backups : contains(local.valid_retention_periods, v.retention_period)])
     error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_exetended_retention to true."
+  }
+
+  validation {
+    condition = alltrue([
+      for v in var.blob_storage_backups :
+      can(regex("^P[0-9]+D$", v.operational_retention_period)) &&
+      (
+        tonumber(substr(v.operational_retention_period, 1, length(v.operational_retention_period) - 2)) >= 1 &&
+        tonumber(substr(v.operational_retention_period, 1, length(v.operational_retention_period) - 2)) <= 360
+      )
+    ])
+    error_message = "The 'operational_retention_period' must be in ISO 8601 duration format (e.g., 'P7D') and represent a duration between 1 and 360 days."
   }
 }
 

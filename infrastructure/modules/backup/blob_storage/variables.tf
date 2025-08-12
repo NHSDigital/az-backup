@@ -21,3 +21,8 @@ variable "storage_account_id" {
 variable "storage_account_containers" {
   type = list(string)
 }
+
+variable "operational_retention_period" {
+  type = string
+  default = "P7D"
+}
