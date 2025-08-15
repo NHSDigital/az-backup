@@ -62,6 +62,8 @@ func TestTerraformOutput(t *testing.T) {
 		terraformOptions := test_structure.LoadTerraformOptions(t, environment.TerraformFolder)
 
 		terraform.Destroy(t, terraformOptions)
+
+		DeleteResourceGroup(t, credential, environment.SubscriptionID, *externalResources.ResourceGroup.Name)
 	})
 
 	// Setup stage
