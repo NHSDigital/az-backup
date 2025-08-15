@@ -17,17 +17,25 @@ import (
 )
 
 type TestBlobStorageBackupExternalResources struct {
-	ResourceGroup              armresources.ResourceGroup
-	LogAnalyticsWorkspace      armoperationalinsights.Workspace
-	StorageAccountOne          armstorage.Account
-	StorageAccountOneContainer armstorage.BlobContainer
-	StorageAccountTwo          armstorage.Account
-	StorageAccountTwoContainer armstorage.BlobContainer
+	ResourceGroup               armresources.ResourceGroup
+	LogAnalyticsWorkspace       armoperationalinsights.Workspace
+	StorageAccountOne           armstorage.Account
+	StorageAccountOneContainerA armstorage.BlobContainer
+	StorageAccountOneContainerB armstorage.BlobContainer
+	StorageAccountTwo           armstorage.Account
+	StorageAccountTwoContainerA armstorage.BlobContainer
 }
 
 /*
- * Creates resources which are "external" to the az-backup module, and models
- * what would be backed up in a real scenario.
+ * Creates resources which are "external" to the az-backup module, and models what would be backed
+ * up in a real scenario.
+ *
+ * The setup is two storage accounts, one of them containing two blob containers. Backups scenarios will be
+ * created for:
+ * - Storage one - container A
+ * - Storage one - container B
+ * - Storage one - container A (duplicate of the first scenario, but with a different policy)
+ * - Storage two - container A
  */
 func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestBlobStorageBackupExternalResources {
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
@@ -38,19 +46,21 @@ func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *az
 
 	storageAccountOneName := fmt.Sprintf("sa%sexternal1", strings.ToLower(uniqueId))
 	storageAccountOne := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, resourceGroupLocation)
-	storageAccountOneContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, "test-container")
+	storageAccountOneContainerA := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, "test-container-a")
+	storageAccountOneContainerB := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountOneName, "test-container-b")
 
 	storageAccountTwoName := fmt.Sprintf("sa%sexternal2", strings.ToLower(uniqueId))
 	storageAccountTwo := CreateStorageAccount(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, resourceGroupLocation)
-	storageAccountTwoContainer := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, "test-container")
+	storageAccountTwoContainerA := CreateStorageAccountContainer(t, credential, subscriptionID, externalResourceGroupName, storageAccountTwoName, "test-container-a")
 
 	externalResources := &TestBlobStorageBackupExternalResources{
-		ResourceGroup:              resourceGroup,
-		LogAnalyticsWorkspace:      logAnalyticsWorkspace,
-		StorageAccountOne:          storageAccountOne,
-		StorageAccountOneContainer: storageAccountOneContainer,
-		StorageAccountTwo:          storageAccountTwo,
-		StorageAccountTwoContainer: storageAccountTwoContainer,
+		ResourceGroup:               resourceGroup,
+		LogAnalyticsWorkspace:       logAnalyticsWorkspace,
+		StorageAccountOne:           storageAccountOne,
+		StorageAccountOneContainerA: storageAccountOneContainerA,
+		StorageAccountOneContainerB: storageAccountOneContainerB,
+		StorageAccountTwo:           storageAccountTwo,
+		StorageAccountTwoContainerA: storageAccountTwoContainerA,
 	}
 
 	return externalResources
@@ -80,14 +90,21 @@ func TestBlobStorageBackup(t *testing.T) {
 			"retention_period":           "P1D",
 			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P1D"},
 			"storage_account_id":         *externalResources.StorageAccountOne.ID,
-			"storage_account_containers": []string{*externalResources.StorageAccountOneContainer.Name},
+			"storage_account_containers": []string{*externalResources.StorageAccountOneContainerA.Name},
 		},
 		"backup2": {
+			"backup_name":                "blob1",
+			"retention_period":           "P1D",
+			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P1D"},
+			"storage_account_id":         *externalResources.StorageAccountOne.ID,
+			"storage_account_containers": []string{*externalResources.StorageAccountOneContainerB.Name},
+		},
+		"backup3": {
 			"backup_name":                "blob2",
 			"retention_period":           "P7D",
 			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P2D"},
 			"storage_account_id":         *externalResources.StorageAccountTwo.ID,
-			"storage_account_containers": []string{*externalResources.StorageAccountTwoContainer.Name},
+			"storage_account_containers": []string{*externalResources.StorageAccountTwoContainerA.Name},
 		},
 	}
 
@@ -172,6 +189,8 @@ func TestBlobStorageBackup(t *testing.T) {
 			assert.NotNil(t, backupInstance, "Expected to find a backup policy called %s", backupInstanceName)
 			assert.Equal(t, storageAccountId, *backupInstance.Properties.DataSourceInfo.ResourceID, "Expected the backup instance source resource ID to be %s", storageAccountId)
 			assert.Equal(t, *backupPolicy.ID, *backupInstance.Properties.PolicyInfo.PolicyID, "Expected the backup instance policy ID to be %s", backupPolicy.ID)
+
+			// TODO: Validate storage containers here
 
 			// Validate role assignment
 			backupContributorRoleDefinition := GetRoleDefinition(t, credential, "Storage Account Backup Contributor")
