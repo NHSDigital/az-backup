@@ -16,7 +16,8 @@ module "blob_storage_backup" {
   backup_intervals           = each.value.backup_intervals
   storage_account_id         = each.value.storage_account_id
   storage_account_containers = each.value.storage_account_containers
-  # Only create role assignment for the first backup for each storage account
+
+  # Only create a role assignment for the first backup for each storage account
   create_role_assignment = contains(
     [for sa_id, backups in local.blob_storage_backups_by_account : backups[0]],
     each.key

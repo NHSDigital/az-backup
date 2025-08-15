@@ -32,10 +32,10 @@ type TestBlobStorageBackupExternalResources struct {
  *
  * The setup is two storage accounts, one of them containing two blob containers. Backups scenarios will be
  * created for:
- * - Storage one - container A
- * - Storage one - container B
- * - Storage one - container A (duplicate of the first scenario, but with a different policy)
- * - Storage two - container A
+ * - Backup 1: Storage account one / container A
+ * - Backup 2: Storage account one / container B
+ * - Backup 3: Storage account one / container A (duplicate of the first scenario, but with a different policy)
+ * - Backup 4: Storage account two / container A
  */
 func setupExternalResourcesForBlobStorageBackupTest(t *testing.T, credential *azidentity.ClientSecretCredential, subscriptionID string, resourceGroupName string, resourceGroupLocation string, uniqueId string) *TestBlobStorageBackupExternalResources {
 	externalResourceGroupName := fmt.Sprintf("%s-external", resourceGroupName)
