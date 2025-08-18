@@ -93,14 +93,14 @@ func TestBlobStorageBackup(t *testing.T) {
 			"storage_account_containers": []string{*externalResources.StorageAccountOneContainerA.Name},
 		},
 		"backup2": {
-			"backup_name":                "blob1",
+			"backup_name":                "blob2",
 			"retention_period":           "P1D",
 			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P1D"},
 			"storage_account_id":         *externalResources.StorageAccountOne.ID,
 			"storage_account_containers": []string{*externalResources.StorageAccountOneContainerB.Name},
 		},
 		"backup3": {
-			"backup_name":                "blob2",
+			"backup_name":                "blob3",
 			"retention_period":           "P7D",
 			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P2D"},
 			"storage_account_id":         *externalResources.StorageAccountTwo.ID,
