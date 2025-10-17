@@ -42,7 +42,7 @@ resource "azurerm_monitor_diagnostic_setting" "backup_vault" {
   dynamic "metric" {
     for_each = toset(local.backup_vault_diagnostics_metric_categories)
     content {
-      category = enabled_metric.key
+      category = metric.key
     }
   }
 }
