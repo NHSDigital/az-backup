@@ -31,3 +31,13 @@ variable "backup_instance_name_override" {
   type    = string
   default = null
 }
+
+variable "time_zone" {
+  type    = string
+  default = "UTC"
+}
+
+variable "enable_daily_retention_rule" {
+  type    = bool
+  default = false
+}

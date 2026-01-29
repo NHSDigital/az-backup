@@ -64,6 +64,8 @@ variable "blob_storage_backups" {
     storage_account_containers    = list(string)
     backup_policy_name_override   = optional(string)
     backup_instance_name_override = optional(string)
+    time_zone                     = optional(string)
+    enable_daily_retention_rule   = optional(bool)
   }))
 
   default = {}

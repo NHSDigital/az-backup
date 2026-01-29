@@ -9,6 +9,8 @@ module "blob_storage_backup" {
   storage_account_containers    = each.value.storage_account_containers
   backup_policy_name_override   = try(each.value.backup_policy_name_override, null)
   backup_instance_name_override = try(each.value.backup_instance_name_override, null)
+  time_zone                     = try(each.value.time_zone, "UTC") # <<< NEW
+  enable_daily_retention_rule   = try(each.value.enable_daily_retention_rule, false)
 
 }
 
