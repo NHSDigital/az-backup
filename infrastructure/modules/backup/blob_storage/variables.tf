@@ -21,3 +21,13 @@ variable "storage_account_id" {
 variable "storage_account_containers" {
   type = list(string)
 }
+
+variable "backup_policy_name_override" {
+  type    = string
+  default = null
+}
+
+variable "backup_instance_name_override" {
+  type    = string
+  default = null
+}

@@ -57,11 +57,13 @@ variable "use_extended_retention" {
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
-    backup_name                = string
-    retention_period           = string
-    backup_intervals           = list(string)
-    storage_account_id         = string
-    storage_account_containers = list(string)
+    backup_name                   = string
+    retention_period              = string
+    backup_intervals              = list(string)
+    storage_account_id            = string
+    storage_account_containers    = list(string)
+    backup_policy_name_override   = optional(string)
+    backup_instance_name_override = optional(string)
   }))
 
   default = {}
@@ -129,4 +131,9 @@ variable "postgresql_flexible_server_backups" {
     condition     = var.use_extended_retention ? true : alltrue([for k, v in var.postgresql_flexible_server_backups : contains(local.valid_retention_periods, v.retention_period)])
     error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_extended_retention to true."
   }
+}
+
+variable "backup_vault_soft_delete" {
+  type    = string
+  default = "Off"
 }

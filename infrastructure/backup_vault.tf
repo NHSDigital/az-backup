@@ -4,7 +4,7 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
   location            = local.resource_group.location
   datastore_type      = "VaultStore"
   redundancy          = var.backup_vault_redundancy
-  soft_delete         = "Off"
+  soft_delete         = var.backup_vault_soft_delete
   immutability        = var.backup_vault_immutability
   tags                = var.tags
   identity {
