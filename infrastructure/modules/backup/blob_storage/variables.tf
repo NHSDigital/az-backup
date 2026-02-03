@@ -21,3 +21,8 @@ variable "storage_account_id" {
 variable "storage_account_containers" {
   type = list(string)
 }
+
+variable "backup_instance_naming_template" {
+  type    = string
+  default = "{resource_abbreviation}-blob-{backup_name}"
+}

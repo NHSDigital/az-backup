@@ -57,11 +57,12 @@ variable "use_extended_retention" {
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
-    backup_name                = string
-    retention_period           = string
-    backup_intervals           = list(string)
-    storage_account_id         = string
-    storage_account_containers = list(string)
+    backup_name                   = string
+    retention_period              = string
+    backup_intervals              = list(string)
+    storage_account_id            = string
+    storage_account_containers    = list(string)
+    backup_instance_name_template = string
   }))
 
   default = {}

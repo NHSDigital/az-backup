@@ -23,18 +23,20 @@ run "create_blob_storage_backup" {
     tags                       = run.setup_tests.tags
     blob_storage_backups = {
       backup1 = {
-        backup_name                = "storage1"
-        retention_period           = "P1D"
-        backup_intervals           = ["R/2024-01-01T00:00:00+00:00/P1D"]
-        storage_account_id         = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
-        storage_account_containers = ["container1"]
+        backup_name                   = "dvbvp"
+        retention_period              = "P1D"
+        backup_intervals              = ["R/2024-01-01T00:00:00+00:00/P1D"]
+        storage_account_id            = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
+        storage_account_containers    = ["container1"]
+        backup_instance_name_template = "nhsuk-findasrv-{backup_name}-prod-uks"
       }
       backup2 = {
-        backup_name                = "storage2"
-        retention_period           = "P7D"
-        backup_intervals           = ["R/2024-01-01T00:00:00+00:00/P2D"]
-        storage_account_id         = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage2"
-        storage_account_containers = ["container2"]
+        backup_name                   = "fvbvp"
+        retention_period              = "P7D"
+        backup_intervals              = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        storage_account_id            = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage2"
+        storage_account_containers    = ["container2"]
+        backup_instance_name_template = "nhsuk-findasrv-{backup_name}-prod-uks"
       }
     }
   }
@@ -75,7 +77,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup["backup1"].backup_instance.name == "bkinst-blob-storage1"
+    condition     = module.blob_storage_backup["backup1"].backup_instance.name == "nhsuk-findasrv-dvbvp-prod-uks"
     error_message = "Blob storage backup instance name not as expected."
   }
 
@@ -135,7 +137,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup["backup2"].backup_instance.name == "bkinst-blob-storage2"
+    condition     = module.blob_storage_backup["backup2"].backup_instance.name == "nhsuk-findasrv-fvbvp-prod-uks"
     error_message = "Blob storage backup instance name not as expected."
   }
 
