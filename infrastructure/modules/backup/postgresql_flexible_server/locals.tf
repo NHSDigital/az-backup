@@ -1,7 +1,7 @@
 locals {
 
   resource_abbreviation = "bkpol"
-  resource_type         = "blob"
+  resource_type         = "pgflex"
 
 
   # Render names using templates

@@ -14,7 +14,7 @@ resource "azurerm_role_assignment" "role_assignment_long_term_retention_backup_r
 }
 
 resource "azurerm_data_protection_backup_instance_postgresql_flexible_server" "backup_instance" {
-  name             = "bkinst-pgflex-${var.backup_name}"
+  name             = local.backup_instance_name
   vault_id         = var.vault.id
   location         = var.vault.location
   server_id        = var.server_id

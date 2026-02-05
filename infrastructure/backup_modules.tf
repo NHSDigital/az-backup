@@ -24,6 +24,8 @@ module "managed_disk_backup" {
   managed_disk_id                   = each.value.managed_disk_id
   managed_disk_resource_group       = each.value.managed_disk_resource_group
   assign_resource_group_level_roles = each.key == keys(var.managed_disk_backups)[0] ? true : false
+  backup_policy_naming_template     = each.value.backup_policy_naming_template
+  backup_instance_naming_template   = each.value.backup_instance_naming_template
 
 }
 
@@ -37,5 +39,7 @@ module "postgresql_flexible_server_backup" {
   server_id                         = each.value.server_id
   server_resource_group_id          = each.value.server_resource_group_id
   assign_resource_group_level_roles = each.key == keys(var.postgresql_flexible_server_backups)[0] ? true : false
+  backup_policy_naming_template     = each.value.backup_policy_naming_template
+  backup_instance_naming_template   = each.value.backup_instance_naming_template
 
 }

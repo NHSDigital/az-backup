@@ -62,8 +62,8 @@ variable "blob_storage_backups" {
     backup_intervals                = list(string)
     storage_account_id              = string
     storage_account_containers      = list(string)
-    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-blob-{backup_name}")
-    backup_instance_naming_template = optional(string, "{resource_abbreviation}-blob-{backup_name}")
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
     time_zone                       = optional(string)
     enable_daily_retention_rule     = optional(bool)
   }))
@@ -97,6 +97,8 @@ variable "managed_disk_backups" {
       id   = string
       name = string
     })
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
   }))
 
   default = {}
@@ -115,11 +117,13 @@ variable "managed_disk_backups" {
 variable "postgresql_flexible_server_backups" {
   description = "A map of postgresql flexible server backups to create"
   type = map(object({
-    backup_name              = string
-    retention_period         = string
-    backup_intervals         = list(string)
-    server_id                = string
-    server_resource_group_id = string
+    backup_name                     = string
+    retention_period                = string
+    backup_intervals                = list(string)
+    server_id                       = string
+    server_resource_group_id        = string
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
   }))
 
   default = {}

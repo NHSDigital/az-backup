@@ -24,12 +24,12 @@ variable "storage_account_containers" {
 
 variable "backup_policy_naming_template" {
   type    = string
-  default = "{resource_abbreviation}-blob-{backup_name}"
+  default = "{resource_abbreviation}-{resource_type}-{backup_name}"
 }
 
 variable "backup_instance_naming_template" {
   type    = string
-  default = "{resource_abbreviation}-blob-{backup_name}"
+  default = "{resource_abbreviation}-{resource_type}-{backup_name}"
 }
 
 variable "time_zone" {
