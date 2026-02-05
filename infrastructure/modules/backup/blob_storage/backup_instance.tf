@@ -6,7 +6,7 @@ resource "azurerm_role_assignment" "role_assignment" {
 }
 
 resource "azurerm_data_protection_backup_instance_blob_storage" "backup_instance" {
-  name                            = coalesce(length(trimspace(var.backup_instance_name_override)) > 0 ? var.backup_instance_name_override : null, "bkinst-blob-${var.backup_name}")
+  name                            = local.backup_instance_name
   vault_id                        = var.vault.id
   location                        = var.vault.location
   storage_account_id              = var.storage_account_id

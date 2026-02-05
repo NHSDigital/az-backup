@@ -1,16 +1,16 @@
 module "blob_storage_backup" {
-  for_each                      = var.blob_storage_backups
-  source                        = "./modules/backup/blob_storage"
-  vault                         = azurerm_data_protection_backup_vault.backup_vault
-  backup_name                   = each.value.backup_name
-  retention_period              = each.value.retention_period
-  backup_intervals              = each.value.backup_intervals
-  storage_account_id            = each.value.storage_account_id
-  storage_account_containers    = each.value.storage_account_containers
-  backup_policy_name_override   = try(each.value.backup_policy_name_override, null)
-  backup_instance_name_override = try(each.value.backup_instance_name_override, null)
-  time_zone                     = try(each.value.time_zone, "UTC")
-  enable_daily_retention_rule   = try(each.value.enable_daily_retention_rule, false)
+  for_each                        = var.blob_storage_backups
+  source                          = "./modules/backup/blob_storage"
+  vault                           = azurerm_data_protection_backup_vault.backup_vault
+  backup_name                     = each.value.backup_name
+  retention_period                = each.value.retention_period
+  backup_intervals                = each.value.backup_intervals
+  storage_account_id              = each.value.storage_account_id
+  storage_account_containers      = each.value.storage_account_containers
+  backup_policy_naming_template   = each.value.backup_policy_naming_template
+  backup_instance_naming_template = each.value.backup_instance_naming_template
+  time_zone                       = try(each.value.time_zone, null)
+  enable_daily_retention_rule     = try(each.value.enable_daily_retention_rule, null)
 
 }
 

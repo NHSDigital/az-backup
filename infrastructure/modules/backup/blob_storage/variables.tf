@@ -22,19 +22,19 @@ variable "storage_account_containers" {
   type = list(string)
 }
 
-variable "backup_policy_name_override" {
+variable "backup_policy_naming_template" {
   type    = string
-  default = null
+  default = "{resource_abbreviation}-blob-{backup_name}"
 }
 
-variable "backup_instance_name_override" {
+variable "backup_instance_naming_template" {
   type    = string
-  default = null
+  default = "{resource_abbreviation}-blob-{backup_name}"
 }
 
 variable "time_zone" {
   type    = string
-  default = "UTC"
+  default = null
 }
 
 variable "enable_daily_retention_rule" {

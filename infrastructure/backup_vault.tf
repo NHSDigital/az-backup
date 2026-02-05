@@ -10,12 +10,6 @@ resource "azurerm_data_protection_backup_vault" "backup_vault" {
   identity {
     type = "SystemAssigned"
   }
-  lifecycle {
-    ignore_changes = [
-      tags["created_date"],
-      tags["created_by"]
-    ]
-  }
 }
 
 
