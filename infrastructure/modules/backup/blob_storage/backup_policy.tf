@@ -6,7 +6,7 @@ resource "azurerm_data_protection_backup_policy_blob_storage" "backup_policy" {
   time_zone                        = var.time_zone
 
   dynamic "retention_rule" {
-    for_each = var.enable_daily_retention_rule ? [1] : []
+    for_each = coalesce(var.enable_daily_retention_rule, false) ? [1] : []
     content {
       name     = "daily-retention"
       priority = 9

@@ -10,7 +10,7 @@ module "blob_storage_backup" {
   backup_policy_naming_template   = each.value.backup_policy_naming_template
   backup_instance_naming_template = each.value.backup_instance_naming_template
   time_zone                       = try(each.value.time_zone, null)
-  enable_daily_retention_rule     = try(each.value.enable_daily_retention_rule, null)
+  enable_daily_retention_rule     = try(each.value.enable_daily_retention_rule, false)
 
 }
 
