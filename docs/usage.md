@@ -82,23 +82,44 @@ module "my_backup" {
       storage_account_id         = azurerm_storage_account.my_storage_account_2.id
       storage_account_containers = ["container1", "container2"]
     }
+    backup3 = {
+      backup_name                     = "storage3"
+      retention_period                = "P30D"
+      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      storage_account_id              = azurerm_storage_account.my_storage_account_2.id
+      storage_account_containers      = ["container1", "container2"]
+      backup_policy_naming_template   = nhsuk-bkpol-blob3-uks
+      backup_instance_naming_template = nhsuk-bkinst-blob3-uks
+    }
   }
   managed_disk_backups = {
     backup1 = {
-      backup_name      = "disk1"
-      retention_period = "P7D"
-      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P1D"]
-      managed_disk_id  = azurerm_managed_disk.my_managed_disk_1.id
+      backup_name                 = "disk1"
+      retention_period            = "P7D"
+      backup_intervals            = ["R/2024-01-01T00:00:00+00:00/P1D"]
+      managed_disk_id             = azurerm_managed_disk.my_managed_disk_1.id
       managed_disk_resource_group = {
         id   = azurerm_resource_group.my_resource_group.id
         name = azurerm_resource_group.my_resource_group.name
       }
     }
     backup2 = {
-      backup_name      = "disk2"
-      retention_period = "P30D"
-      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
-      managed_disk_id  = azurerm_managed_disk.my_managed_disk_2.id
+      backup_name                 = "disk2"
+      retention_period            = "P30D"
+      backup_intervals            = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      managed_disk_id             = azurerm_managed_disk.my_managed_disk_2.id
+      managed_disk_resource_group = {
+        id   = azurerm_resource_group.my_resource_group.id
+        name = azurerm_resource_group.my_resource_group.name
+      }
+    }
+    backup3 = {
+      backup_name                     = "disk3"
+      retention_period                = "P30D"
+      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      managed_disk_id                 = azurerm_managed_disk.my_managed_disk_2.id
+      backup_policy_naming_template   = nhsuk-bkpol-disk3-uks
+      backup_instance_naming_template = nhsuk-bkinst-disk3-uks
       managed_disk_resource_group = {
         id   = azurerm_resource_group.my_resource_group.id
         name = azurerm_resource_group.my_resource_group.name
@@ -107,18 +128,27 @@ module "my_backup" {
   }
   postgresql_flexible_server_backups = {
     backup1 = {
-      backup_name      = "server1"
-      retention_period = "P7D"
-      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P1D"]
-      server_id  = azurerm_postgresql_flexible_server.my_server_1.id
+      backup_name              = "server1"
+      retention_period         = "P7D"
+      backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
+      server_id                = azurerm_postgresql_flexible_server.my_server_1.id
       server_resource_group_id = azurerm_resource_group.my_resource_group.id
     }
     backup2 = {
-      backup_name      = "server2"
-      retention_period = "P30D"
-      backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
-      server_id  = azurerm_postgresql_flexible_server.my_server_2.id
+      backup_name              = "server2"
+      retention_period         = "P30D"
+      backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      server_id                = azurerm_postgresql_flexible_server.my_server_2.id
       server_resource_group_id = azurerm_resource_group.my_resource_group.id
+    }
+    backup3 = {
+      backup_name                     = "server3"
+      retention_period                = "P30D"
+      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      server_id                       = azurerm_postgresql_flexible_server.my_server_2.id
+      server_resource_group_id        = azurerm_resource_group.my_resource_group.id
+      backup_policy_naming_template   = nhsuk-bkpol-pgflex3-uks
+      backup_instance_naming_template = nhsuk-bkinst-pgflex3-uks
     }
   }
 }
@@ -133,6 +163,7 @@ module "my_backup" {
 | `create_resource_group` | States whether a resource group should be created. Setting this to `false` means the vault will be deployed into an externally managed resource group, the name of which is defined in `resource_group_name`. | No | `true` |
 | `backup_vault_name` | The name of the backup vault. The value supplied will be automatically prefixed with `rg-nhsbackup-`. If more than one az-backup module is created, this value must be unique across them. | Yes | n/a |
 | `backup_vault_redundancy` | The redundancy of the vault, e.g. `GeoRedundant`. [See the following link for the possible values.](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#redundancy) | No | `LocallyRedundant` |
+| `soft_delete` | The state of soft delete for this Backup Vault, e.g. `On`. [See the following link for the possible values.](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/data_protection_backup_vault#soft_delete) | No | `Off` |
 | `backup_vault_immutability` | The immutability of the vault, e.g. `Locked`. [See the following link for the possible values.](https://learn.microsoft.com/en-us/azure/templates/microsoft.dataprotection/backupvaults?pivots=deployment-language-terraform#immutabilitysettings-2) | No | `Disabled` |
 | `log_analytics_workspace_id` | The id of the log analytics workspace that backup telemetry and diagnostics should be sent to. **NOTE** this variable was made mandatory in v2 of the module. | Yes | n/a |
 | `tags` | A map of tags which will be applied to the resource group and backup vault. When no tags are specified then no tags are added. NOTE when using an externally managed resource group the tags will not be applied to it (they will still be applied to the backup vault). | No | n/a |
@@ -143,14 +174,22 @@ module "my_backup" {
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |
 | `blob_storage_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
 | `blob_storage_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `blob_storage_backups.backup_policy_naming_template` | Naming template allows existing teams to preserve pre-existing blob policy names while enabling consistent naming. | No | {resource_abbreviation}-blob-{backup_name} |
+| `blob_storage_backups.backup_instance_naming_template` | Naming template allows existing teams to preserve pre-existing blob instance names while enabling consistent naming. | No | {resource_abbreviation}-blob-{backup_name} |
+| `blob_storage_backups.time_zone` | The time zone to apply to the backup policy schedule (eg. Europe/London). If not specified, Azure’s default time zone behaviour is used. | No | n/a |
+| `blob_storage_backups.backuenable_daily_retention_rulep_name` | Enables an additional daily retention rule on the backup policy. This is optional and intended for scenarios that require explicit daily retention behaviour beyond the default policy configuration. | No | false |
 | `managed_disk_backups` | A map of managed disk backups that should be created. For each backup the following values should be provided: `managed_disk_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `managed_disk_backups.managed_disk_id` | The id of the managed disk that should be backed up. | Yes | n/a |
 | `managed_disk_backups.backup_name` | The name of the backup, which must be unique across managed disk backups. | Yes | n/a |
 | `managed_disk_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
 | `managed_disk_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `managed_disk_backup.backup_policy_naming_template` | Naming template allows existing teams to preserve pre-existing disk policy names while enabling consistent naming. | No | {resource_abbreviation}-disk-{backup_name} |
+| `managed_disk_backup.backup_instance_naming_template` | Naming template allows existing teams to preserve pre-existing disk instance names while enabling consistent naming. | No | {resource_abbreviation}-disk-{backup_name} |
 | `postgresql_flexible_server_backups` | A map of postgresql flexible server backups that should be created. For each backup the following values should be provided: `backup_name`, `server_id`, `server_resource_group_id`, `retention_period` and `backup_intervals`. When no value is provided then no backups are created. | No | n/a |
 | `postgresql_flexible_server_backups.backup_name` | The name of the backup, which must be unique across postgresql flexible server backups. | Yes | n/a |
 | `postgresql_flexible_server_backups.server_id` | The id of the postgresql flexible server that should be backed up. | Yes | n/a |
 | `postgresql_flexible_server_backups.server_resource_group_id` | The id of the resource group which the postgresql flexible server resides in. | Yes | n/a |
 | `postgresql_flexible_server_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
 | `postgresql_flexible_server_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `postgresql_flexible_server_backup.backup_policy_naming_template` | Naming template allows existing teams to preserve pre-existing pgflex policy names while enabling consistent naming. | No | {resource_abbreviation}-pgflex-{backup_name} |
+| `postgresql_flexible_server_backup.backup_instance_naming_template` | Naming template allows existing teams to preserve pre-existing pgflex instance names while enabling consistent naming. | No | {resource_abbreviation}-pgflex-{backup_name} |
