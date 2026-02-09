@@ -177,7 +177,7 @@ module "my_backup" {
 | `blob_storage_backups.backup_policy_naming_template` | Naming template allows existing teams to preserve pre-existing blob policy names while enabling consistent naming. | No | {resource_abbreviation}-blob-{backup_name} |
 | `blob_storage_backups.backup_instance_naming_template` | Naming template allows existing teams to preserve pre-existing blob instance names while enabling consistent naming. | No | {resource_abbreviation}-blob-{backup_name} |
 | `blob_storage_backups.time_zone` | The time zone to apply to the backup policy schedule (eg. Europe/London). If not specified, Azure’s default time zone behaviour is used. | No | n/a |
-| `blob_storage_backups.backuenable_daily_retention_rulep_name` | Enables an additional daily retention rule on the backup policy. This is optional and intended for scenarios that require explicit daily retention behaviour beyond the default policy configuration. | No | false |
+| `blob_storage_backups.backuenable_daily_retention_rule_name` | Enables an additional daily retention rule on the backup policy. This is optional and intended for scenarios that require explicit daily retention behaviour beyond the default policy configuration. | No | false |
 | `managed_disk_backups` | A map of managed disk backups that should be created. For each backup the following values should be provided: `managed_disk_id`, `backup_name` and `retention_period`. When no value is provided then no backups are created. | No | n/a |
 | `managed_disk_backups.managed_disk_id` | The id of the managed disk that should be backed up. | Yes | n/a |
 | `managed_disk_backups.backup_name` | The name of the backup, which must be unique across managed disk backups. | Yes | n/a |
