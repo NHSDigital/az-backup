@@ -57,11 +57,15 @@ variable "use_extended_retention" {
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
-    backup_name                = string
-    retention_period           = string
-    backup_intervals           = list(string)
-    storage_account_id         = string
-    storage_account_containers = list(string)
+    backup_name                     = string
+    retention_period                = string
+    backup_intervals                = list(string)
+    storage_account_id              = string
+    storage_account_containers      = list(string)
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    time_zone                       = optional(string)
+    enable_daily_retention_rule     = optional(bool)
   }))
 
   default = {}
@@ -93,6 +97,8 @@ variable "managed_disk_backups" {
       id   = string
       name = string
     })
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
   }))
 
   default = {}
@@ -111,11 +117,13 @@ variable "managed_disk_backups" {
 variable "postgresql_flexible_server_backups" {
   description = "A map of postgresql flexible server backups to create"
   type = map(object({
-    backup_name              = string
-    retention_period         = string
-    backup_intervals         = list(string)
-    server_id                = string
-    server_resource_group_id = string
+    backup_name                     = string
+    retention_period                = string
+    backup_intervals                = list(string)
+    server_id                       = string
+    server_resource_group_id        = string
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
   }))
 
   default = {}
@@ -129,4 +137,9 @@ variable "postgresql_flexible_server_backups" {
     condition     = var.use_extended_retention ? true : alltrue([for k, v in var.postgresql_flexible_server_backups : contains(local.valid_retention_periods, v.retention_period)])
     error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_extended_retention to true."
   }
+}
+
+variable "backup_vault_soft_delete" {
+  type    = string
+  default = "Off"
 }

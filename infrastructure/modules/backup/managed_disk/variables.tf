@@ -28,3 +28,13 @@ variable "managed_disk_resource_group" {
 variable "assign_resource_group_level_roles" {
   type = bool
 }
+
+variable "backup_policy_naming_template" {
+  type    = string
+  default = "{resource_abbreviation}-{resource_type}-{backup_name}"
+}
+
+variable "backup_instance_naming_template" {
+  type    = string
+  default = "{resource_abbreviation}-{resource_type}-{backup_name}"
+}
