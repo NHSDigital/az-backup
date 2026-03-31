@@ -25,14 +25,14 @@ run "create_postgresql_flexible_server_backup" {
       backup1 = {
         backup_name              = "server1"
         retention_period         = "P1D"
-        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1W"]
         server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
       }
       backup2 = {
         backup_name              = "server2"
         retention_period         = "P7D"
-        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1W"]
         server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-2"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group2"
       }
@@ -65,7 +65,7 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   assert {
-    condition     = module.postgresql_flexible_server_backup["backup1"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P1D"
+    condition     = module.postgresql_flexible_server_backup["backup1"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P1W"
     error_message = "Postgresql flexible server backup policy backup intervals not as expected."
   }
 
@@ -120,7 +120,7 @@ run "create_postgresql_flexible_server_backup" {
   }
 
   assert {
-    condition     = module.postgresql_flexible_server_backup["backup2"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P2D"
+    condition     = module.postgresql_flexible_server_backup["backup2"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P1W"
     error_message = "Postgresql flexible server backup policy backup intervals not as expected."
   }
 
@@ -172,7 +172,7 @@ run "validate_retention_period" {
       backup1 = {
         backup_name              = "server1"
         retention_period         = "P30D"
-        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1W"]
         server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
       }
@@ -202,7 +202,7 @@ run "validate_retention_period_with_extended_retention" {
       backup1 = {
         backup_name              = "server1"
         retention_period         = "P30D"
-        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1W"]
         server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
       }
@@ -233,6 +233,35 @@ run "validate_backup_intervals" {
         backup_name              = "server1"
         retention_period         = "P7D"
         backup_intervals         = []
+        server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
+        server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.postgresql_flexible_server_backups,
+  ]
+}
+
+run "validate_backup_intervals_invalid_frequency" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
+    postgresql_flexible_server_backups = {
+      backup1 = {
+        backup_name              = "server1"
+        retention_period         = "P7D"
+        backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
         server_id                = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.DBforPostgreSQL/flexibleServers/server-1"
         server_resource_group_id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
       }
