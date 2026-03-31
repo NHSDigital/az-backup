@@ -72,14 +72,14 @@ func TestPostgresqlFlexibleServerBackup(t *testing.T) {
 		"backup1": {
 			"backup_name":              "server1",
 			"retention_period":         "P6D",
-			"backup_intervals":         []string{"R/2024-01-01T00:00:00+00:00/P6D"},
+			"backup_intervals":         []string{"R/2024-01-01T00:00:00+00:00/P1W"},
 			"server_id":                *externalResources.PostgresqlFlexibleServerOne.ID,
 			"server_resource_group_id": *externalResources.ResourceGroup.ID,
 		},
 		"backup2": {
 			"backup_name":              "server2",
 			"retention_period":         "P7D",
-			"backup_intervals":         []string{"R/2024-01-01T00:00:00+00:00/P7D"},
+			"backup_intervals":         []string{"R/2024-01-01T00:00:00+00:00/P1W"},
 			"server_id":                *externalResources.PostgresqlFlexibleServerTwo.ID,
 			"server_resource_group_id": *externalResources.ResourceGroup.ID,
 		},
