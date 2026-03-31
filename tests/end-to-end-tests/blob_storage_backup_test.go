@@ -77,15 +77,15 @@ func TestBlobStorageBackup(t *testing.T) {
 	blobStorageBackups := map[string]map[string]interface{}{
 		"backup1": {
 			"backup_name":                "blob1",
-			"retention_period":           "P1D",
-			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P1D"},
+			"retention_period":           "P6D",
+			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P6D"},
 			"storage_account_id":         *externalResources.StorageAccountOne.ID,
 			"storage_account_containers": []string{*externalResources.StorageAccountOneContainer.Name},
 		},
 		"backup2": {
 			"backup_name":                "blob2",
 			"retention_period":           "P7D",
-			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P2D"},
+			"backup_intervals":           []string{"R/2024-01-01T00:00:00+00:00/P7D"},
 			"storage_account_id":         *externalResources.StorageAccountTwo.ID,
 			"storage_account_containers": []string{*externalResources.StorageAccountTwoContainer.Name},
 		},
