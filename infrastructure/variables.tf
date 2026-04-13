@@ -2,10 +2,16 @@ locals {
   # The valid backup retention period - up to 7 days, which can be bypassed when use_extended_retention is set to true
   valid_retention_periods = [for days in range(1, 8) : "P${days}D"]
 
-  # Valid backup interval suffixes per resource type (the duration part after the last '/' in the repeating interval)
+  # Valid backup interval frequencies per resource type
   valid_blob_storage_intervals               = ["P1D", "P1W"]
   valid_managed_disk_intervals               = ["PT1H", "PT2H", "PT4H", "PT6H", "PT8H", "PT12H", "P1D"]
   valid_postgresql_flexible_server_intervals = ["P1W"]
+
+  # Repeating interval format: R/<RFC3339 timestamp>/<duration>
+  backup_interval_timestamp_pattern = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})"
+  blob_storage_interval_pattern     = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_blob_storage_intervals)})$"
+  managed_disk_interval_pattern     = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_managed_disk_intervals)})$"
+  postgresql_interval_pattern       = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_postgresql_flexible_server_intervals)})$"
 }
 
 variable "resource_group_name" {
@@ -83,7 +89,7 @@ variable "blob_storage_backups" {
   validation {
     condition = alltrue([
       for k, v in var.blob_storage_backups : alltrue([
-        for interval in v.backup_intervals : contains(local.valid_blob_storage_intervals, element(split("/", interval), length(split("/", interval)) - 1))
+        for interval in v.backup_intervals : can(regex(local.blob_storage_interval_pattern, interval))
       ])
     ])
     error_message = "Invalid backup interval for blob storage: allowed frequencies are P1D (daily) or P1W (weekly). See https://learn.microsoft.com/en-us/azure/backup/blob-backup-configure-manage for details."
@@ -125,7 +131,7 @@ variable "managed_disk_backups" {
   validation {
     condition = alltrue([
       for k, v in var.managed_disk_backups : alltrue([
-        for interval in v.backup_intervals : contains(local.valid_managed_disk_intervals, element(split("/", interval), length(split("/", interval)) - 1))
+        for interval in v.backup_intervals : can(regex(local.managed_disk_interval_pattern, interval))
       ])
     ])
     error_message = "Invalid backup interval for managed disk: allowed frequencies are PT1H, PT2H, PT4H, PT6H, PT8H, PT12H (hourly) or P1D (daily). See https://learn.microsoft.com/en-us/azure/backup/disk-backup-support-matrix for details."
@@ -159,7 +165,7 @@ variable "postgresql_flexible_server_backups" {
   validation {
     condition = alltrue([
       for k, v in var.postgresql_flexible_server_backups : alltrue([
-        for interval in v.backup_intervals : contains(local.valid_postgresql_flexible_server_intervals, element(split("/", interval), length(split("/", interval)) - 1))
+        for interval in v.backup_intervals : can(regex(local.postgresql_interval_pattern, interval))
       ])
     ])
     error_message = "Invalid backup interval for PostgreSQL flexible server: only P1W (weekly) is allowed. See https://learn.microsoft.com/en-us/azure/backup/backup-azure-database-postgresql-flex-support-matrix for details."
