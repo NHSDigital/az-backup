@@ -8,7 +8,7 @@ locals {
   valid_postgresql_flexible_server_intervals = ["P1W"]
 
   # Repeating interval format: R/<RFC3339 timestamp>/<duration>
-  backup_interval_timestamp_pattern = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})"
+  backup_interval_timestamp_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})"
   blob_storage_interval_pattern     = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_blob_storage_intervals)})$"
   managed_disk_interval_pattern     = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_managed_disk_intervals)})$"
   postgresql_interval_pattern       = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_postgresql_flexible_server_intervals)})$"
