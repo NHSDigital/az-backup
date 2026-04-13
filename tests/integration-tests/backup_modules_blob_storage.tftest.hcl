@@ -32,7 +32,7 @@ run "create_blob_storage_backup" {
       backup2 = {
         backup_name                = "storage2"
         retention_period           = "P7D"
-        backup_intervals           = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        backup_intervals           = ["R/2024-01-01T00:00:00+00:00/P1W"]
         storage_account_id         = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage2"
         storage_account_containers = ["container2"]
       }
@@ -125,7 +125,7 @@ run "create_blob_storage_backup" {
   }
 
   assert {
-    condition     = module.blob_storage_backup["backup2"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P2D"
+    condition     = module.blob_storage_backup["backup2"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P1W"
     error_message = "Blob storage backup policy backup intervals not as expected."
   }
 
@@ -243,6 +243,64 @@ run "validate_backup_intervals" {
         backup_name                = "storage1"
         retention_period           = "P7D"
         backup_intervals           = []
+        storage_account_id         = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
+        storage_account_containers = ["container1"]
+      }
+    }
+  }
+
+  expect_failures = [
+    var.blob_storage_backups,
+  ]
+}
+
+run "validate_backup_intervals_invalid_frequency" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
+    blob_storage_backups = {
+      backup1 = {
+        backup_name                = "storage1"
+        retention_period           = "P7D"
+        backup_intervals           = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        storage_account_id         = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
+        storage_account_containers = ["container1"]
+      }
+    }
+  }
+
+  expect_failures = [
+    var.blob_storage_backups,
+  ]
+}
+
+run "validate_backup_intervals_invalid_structure" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
+    blob_storage_backups = {
+      backup1 = {
+        backup_name                = "storage1"
+        retention_period           = "P7D"
+        backup_intervals           = ["P1D", "R/bad-date/P1D", "R/2024-01-01T00:00:00+00:00/PT10H"]
         storage_account_id         = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Storage/storageAccounts/sastorage1"
         storage_account_containers = ["container1"]
       }
