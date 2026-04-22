@@ -1,6 +1,17 @@
 locals {
   # The valid backup retention period - up to 7 days, which can be bypassed when use_extended_retention is set to true
   valid_retention_periods = [for days in range(1, 8) : "P${days}D"]
+
+  # Valid backup interval frequencies per resource type
+  valid_blob_storage_intervals               = ["P1D", "P1W"]
+  valid_managed_disk_intervals               = ["PT1H", "PT2H", "PT4H", "PT6H", "PT8H", "PT12H", "P1D"]
+  valid_postgresql_flexible_server_intervals = ["P1W"]
+
+  # Repeating interval format: R/<RFC3339 timestamp>/<duration>
+  backup_interval_timestamp_pattern = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})"
+  blob_storage_interval_pattern     = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_blob_storage_intervals)})$"
+  managed_disk_interval_pattern     = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_managed_disk_intervals)})$"
+  postgresql_interval_pattern       = "^R/${local.backup_interval_timestamp_pattern}/(${join("|", local.valid_postgresql_flexible_server_intervals)})$"
 }
 
 variable "resource_group_name" {
@@ -57,11 +68,15 @@ variable "use_extended_retention" {
 variable "blob_storage_backups" {
   description = "A map of blob storage backups to create"
   type = map(object({
-    backup_name                = string
-    retention_period           = string
-    backup_intervals           = list(string)
-    storage_account_id         = string
-    storage_account_containers = list(string)
+    backup_name                     = string
+    retention_period                = string
+    backup_intervals                = list(string)
+    storage_account_id              = string
+    storage_account_containers      = list(string)
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    time_zone                       = optional(string)
+    enable_daily_retention_rule     = optional(bool)
   }))
 
   default = {}
@@ -69,6 +84,15 @@ variable "blob_storage_backups" {
   validation {
     condition     = alltrue([for k, v in var.blob_storage_backups : length(v.backup_intervals) > 0])
     error_message = "At least one backup interval must be provided."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.blob_storage_backups : alltrue([
+        for interval in v.backup_intervals : can(regex(local.blob_storage_interval_pattern, interval))
+      ])
+    ])
+    error_message = "Invalid backup interval for blob storage: allowed frequencies are P1D (daily) or P1W (weekly). See https://learn.microsoft.com/en-us/azure/backup/blob-backup-configure-manage for details."
   }
 
   validation {
@@ -93,6 +117,8 @@ variable "managed_disk_backups" {
       id   = string
       name = string
     })
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
   }))
 
   default = {}
@@ -100,6 +126,15 @@ variable "managed_disk_backups" {
   validation {
     condition     = alltrue([for k, v in var.managed_disk_backups : length(v.backup_intervals) > 0])
     error_message = "At least one backup interval must be provided."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.managed_disk_backups : alltrue([
+        for interval in v.backup_intervals : can(regex(local.managed_disk_interval_pattern, interval))
+      ])
+    ])
+    error_message = "Invalid backup interval for managed disk: allowed frequencies are PT1H, PT2H, PT4H, PT6H, PT8H, PT12H (hourly) or P1D (daily). See https://learn.microsoft.com/en-us/azure/backup/disk-backup-support-matrix for details."
   }
 
   validation {
@@ -111,11 +146,13 @@ variable "managed_disk_backups" {
 variable "postgresql_flexible_server_backups" {
   description = "A map of postgresql flexible server backups to create"
   type = map(object({
-    backup_name              = string
-    retention_period         = string
-    backup_intervals         = list(string)
-    server_id                = string
-    server_resource_group_id = string
+    backup_name                     = string
+    retention_period                = string
+    backup_intervals                = list(string)
+    server_id                       = string
+    server_resource_group_id        = string
+    backup_policy_naming_template   = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
+    backup_instance_naming_template = optional(string, "{resource_abbreviation}-{resource_type}-{backup_name}")
   }))
 
   default = {}
@@ -126,7 +163,21 @@ variable "postgresql_flexible_server_backups" {
   }
 
   validation {
+    condition = alltrue([
+      for k, v in var.postgresql_flexible_server_backups : alltrue([
+        for interval in v.backup_intervals : can(regex(local.postgresql_interval_pattern, interval))
+      ])
+    ])
+    error_message = "Invalid backup interval for PostgreSQL flexible server: only P1W (weekly) is allowed. See https://learn.microsoft.com/en-us/azure/backup/backup-azure-database-postgresql-flex-support-matrix for details."
+  }
+
+  validation {
     condition     = var.use_extended_retention ? true : alltrue([for k, v in var.postgresql_flexible_server_backups : contains(local.valid_retention_periods, v.retention_period)])
     error_message = "Invalid retention period: valid periods are up to 7 days. If you require a longer retention period then please set use_extended_retention to true."
   }
+}
+
+variable "backup_vault_soft_delete" {
+  type    = string
+  default = "Off"
 }

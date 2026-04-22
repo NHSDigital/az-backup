@@ -21,3 +21,23 @@ variable "storage_account_id" {
 variable "storage_account_containers" {
   type = list(string)
 }
+
+variable "backup_policy_naming_template" {
+  type    = string
+  default = "{resource_abbreviation}-{resource_type}-{backup_name}"
+}
+
+variable "backup_instance_naming_template" {
+  type    = string
+  default = "{resource_abbreviation}-{resource_type}-{backup_name}"
+}
+
+variable "time_zone" {
+  type    = string
+  default = null
+}
+
+variable "enable_daily_retention_rule" {
+  type    = bool
+  default = false
+}

@@ -12,6 +12,15 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+    inputs:
+      grype_version:
+        description: "Grype version to install"
+        default: "v0.110.0"
+        type: string
+      grype_commit_sha:
+        description: "Grype commit SHA for install script"
+        default: "dee8de483dfba5b4e0bc0aa8e4ab2ce52137e490"
+        type: string
 
 jobs:
   build-verification:
@@ -27,7 +36,7 @@ jobs:
         with:
           terraform_version: 1.9.3
           terraform_wrapper: false
-        
+
       - name: Install Go
         uses: actions/setup-go@v6
         with:
@@ -97,17 +106,12 @@ jobs:
       - name: Run GitLeaks Scan
         run: gitleaks detect --source . --config .gitleaks.toml
 
-      - name: Install Trivy
+      - name: Install Grype
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/${{ inputs.grype_commit_sha || 'dee8de483dfba5b4e0bc0aa8e4ab2ce52137e490' }}/install.sh | bash -s -- -b /usr/local/bin ${{ inputs.grype_version || 'v0.110.0' }}
 
-      - name: Run Trivy Scan
-        run: trivy filesystem --security-checks vuln,config --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed .
+      - name: Run Grype Filesystem Scan
+        run: grype "dir:./" --fail-on high
 
   publishing:
     name: Publish Release
@@ -118,7 +122,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # Disable default GITHUB_TOKEN persistence
+          persist-credentials: false # Disable default GITHUB_TOKEN persistence
 
       - name: Create Semantic Release
         uses: cycjimmy/semantic-release-action@v4.1.0

@@ -14,7 +14,7 @@ resource "azurerm_role_assignment" "role_assignment_backup_reader" {
 }
 
 resource "azurerm_data_protection_backup_instance_disk" "backup_instance" {
-  name                         = "bkinst-disk-${var.backup_name}"
+  name                         = local.backup_instance_name
   vault_id                     = var.vault.id
   location                     = var.vault.location
   disk_id                      = var.managed_disk_id
