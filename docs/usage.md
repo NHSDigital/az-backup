@@ -79,7 +79,7 @@ module "my_backup" {
     backup2 = {
       backup_name                     = "storage2"
       retention_period                = "P30D"
-      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P1W"]
       storage_account_id              = azurerm_storage_account.my_storage_account_2.id
       storage_account_containers      = ["container1", "container2"]
       backup_policy_naming_template   = "nhsuk-{resource_abbreviation}-{resource_type}-{backup_name}"
@@ -100,7 +100,7 @@ module "my_backup" {
     backup2 = {
       backup_name                     = "disk2"
       retention_period                = "P30D"
-      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/PT12H"]
       managed_disk_id                 = azurerm_managed_disk.my_managed_disk_2.id
       backup_policy_naming_template   = "nhsuk-{resource_abbreviation}-{resource_type}-{backup_name}"
       backup_instance_naming_template = "nhsuk-{resource_abbreviation}-{resource_type}-{backup_name}"
@@ -114,14 +114,14 @@ module "my_backup" {
     backup1 = {
       backup_name              = "server1"
       retention_period         = "P7D"
-      backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1D"]
+      backup_intervals         = ["R/2024-01-01T00:00:00+00:00/P1W"]
       server_id                = azurerm_postgresql_flexible_server.my_server_1.id
       server_resource_group_id = azurerm_resource_group.my_resource_group.id
     }
     backup2 = {
       backup_name                     = "server2"
       retention_period                = "P30D"
-      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P2D"]
+      backup_intervals                = ["R/2024-01-01T00:00:00+00:00/P1W"]
       server_id                       = azurerm_postgresql_flexible_server.my_server_2.id
       server_resource_group_id        = azurerm_resource_group.my_resource_group.id
       backup_policy_naming_template   = "nhsuk-{resource_abbreviation}-{resource_type}-{backup_name}"
@@ -150,7 +150,7 @@ module "my_backup" {
 | `blob_storage_backups.storage_account_containers` | A list of containers in the storage account that should be backed up. | Yes | n/a |
 | `blob_storage_backups.backup_name` | The name of the backup, which must be unique across blob storage backups. | Yes | n/a |
 | `blob_storage_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
-| `blob_storage_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `blob_storage_backups.backup_intervals` | A list of intervals at which backups should be taken, in `ISO 8601` repeating interval format. The frequency (duration) part must be `P1D` (daily) or `P1W` (weekly). [See the Azure Blob backup documentation for supported schedules](https://learn.microsoft.com/en-us/azure/backup/blob-backup-configure-manage). | Yes | n/a |
 | `blob_storage_backups.backup_policy_naming_template` | Naming template used to construct the blob backup instance name. The following placeholders are supported and will be replaced by the module: `{resource_abbreviation}` → `bkpol`, `{resource_type}` → `blob`, `{backup_name}` → value of `blob_storage_backups.backup_name` | No | {resource_abbreviation}-{resource_type}-{backup_name} |
 | `blob_storage_backups.backup_instance_naming_template` | Naming template used to construct the blob backup instance name. The following placeholders are supported and will be replaced by the module: `{resource_abbreviation}` → `bkinst`, `{resource_type}` → `blob`, `{backup_name}` → value of `blob_storage_backups.backup_name` | No | {resource_abbreviation}-{resource_type}-{backup_name} |
 | `blob_storage_backups.time_zone` | The time zone to apply to the backup policy schedule (eg. Europe/London). If not specified, Azure’s default time zone behaviour is used. | No | n/a |
@@ -159,7 +159,7 @@ module "my_backup" {
 | `managed_disk_backups.managed_disk_id` | The id of the managed disk that should be backed up. | Yes | n/a |
 | `managed_disk_backups.backup_name` | The name of the backup, which must be unique across managed disk backups. | Yes | n/a |
 | `managed_disk_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
-| `managed_disk_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `managed_disk_backups.backup_intervals` | A list of intervals at which backups should be taken, in `ISO 8601` repeating interval format. The frequency (duration) part must be one of `PT1H`, `PT2H`, `PT4H`, `PT6H`, `PT8H`, `PT12H` (hourly) or `P1D` (daily). [See the Azure Disk backup support matrix for supported schedules](https://learn.microsoft.com/en-us/azure/backup/disk-backup-support-matrix). | Yes | n/a |
 | `managed_disk_backup.backup_policy_naming_template` | Naming template used to construct the disk backup instance name. The following placeholders are supported and will be replaced by the module: `{resource_abbreviation}` → `bkpol`, `{resource_type}` → `disk`, `{backup_name}` → value of `managed_disk_backup.backup_name` | No | {resource_abbreviation}-{resource_type}-{backup_name} |
 | `managed_disk_backup.backup_instance_naming_template` | Naming template used to construct the disk backup instance name. The following placeholders are supported and will be replaced by the module: `{resource_abbreviation}` → `bkinst`, `{resource_type}` → `disk`, `{backup_name}` → value of `managed_disk_backup.backup_name` | No | {resource_abbreviation}-{resource_type}-{backup_name} |
 | `postgresql_flexible_server_backups` | A map of postgresql flexible server backups that should be created. For each backup the following values should be provided: `backup_name`, `server_id`, `server_resource_group_id`, `retention_period` and `backup_intervals`. When no value is provided then no backups are created. | No | n/a |
@@ -167,6 +167,6 @@ module "my_backup" {
 | `postgresql_flexible_server_backups.server_id` | The id of the postgresql flexible server that should be backed up. | Yes | n/a |
 | `postgresql_flexible_server_backups.server_resource_group_id` | The id of the resource group which the postgresql flexible server resides in. | Yes | n/a |
 | `postgresql_flexible_server_backups.retention_period` | How long the backed up data will be retained for, which should be in `ISO 8601` duration format. This must be specified in days, and can be up to 7 days unless `use_extended_retention` is on. [See the following link for more information about the format](https://en.wikipedia.org/wiki/ISO_8601#Durations). | Yes | n/a |
-| `postgresql_flexible_server_backups.backup_intervals` | A list of intervals at which backups should be taken, which should be in `ISO 8601` duration format. [See the following link for the possible values](https://en.wikipedia.org/wiki/ISO_8601#Time_intervals). | Yes | n/a |
+| `postgresql_flexible_server_backups.backup_intervals` | A list of intervals at which backups should be taken, in `ISO 8601` repeating interval format. Only `P1W` (weekly) is supported. [See the Azure PostgreSQL Flexible Server backup support matrix for supported schedules](https://learn.microsoft.com/en-us/azure/backup/backup-azure-database-postgresql-flex-support-matrix). | Yes | n/a |
 | `postgresql_flexible_server_backup.backup_policy_naming_template` | Naming template used to construct the pgflex server backup instance name. The following placeholders are supported and will be replaced by the module: `{resource_abbreviation}` → `bkpol`, `{resource_type}` → `pgflex`, `{backup_name}` → value of `postgresql_flexible_server_backup.backup_name` | No | {resource_abbreviation}-{resource_type}-{backup_name} |
 | `postgresql_flexible_server_backup.backup_instance_naming_template` | Naming template used to construct the pgflex server backup instance name. The following placeholders are supported and will be replaced by the module: `{resource_abbreviation}` → `bkinst`, `{resource_type}` → `pgflex`, `{backup_name}` → value of `postgresql_flexible_server_backup.backup_name` | No | {resource_abbreviation}-{resource_type}-{backup_name} |

@@ -35,7 +35,7 @@ run "create_managed_disk_backup" {
       backup2 = {
         backup_name      = "disk2"
         retention_period = "P7D"
-        backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        backup_intervals = ["R/2024-01-01T00:00:00+00:00/PT12H"]
         managed_disk_id  = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Compute/disks/disk-2"
         managed_disk_resource_group = {
           id   = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group2"
@@ -131,7 +131,7 @@ run "create_managed_disk_backup" {
   }
 
   assert {
-    condition     = module.managed_disk_backup["backup2"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/P2D"
+    condition     = module.managed_disk_backup["backup2"].backup_policy.backup_repeating_time_intervals[0] == "R/2024-01-01T00:00:00+00:00/PT12H"
     error_message = "Managed disk backup policy backup intervals not as expected."
   }
 
@@ -255,6 +255,70 @@ run "validate_backup_intervals" {
         backup_name      = "disk1"
         retention_period = "P7D"
         backup_intervals = []
+        managed_disk_id  = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Compute/disks/disk-1"
+        managed_disk_resource_group = {
+          id   = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
+          name = "example-resource-group1"
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    var.managed_disk_backups,
+  ]
+}
+
+run "validate_backup_intervals_invalid_frequency" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
+    managed_disk_backups = {
+      backup1 = {
+        backup_name      = "disk1"
+        retention_period = "P7D"
+        backup_intervals = ["R/2024-01-01T00:00:00+00:00/P2D"]
+        managed_disk_id  = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Compute/disks/disk-1"
+        managed_disk_resource_group = {
+          id   = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
+          name = "example-resource-group1"
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    var.managed_disk_backups,
+  ]
+}
+
+run "validate_backup_intervals_invalid_structure" {
+  command = plan
+
+  module {
+    source = "../../infrastructure"
+  }
+
+  variables {
+    resource_group_name        = run.setup_tests.resource_group_name
+    resource_group_location    = "uksouth"
+    backup_vault_name          = run.setup_tests.backup_vault_name
+    log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    tags                       = run.setup_tests.tags
+    managed_disk_backups = {
+      backup1 = {
+        backup_name      = "disk1"
+        retention_period = "P7D"
+        backup_intervals = ["P1D", "R/bad-date/P1D", "R/2024-01-01T00:00:00+00:00/PT10H"]
         managed_disk_id  = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group/providers/Microsoft.Compute/disks/disk-1"
         managed_disk_resource_group = {
           id   = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/example-resource-group1"
