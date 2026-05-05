@@ -1,6 +1,6 @@
 module e2e_tests
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
@@ -20,39 +20,39 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.6.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.36.0 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.8 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.41.5 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.29.5 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.58 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.27 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.58 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.31 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.31 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.21 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.31 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.65.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.202.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.40.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.39.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.5.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.21 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.93.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.48.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.75.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.13 // indirect
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.13 // indirect
-	github.com/aws/smithy-go v1.22.2 // indirect
+	github.com/aws/smithy-go v1.24.2 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/boombuler/barcode v1.0.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
@@ -88,7 +88,7 @@ require (
 	github.com/hashicorp/terraform-json v0.24.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.7.2 // indirect
+	github.com/jackc/pgx/v5 v5.9.2 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
-	github.com/moby/spdystream v0.5.0 // indirect
+	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
