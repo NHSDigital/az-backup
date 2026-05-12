@@ -1,0 +1,16 @@
+[data-md-color-primary="nhs"] {
+  --md-primary-fg-color:        #005EB8;
+}
+
+.md-header__button.md-logo {
+  padding: 0 !important;
+}
+
+.md-header__title {
+margin-left: 0.5rem !important;  
+}
+
+.md-header__button.md-logo img, .md-header__button.md-logo svg {
+  height: 2.5rem;
+  width: 2.5rem;
+}
